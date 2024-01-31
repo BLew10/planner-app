@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id               Int               @id @default(autoincrement())
+  email            String            @unique
+  firstName        String?
+  lastName         String?
+  username         String            @unique
+  password         String
+  accounts         Account[]
+  clients          Client[]
+  calendarEditions CalendarEdition[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            Int
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Client {
+  id           Int           @id @default(autoincrement())
+  user         User          @relation(fields: [userId], references: [id])
+  userId       Int
+  name         String
+  email        String?
+  phoneNumber  String?
+  displays     Display[]
+  addressBooks AddressBook[] @relation("ClientAddressBooks")
+}
+
+model CalendarEdition {
+  id     Int     @id @default(autoincrement())
+  user   User    @relation(fields: [userId], references: [id])
+  userId Int
+  months Month[]
+}
+
+model Month {
+  monthId         Int             @id
+  year            Int
+  calendarEdition CalendarEdition @relation(fields: [editionId], references: [id])
+  editionId       Int
+  displays        Display[]
+
+  @@unique([monthId, year])
+}
+
+model Display {
+  id         Int     @id @default(autoincrement())
+  type       String
+  isOccupied Boolean @default(false)
+  month      Month   @relation(fields: [monthId], references: [monthId])
+  monthId    Int
+  client     Client? @relation(fields: [clientId], references: [id])
+  clientId   Int?
+}
+
+model AddressBook {
+  id           Int      @id @default(autoincrement())
+  name         String
+  displayLevel String?
+  clients      Client[] @relation("ClientAddressBooks")
+  clientId     Int?
+}

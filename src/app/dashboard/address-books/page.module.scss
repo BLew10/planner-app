@@ -1,0 +1,36 @@
+@use "../../../styles/mixins.scss" as *;
+
+.container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.modWrapper {
+  display: flex;
+  gap: 20px;
+}
+
+.deleteButton,
+.editButton {
+  @include table-mod-button;
+}
+
+.deleteButton {
+  background-color: var(--primary-red-opacity);
+  color: var(--text-white);
+  &:hover {
+    background-color: var(--primary-red-dark-opacity);
+  }
+}
+
+.editButton {
+  background-color: var(--primary-yellow-opacity);
+  color: var(--text-white);
+  &:hover {
+    background-color: var(--primary-yellow-dark-opacity);
+  }
+}

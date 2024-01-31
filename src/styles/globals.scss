@@ -1,0 +1,59 @@
+:root {
+--primary-yellow:rgb(253, 178, 8);
+--primary-yellow-opacity: rgba(253, 178, 8, 0.5);
+--primary-yellow-dark:rgb(240, 134, 13);
+--primary-yellow-dark-opacity: rgba(240, 134, 13, 0.5);
+--primary-blue:rgb(16, 198, 248);
+--primary-blue-opacity: rgba(16, 198, 248, 0.5);
+--primary-blue-dark:rgb(9, 164, 228);
+--primary-blue-dark-opacity: rgba(9, 164, 228, 0.5);
+--primary-red:rgb(254, 51, 92);
+--primary-red-dark:rgb(222, 14, 66);
+--primary-red-dark-opacity: rgba(222, 14, 66, 0.5);
+--primary-red-opacity: rgba(254, 51, 92, 0.5);
+--primary-green:rgb(28, 221, 157);
+--primary-green-dark:rgb(26, 171, 151);
+--primary-green-opacity: rgba(28, 221, 157, 0.5);
+--primary-green-dark-opacity: rgba(26, 171, 151, 0.5);
+--primary-color: #172235;
+--bg-color: #141d29;
+--text-color: #b7bac1;
+--text-white: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-color);
+  max-width: 100vw;
+  max-height: 100vh;
+  overflow-x: hidden;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}

@@ -1,0 +1,20 @@
+import React from "react";
+import Link from "next/link";
+import { IconType } from "react-icons";
+import styles from "./MenuItem.module.scss";
+import { Url } from "next/dist/shared/lib/router/router";
+
+interface MenuItemProps {
+  icon: IconType;
+  label: string;
+  urlPath: string;
+}
+
+export const MenuItem: React.FC<MenuItemProps> = ({ icon: Icon, label, urlPath }) => {
+  return (
+    <Link className={styles.item} href={urlPath}>
+      <span className={styles.icon}><Icon /></span>
+      <span className={styles.label}>{label}</span>
+    </Link>
+  );
+};

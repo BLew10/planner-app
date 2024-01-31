@@ -1,0 +1,12 @@
+.title {
+  color: var(--text-white);
+  font-weight: normal;
+  font-size: 0.9rem;
+}
+
+.items {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
