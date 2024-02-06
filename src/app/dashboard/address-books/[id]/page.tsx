@@ -1,6 +1,6 @@
 import AddressBookForm from "../AddressBookForm";
 import styles from "./page.module.scss";
-import { getAddressBookById } from "@/data/addressBook";
+import { getAddressBookById } from "@/lib/data/addressBook";
 
 const UpdateAddressBookPage = async ({
   params,

@@ -1,5 +1,5 @@
 import CredentialsProvider from "next-auth/providers/credentials";
-import { getUserByCredential, User } from "./data/user";
+import { getUserByCredential } from "./lib/data/user";
 import bcrypt from "bcryptjs";
 import type { NextAuthConfig, Session } from "next-auth";
 import type { JWT } from "next-auth/jwt";

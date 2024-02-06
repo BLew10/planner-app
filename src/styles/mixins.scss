@@ -112,10 +112,59 @@
   }
 }
 
-@mixin table-mod-button {
+@mixin action-link {
   border: none;
   padding: 10px 20px;
   border-radius: 5px;
+  text-underline-offset: 3px;
   cursor: pointer;
   font-size: 0.8rem;
+}
+
+@mixin delete-link {
+  @include action-link;
+  color: var(--primary-red);
+  background-color: transparent;
+  font-weight: bold;
+
+  &:hover {
+    color: var(--primary-red-dark);
+  }
+}
+
+@mixin edit-link {
+  @include action-link;
+  color: var(--primary-yellow);
+  background-color: transparent;
+  font-weight: bold;
+
+  &:hover {
+    color: var(--primary-yellow-dark);
+  }
+}
+
+@mixin overview-link {
+  @include action-link;
+  color: var(--primary-green);
+  background-color: transparent;
+  font-weight: bold;
+
+  &:hover {
+    color: var(--primary-green-dark);
+  }
+}
+
+@mixin addButton {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  background-color: var(--primary-green);
+  color: var(--text-white);
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: var(--primary-green-dark);
+  }
 }

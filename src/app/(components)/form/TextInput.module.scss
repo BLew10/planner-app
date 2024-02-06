@@ -1,0 +1,17 @@
+@use "../../../styles/mixins.scss" as *;
+
+.label {
+    @include label;
+}
+
+.input {
+    @include input;
+}
+
+.error {
+    color: red;
+}
+
+.inputWrapper {
+    flex: 1;
+}

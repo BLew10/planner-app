@@ -3,10 +3,10 @@
 import React, { useState } from "react";
 
 import styles from "./AddressBookForm.module.scss";
-import TextInput from "@/form/TextInput";
-import SelectInput from "@/form/SelectInput";
+import TextInput from "@/app/(components)/form/TextInput";
+import SelectInput from "@/app/(components)/form/SelectInput";
 import upsertAddressBook from "@/actions/address-book/upsertAddressBook";
-import AnimateWrapper from "@/general/AnimateWrapper";
+import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 
 interface AddressBookFormProps {
   addressBookName: string | null;

@@ -14,23 +14,12 @@
   gap: 20px;
 }
 
-.deleteButton,
-.editButton {
-  @include table-mod-button;
+.deleteAction {
+  @include delete-link;
+  padding: 0.25rem;
 }
 
-.deleteButton {
-  background-color: var(--primary-red-opacity);
-  color: var(--text-white);
-  &:hover {
-    background-color: var(--primary-red-dark-opacity);
-  }
-}
-
-.editButton {
-  background-color: var(--primary-yellow-opacity);
-  color: var(--text-white);
-  &:hover {
-    background-color: var(--primary-yellow-dark-opacity);
-  }
+.editAction {
+  @include edit-link;
+  padding: 0.25rem;
 }

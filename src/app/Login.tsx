@@ -1,7 +1,7 @@
 import login from "@/actions/user/login";
 import styles from "./Login.module.scss"; // Ensure this path is correct
-import AnimateWrapper from "@/general/AnimateWrapper";
-import TextInput from "@/form/TextInput";
+import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
+import TextInput from "@/app/(components)/form/TextInput";
 
 const LoginComponent: React.FC = () => {
   return (

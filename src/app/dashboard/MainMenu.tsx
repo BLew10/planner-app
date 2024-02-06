@@ -36,47 +36,37 @@ const MainMenu = () => {
               label="Dashboard"
               urlPath="/dashboard"
             />
-          </MenuGroup>
-        </li>
-        <li>
-          <MenuGroup title="Address Books">
             <MenuItem
               icon={MdMenuBook}
-              label="View Address Books"
+              label="Address Books"
               urlPath="/dashboard/address-books"
             />
             <MenuItem
-              icon={MdAdd}
-              label="Add Address Book"
-              urlPath="/dashboard/address-books/add"
-            />
-          </MenuGroup>
-        </li>
-        <li>
-          <MenuGroup title="Contacts">
-            <MenuItem
               icon={MdContacts}
-              label="View Contacts"
+              label="Contacts"
               urlPath="/dashboard/contacts"
             />
             <MenuItem
-              icon={MdAdd}
-              label="Add Contact"
-              urlPath="/dashboard/contacts/add"
+              icon={MdContacts}
+              label="Advertisement Types"
+              urlPath="/dashboard/advertisement-types"
             />
           </MenuGroup>
         </li>
         <li>
           <MenuGroup title="User">
             <form className={menuGroupStyles.menuGroup} action={logout}>
-              <div className={menuItemStyles.item}>
-                <p className={menuItemStyles.icon}>
-                  <MdLogout />
-                </p>
-                <button type="submit" className={menuItemStyles.label}>
-                  Sign Out
-                </button>
-              </div>
+              <button
+                type="submit"
+                className={`${menuItemStyles.label} ${styles.logoutButton}`}
+              >
+                <div className={menuItemStyles.item}>
+                  <p className={menuItemStyles.icon}>
+                    <MdLogout />
+                  </p>
+                  <span className={menuItemStyles.label}>Sign Out</span>
+                </div>
+              </button>
             </form>
           </MenuGroup>
         </li>

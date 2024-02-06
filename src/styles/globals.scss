@@ -15,10 +15,14 @@
 --primary-green-dark:rgb(26, 171, 151);
 --primary-green-opacity: rgba(28, 221, 157, 0.5);
 --primary-green-dark-opacity: rgba(26, 171, 151, 0.5);
---primary-color: #172235;
---bg-color: #141d29;
+--primary-color: rgb(23, 34, 53);
+--primary-color-opacity: rgba(23, 34, 53, 0 5);
+--bg-color: rgb(20, 29, 41);
+--bg-color-opacity: rgba(20, 29, 41, 0.5);
 --text-color: #b7bac1;
 --text-white: #ffffff;
+--row-odd-color: var(--primary-color); /* Light grey color, for example */
+--row-even-color: var(--bg-color); /* Slightly different grey color, for example */
 }
 
 * {

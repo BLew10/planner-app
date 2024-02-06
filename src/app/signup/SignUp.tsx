@@ -1,7 +1,7 @@
 import styles from './SignUp.module.scss';
-import AnimateWrapper from '../../general/AnimateWrapper';
+import AnimateWrapper from '../(components)/general/AnimateWrapper';
 import signUp from '@/actions/user/signup';
-import TextInput from '@/form/TextInput';
+import TextInput from '@/app/(components)/form/TextInput';
  
 const SignUp: React.FC = () => {
 
