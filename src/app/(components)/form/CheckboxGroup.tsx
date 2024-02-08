@@ -1,10 +1,10 @@
-import React from 'react';
-import CheckboxInput from './CheckboxInput';
-import styles from './CheckboxGroup.module.scss';
+import React from "react";
+import CheckboxInput from "./CheckboxInput";
+import styles from "./CheckboxGroup.module.scss";
 
 interface CheckboxGroupProps {
   name: string;
-  options: { label: any ; value: any }[];
+  options: { label: any; value: any; checked: boolean }[];
 }
 
 const CheckboxGroup = ({ name, options }: CheckboxGroupProps) => {
@@ -16,6 +16,7 @@ const CheckboxGroup = ({ name, options }: CheckboxGroupProps) => {
           name={name}
           value={option.value}
           label={option.label}
+          checked={option.checked}
         />
       ))}
     </div>

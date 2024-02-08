@@ -1,20 +1,17 @@
 import Link from "next/link";
 import styles from "./page.module.scss";
 import Table from "@/app/(components)/general/Table";
-import { getAllAddressBooks } from "@/lib/data/addressBook";
+import { getAllCalendars } from "@/lib/data/calendarEdition";
 import deleteAddressBook from "@/actions/address-book/deleteAddressBook";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 
-const AddressBooksPage = async () => {
-  const addressBooks = await getAllAddressBooks();
+const CalendarsPage = async () => {
+  const calendars = await getAllCalendars();
+  console.log(calendars);
 
   const columns = [
     {
       name: "Name",
-      size: "default",
-    },
-    {
-      name: "Display Level",
       size: "default",
     },
     {
@@ -23,13 +20,12 @@ const AddressBooksPage = async () => {
     },
   ];
 
-  const data = addressBooks?.map((addressBook) => {
+  const data = calendars?.map((c) => {
     return [
-      addressBook.name,
-      addressBook.displayLevel,
+      c.name,
       <div className={styles.modWrapper}>
         <Link
-          href={`/dashboard/address-books/${addressBook.id}`}
+          href={`/dashboard/calendar-types/${c.id}`}
           className={styles.editAction}
         >
           Edit
@@ -38,7 +34,7 @@ const AddressBooksPage = async () => {
           <button type="submit" className={styles.deleteAction}>
             Delete
           </button>
-          <input type="hidden" name="addressId" value={addressBook.id} />
+          <input type="hidden" name="addressId" value={c.id} />
         </form>
       </div>,
     ];
@@ -47,10 +43,10 @@ const AddressBooksPage = async () => {
   return (
     <AnimateWrapper>
       <section className={styles.container}>
-        <Table tableName="Address Books" columns={columns} data={data} addPath={'/dashboard/address-books/add'} />
+        <Table tableName="Calendar Editions" columns={columns} data={data} addPath={'/dashboard/calendar-editions/add'} />
       </section>
     </AnimateWrapper>
   );
 };
 
-export default AddressBooksPage;
+export default CalendarsPage;

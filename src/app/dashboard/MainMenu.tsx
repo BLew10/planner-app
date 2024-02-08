@@ -4,9 +4,10 @@ import Link from "next/link";
 import {
   MdDashboard,
   MdContacts,
-  MdAdd,
+  MdDateRange,
   MdMenuBook,
   MdLogout,
+  MdOutlineTopic
 } from "react-icons/md";
 
 import styles from "./MainMenu.module.scss";
@@ -47,9 +48,14 @@ const MainMenu = () => {
               urlPath="/dashboard/contacts"
             />
             <MenuItem
-              icon={MdContacts}
+              icon={MdOutlineTopic}
               label="Advertisement Types"
               urlPath="/dashboard/advertisement-types"
+            />
+            <MenuItem
+              icon={MdDateRange}
+              label="Calendar Editions"
+              urlPath="/dashboard/calendar-editions"
             />
           </MenuGroup>
         </li>

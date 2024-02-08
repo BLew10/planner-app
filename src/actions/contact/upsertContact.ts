@@ -46,8 +46,10 @@ const upsertContact = async (formData: FormData) => {
             notes: contactData.notes,
             category: contactData.category,
             webAddress: contactData.webAddress,
-          },
-        });
+            addressBooks: {
+              connect: contactData.addressBooks,
+            }
+        }});
       } else {
         contact = await prisma.contact.create({
           data: {
@@ -56,6 +58,9 @@ const upsertContact = async (formData: FormData) => {
             notes: contactData.notes,
             category: contactData.category,
             webAddress: contactData.webAddress,
+            addressBooks: {
+              connect: contactData.addressBooks,
+            },
           },
         });
       }

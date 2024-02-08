@@ -1,3 +1,5 @@
+"use server"
+
 import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
 import {
@@ -13,23 +15,34 @@ import {
  * @returns id, customerSince, notes, category, webAddress, and contact information
  */
 
-interface ContactTableData extends Contact {
+export interface ContactTableData extends Contact {
   contactContactInformation?: Partial<ContactContactInformation> | null;
-  contactTelecomInformation?: Partial<ContactTelecomInformation >| null;
+  contactTelecomInformation?: Partial<ContactTelecomInformation> | null;
   contactAddress?: Partial<ContactAddress> | null;
 }
 
-
-export const getAllContacts = async (): Promise<
-  Partial<ContactTableData>[] | null
-> => {
+export const getContactsByAddressBook = async (
+  addressBookId: string
+): Promise<Partial<ContactTableData>[] | null> => {
+  "use server"
   const session = await auth();
   const userId = session?.user?.id;
+  if (!addressBookId) {
+    const addressBook = await prisma.addressBook.findFirst();
+    addressBookId = addressBook?.id || "";
+  }
+
+  console.log("addressBookId", addressBookId);
 
   try {
     const contacts = await prisma.contact.findMany({
       where: {
         userId,
+        addressBooks: {
+          some: {
+            id: addressBookId,
+          },
+        },
       },
       select: {
         id: true,
@@ -100,9 +113,7 @@ interface ContactSaveData extends Contact {
   contactContactInformation: ContactInfoData;
   contactTelecomInformation: TelecomInfoData;
   contactAddress: AddressData;
-  addressBooks: {
-    connect: { id: string }[];
-  };
+  addressBooks: { id: string }[];
 }
 
 interface ContactInfoData {
@@ -163,13 +174,11 @@ export const parseContactFormData = (
     },
   };
 
-  const addressBooks: { connect: { id: string }[] } = {
-    connect: [],
-  };
+  const addressBooks: {id: string }[] = [];
   // Handling multiple addressBookIds for many-to-many relation
   formData.getAll("addressBookIds").forEach((id) => {
     const addressBookId = id.toString();
-    addressBooks.connect.push({ id: addressBookId });
+    addressBooks.push({ id: addressBookId });
   });
 
   // Directly assigning other fields with simple validation or transformation as needed
@@ -188,3 +197,65 @@ export const parseContactFormData = (
 
   return contactData;
 };
+
+
+export const getContactById = async (id: string) => {
+
+  if (!id) {
+    return null;
+  }
+  const session = await auth();
+  const contactId = id;
+  const userId = session?.user?.id;
+
+  try {
+    const contact = await prisma.contact.findFirst({
+      where: { id: contactId, userId: userId },
+      select: {
+        id: true,
+        customerSince: true,
+        notes: true,
+        category: true,
+        webAddress: true,
+        contactContactInformation: {
+          select: {
+            firstName: true,
+            lastName: true,
+            altContactFirstName: true,
+            altContactLastName: true,
+            salutation: true,
+            company: true,
+          },
+        },
+        contactTelecomInformation: {
+          select: {
+            phone: true,
+            extension: true,
+            altPhone: true,
+            fax: true,
+            cellPhone: true,
+            homePhone: true,
+          },
+        },
+        contactAddress: {
+          select: {
+            address: true,
+            address2: true,
+            city: true,
+            state: true,
+            zip: true,
+            country: true,
+          },
+        },
+        addressBooks: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+    return contact;
+  } catch {
+    return null;
+  }
+}

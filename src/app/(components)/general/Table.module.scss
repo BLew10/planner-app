@@ -20,10 +20,7 @@
   color: var(--text-color);
   padding: 20px;
   border-radius: 10px;
-}
-
-.small {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
 }
 
 .tableBody {
@@ -46,22 +43,27 @@
   width: 100%;
   position: sticky;
   top: 0;
+  cursor: pointer;
 }
 
 .cell,
 .cellHead {
   padding: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .cellHead {
   color: var(--text-white);
+  white-space: break-spaces;
 }
 
 .addButton {
   @include addButton;
 }
 
-.headerWrapper {
+.subHeading {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -80,4 +82,51 @@
 
 .row:nth-child(even) {
   background-color: var(--row-even-color); /* Choose your color for even rows */
+}
+
+
+.searchWrapper {
+  display: flex;
+  width: 300px;
+  gap: 20px;
+  flex-direction: column;
+  margin: 20px 0;
+}
+
+.filterTerm {
+  color: var(--primary-blue);
+  font-weight: bold;
+}
+
+.filterDescription {
+  color: var(--text-color);
+  font-size: 0.8rem;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.clearFilter {
+  color: var(--primary-red);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.7rem;
+}
+
+.filterWrapper {
+  display: flex;
+  gap: 20px;
+}
+
+.small {
+  width: 50px;
+}
+
+.default {
+  width: auto;
+}
+
+.large {
+  width: 150px;
 }

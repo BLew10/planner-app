@@ -1,0 +1,22 @@
+@use "../../../styles/mixins.scss" as *;
+
+.form {
+  @include form;
+}
+
+.heading {
+  @include form-heading;
+}
+
+.instructions {
+  @include form-instructions;
+}
+
+.submitButton {
+  @include submit-button;
+}
+
+.subInstructions {
+  font-size: 0.75rem;
+  margin: 10px;
+}

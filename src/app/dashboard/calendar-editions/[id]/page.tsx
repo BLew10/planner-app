@@ -1,7 +1,7 @@
-import ContactForm from "../../advertisement-types/ATForm";
+import ATForm from "../CalendarForm";
 import styles from "./page.module.scss";
 
-const UpdateAddressBookPage = async ({
+const UpdateAdvertisement = async ({
   params,
 }: {
   params: { id: string };
@@ -10,11 +10,11 @@ const UpdateAddressBookPage = async ({
 
   return (
     <section className={styles.container}>
-      <ContactForm
+      <ATForm
       id={id}
       />
     </section>
   );
 };
 
-export default UpdateAddressBookPage;
+export default UpdateAdvertisement;

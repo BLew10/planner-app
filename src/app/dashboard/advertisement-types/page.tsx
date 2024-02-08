@@ -1,12 +1,13 @@
 import Link from "next/link";
 import styles from "./page.module.scss";
 import Table from "@/app/(components)/general/Table";
-import { getAllAddressBooks } from "@/lib/data/addressBook";
+import { getAllAdvertisementTypes } from "@/lib/data/advertisementType";
 import deleteAddressBook from "@/actions/address-book/deleteAddressBook";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
+import { MdCheck } from "react-icons/md";
 
-const AddressBooksPage = async () => {
-  const addressBooks = await getAllAddressBooks();
+const AdvertisementsPage = async () => {
+  const advertisements = await getAllAdvertisementTypes();
 
   const columns = [
     {
@@ -14,7 +15,11 @@ const AddressBooksPage = async () => {
       size: "default",
     },
     {
-      name: "Display Level",
+      name: "Quanity Per Month",
+      size: "default",
+    },
+    {
+      name: "Is Day Type",
       size: "default",
     },
     {
@@ -23,13 +28,14 @@ const AddressBooksPage = async () => {
     },
   ];
 
-  const data = addressBooks?.map((addressBook) => {
+  const data = advertisements?.map((at) => {
     return [
-      addressBook.name,
-      addressBook.displayLevel,
+      at.name,
+      at.perMonth,
+      at.isDayType ? <MdCheck /> : "",
       <div className={styles.modWrapper}>
         <Link
-          href={`/dashboard/address-books/${addressBook.id}`}
+          href={`/dashboard/advertisement-types/${at.id}`}
           className={styles.editAction}
         >
           Edit
@@ -38,7 +44,7 @@ const AddressBooksPage = async () => {
           <button type="submit" className={styles.deleteAction}>
             Delete
           </button>
-          <input type="hidden" name="addressId" value={addressBook.id} />
+          <input type="hidden" name="addressId" value={at.id} />
         </form>
       </div>,
     ];
@@ -47,10 +53,10 @@ const AddressBooksPage = async () => {
   return (
     <AnimateWrapper>
       <section className={styles.container}>
-        <Table tableName="Address Books" columns={columns} data={data} addPath={'/dashboard/address-books/add'} />
+        <Table tableName="Advertisement Types" columns={columns} data={data} addPath={'/dashboard/advertisement-types/add'} />
       </section>
     </AnimateWrapper>
   );
 };
 
-export default AddressBooksPage;
+export default AdvertisementsPage;

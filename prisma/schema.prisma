@@ -20,6 +20,7 @@ model User {
   calendarEditions      CalendarEdition[]
   Contacts              Contact[]
   AdvertisementPurchase AdvertisementPurchase[]
+  Advertisement         Advertisement[]
 }
 
 model Account {
@@ -47,7 +48,6 @@ model Contact {
   notes                     String?
   webAddress                String?
   user                      User?                      @relation(fields: [userId], references: [id])
-  advertisements            Advertisement[]
   addressBooks              AddressBook[]              @relation("ContactAddressBooks")
   category                  String?
   contactContactInformation ContactContactInformation?
@@ -94,29 +94,32 @@ model ContactAddress {
 }
 
 model CalendarEdition {
-  id     Int     @id @default(autoincrement())
+  id     String  @id @default(uuid())
   userId String
+  name   String
   user   User    @relation(fields: [userId], references: [id])
   months Month[]
 }
 
 model Month {
-  monthId         Int                     @id
+  monthId         Int
   year            Int
-  editionId       Int
+  editionId       String
   purchases       AdvertisementPurchase[]
   calendarEdition CalendarEdition         @relation(fields: [editionId], references: [id])
 
-  @@unique([monthId, year])
+  @@unique([monthId, year, editionId])
 }
 
 model Advertisement {
   id        String                  @id @default(uuid())
   name      String
   isDayType Boolean                 @default(false)
+  isDeleted Boolean                 @default(false)
+  perMonth  Int                     @default(0)
   purchases AdvertisementPurchase[]
-  Contact   Contact?                @relation(fields: [contactId], references: [id])
-  contactId String?
+  userId    String
+  User      User                    @relation(fields: [userId], references: [id])
 }
 
 model AddressBook {
@@ -131,14 +134,17 @@ model AddressBook {
 model AdvertisementPurchase {
   id              String        @id @default(uuid())
   advertisementId String
+  amount          Int
+  cost            Decimal
   userId          String
   monthId         Int
+  editionId       String
   year            Int
   advertisement   Advertisement @relation(fields: [advertisementId], references: [id])
   user            User          @relation(fields: [userId], references: [id])
-  month           Month         @relation(fields: [monthId, year], references: [monthId, year])
+  month           Month         @relation(fields: [monthId, year, editionId], references: [monthId, year, editionId])
   contact         Contact?      @relation(fields: [contactId], references: [id])
   contactId       String?
 
-  @@unique([advertisementId, userId, monthId, year]) // Ensure unique purchases per user per advertisement per month
+  @@unique([advertisementId, userId, monthId, year])
 }

@@ -3,57 +3,113 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "./Table.module.scss";
+import TextInput from "../form/TextInput";
+import SelectInput from "../form/SelectInput";
 
 interface TableProps {
   tableName: string;
-  columns: string[];
-  style?: "small" | "medium" | "large";
+  columns: {name: string, size: string}[];
   data?: any[][];
-  addPath?: string; // This is a path to a form to add a new row to the table
+  addPath?: string;
+  filterOptions?:  { value: string; label: string }[];
+  handleFilterChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 }
 
-const Table = ({ tableName, columns, data, addPath, style = 'medium' }: TableProps) => {
-
-  const [searchQuery, setSearchQuery] = useState('');
+const Table = ({
+  tableName,
+  columns,
+  data,
+  addPath,
+  filterOptions,
+  handleFilterChange
+}: TableProps) => {
+  const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState(data);
+  const [filteredColumn, setFilteredColumn] = useState<number | null>(null);
 
   useEffect(() => {
-    if (searchQuery) {
-      const lowercasedQuery = searchQuery.toLowerCase();
-      const filtered = data?.filter(row =>
-        row.some(cell =>
-          cell.toString().toLowerCase().includes(lowercasedQuery)
-        )
-      );
-      setFilteredData(filtered);
+    if (!data) return;
+    const lowercasedQuery = searchQuery.toLowerCase();
+    const filtered = data.filter((row) =>
+      filteredColumn != null
+        ? row[filteredColumn].toString().toLowerCase().includes(lowercasedQuery)
+        : row.some((cell) =>
+            cell.toString().toLowerCase().includes(lowercasedQuery)
+          )
+    );
+    setFilteredData(filtered);
+  }, [searchQuery, data, filteredColumn]);
+
+  const handleColumnClick = (index: number) => {
+    if (filteredColumn === index) {
+      setFilteredColumn(null);
+      setSearchQuery("");
     } else {
-      setFilteredData(data);
+      setFilteredColumn(index);
     }
-  }, [searchQuery, data]);
+  };
 
   return (
     <div className={styles.container}>
       <div className={styles.headerWrapper}>
         <h1 className={styles.tableName}>{tableName}</h1>
+      </div>
+      <div className={styles.subHeading}>
+        <div className={styles.searchWrapper}>
+          <div className={styles.filterWrapper}>
+          <TextInput
+            type="text"
+            name="search-query"
+            id="table-search"
+            label="Search"
+            placeholder={`Search ${
+              filteredColumn !== null ? ` in ${columns[filteredColumn].name}` : ""
+            }...`}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            autocomplete="new-password"
+          />
+          {
+            (filterOptions && filterOptions.length > 0) && (
+              <SelectInput name="filter" label="Filter" options={filterOptions} onChange={handleFilterChange} />
+            ) 
+          }
+          </div>
+          {filteredColumn !== null ? (
+            <p className={styles.filterDescription}>
+              Filtering by:{" "}
+              <span className={styles.filterTerm}>
+                {columns[filteredColumn].name}
+              </span>
+              <button
+                className={styles.clearFilter}
+                onClick={() => handleColumnClick(filteredColumn)}
+              >
+                Clear
+              </button>
+            </p>
+          ) : (
+            <p className={styles.filterDescription}>
+              Search the entire table or click a column to filter by it.
+            </p>
+          )}
+        </div>
         {addPath && (
           <Link href={addPath} className={styles.addButton}>
-            Add 
+            Add
           </Link>
         )}
       </div>
-      <input
-        type="text"
-        placeholder="Search..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className={styles.searchInput}
-      />
-      <table className={`${styles.table} ${styles[style]}`}>
+      <table className={`${styles.table}`}>
         <thead className={styles.tableHead}>
           <tr className={styles.row}>
             {columns.map((column, index) => (
-              <th key={index} className={styles.cellHead}>
-                {column}
+              <th
+                key={index}
+                className={`${styles.cellHead} ${styles[column.size]}`}
+                onClick={() => handleColumnClick(index)}
+              >
+                {column.name}
               </th>
             ))}
           </tr>
@@ -62,7 +118,7 @@ const Table = ({ tableName, columns, data, addPath, style = 'medium' }: TablePro
           {filteredData?.map((rowData, rowIndex) => (
             <tr key={rowIndex} className={styles.row}>
               {rowData.map((cellData, cellIndex) => (
-                <td key={cellIndex} className={styles.cell}>
+                <td key={cellIndex} className={`${styles.cell} ${styles[columns[cellIndex].size]}`}>
                   {cellData}
                 </td>
               ))}

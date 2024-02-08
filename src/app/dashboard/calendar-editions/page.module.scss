@@ -1,0 +1,29 @@
+@use "../../../styles/mixins.scss" as *;
+
+.container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.modWrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.overviewAction {
+  @include overview-link;
+  padding: 0.25rem;
+}
+.deleteAction {
+  @include delete-link;
+  padding: 0.25rem;
+}
+
+.editAction {
+  @include edit-link;
+  padding: 0.25rem;
+}
