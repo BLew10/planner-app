@@ -36,10 +36,8 @@ const TextInput: React.FC<TextInputProps> = ({
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState<string>(value || "");
-  console.log("TextInputProps", value);
 
   useEffect(() => {
-    // Update local state to reflect prop changes
     setInputValue(value || "");
   }, [value]);
 

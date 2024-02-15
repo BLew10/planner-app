@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 
-const deleteAddressBook = async (formData: FormData) => {
+const deleteContact = async (formData: FormData) => {
   try {
     const session = await auth();
     if (!session) {
@@ -16,29 +16,29 @@ const deleteAddressBook = async (formData: FormData) => {
         },
       };
     }
-    const addressId = formData.get("addressId")?.toString() || "-1";
+    const contactId = formData.get("contactId")?.toString() || "-1";
     const userId = session.user?.id;
 
-    await prisma.addressBook.delete({
+    await prisma.contact.delete({
       where: {
-        id: addressId,
+        id: contactId,
         userId,
       },
     });
   } catch (error: any) {
     // Handle any potential errors here
-    console.error("Error deleting address book", error);
+    console.error("Error deleting contact", error);
 
     return {
       status: 500,
       json: {
         success: false,
-        message: "Error deleting address book",
+        message: "Error deleting contact",
       },
     };
   }
 
-  revalidatePath("/dashboard/address-book");
+  revalidatePath("/dashboard/contacts");
 };
 
-export default deleteAddressBook;
+export default deleteContact;

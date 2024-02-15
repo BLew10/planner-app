@@ -2,7 +2,7 @@ import Link from "next/link";
 import styles from "./page.module.scss";
 import Table from "@/app/(components)/general/Table";
 import { getAllAdvertisementTypes } from "@/lib/data/advertisementType";
-import deleteAddressBook from "@/actions/address-book/deleteAddressBook";
+import deleteAdvertisementType from "@/actions/advertisement-types/deleteAdvertisementType";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import { MdCheck } from "react-icons/md";
 
@@ -40,11 +40,11 @@ const AdvertisementsPage = async () => {
         >
           Edit
         </Link>
-        <form action={deleteAddressBook}>
+        <form action={deleteAdvertisementType}>
           <button type="submit" className={styles.deleteAction}>
             Delete
           </button>
-          <input type="hidden" name="addressId" value={at.id} />
+          <input type="hidden" name="advertisementId" value={at.id} />
         </form>
       </div>,
     ];

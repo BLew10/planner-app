@@ -2,8 +2,8 @@ import Link from "next/link";
 import styles from "./page.module.scss";
 import Table from "@/app/(components)/general/Table";
 import { getAllCalendars } from "@/lib/data/calendarEdition";
-import deleteAddressBook from "@/actions/address-book/deleteAddressBook";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
+import deleteCalendar from "@/actions/calendar-editions/deleteCalendarEdition";
 
 const CalendarsPage = async () => {
   const calendars = await getAllCalendars();
@@ -30,11 +30,11 @@ const CalendarsPage = async () => {
         >
           Edit
         </Link>
-        <form action={deleteAddressBook}>
+        <form action={deleteCalendar}>
           <button type="submit" className={styles.deleteAction}>
             Delete
           </button>
-          <input type="hidden" name="addressId" value={c.id} />
+          <input type="hidden" name="calendarId" value={c.id} />
         </form>
       </div>,
     ];

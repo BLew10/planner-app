@@ -1,7 +1,7 @@
-import ContactForm from "../../advertisement-types/ATForm";
+import ContactForm from "../../contacts/ContactForm";
 import styles from "./page.module.scss";
 
-const UpdateAddressBookPage = async ({
+const UpdateContactPage = async ({
   params,
 }: {
   params: { id: string };
@@ -17,4 +17,4 @@ const UpdateAddressBookPage = async ({
   );
 };
 
-export default UpdateAddressBookPage;
+export default UpdateContactPage;

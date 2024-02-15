@@ -568,3 +568,18 @@ export const CATEGORIES = [
   { value: "219", label: "Water Treatment, Softeners, Systems" },
   { value: "220", label: "Weight Loss" },
 ];
+
+export const YEARS = [
+  {
+    value: String(new Date().getFullYear()),
+    label: String(new Date().getFullYear()),
+  }, // Current year
+  {
+    value: String(new Date().getFullYear() + 1),
+    label: String(new Date().getFullYear() + 1),
+  }, // Next year
+  {
+    value: String(new Date().getFullYear() + 2),
+    label: String(new Date().getFullYear() + 2),
+  }
+];

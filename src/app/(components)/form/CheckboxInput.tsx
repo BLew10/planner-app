@@ -18,14 +18,13 @@ const CheckboxInput = ({
   onChange,
   isReadOnly = false,
 }: CheckboxInputProps) => {
-  console.log("CheckboxInputProps", checked);
   return (
     <div className={styles.inputContainer}>
       <input
         type="checkbox"
         name={name}
         value={value}
-        checked={checked}
+        defaultChecked={checked}
         disabled={isReadOnly}
         onChange={onChange}
       />

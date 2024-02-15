@@ -32,8 +32,6 @@ export const getContactsByAddressBook = async (
     addressBookId = addressBook?.id || "";
   }
 
-  console.log("addressBookId", addressBookId);
-
   try {
     const contacts = await prisma.contact.findMany({
       where: {

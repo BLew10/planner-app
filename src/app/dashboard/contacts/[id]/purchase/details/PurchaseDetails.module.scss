@@ -1,0 +1,61 @@
+@use "/src/styles/mixins.scss" as *;
+
+.container {
+  max-width: 1200px;
+  margin: 100px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.selectsWrapper {
+  display: flex;
+  gap: 20px;
+  max-width: 500px;
+  * {
+    flex: 1;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr); // 6 columns
+  gap: 10px; // 10px gap between rows and columns
+  margin-bottom: 20px; // Adjust as necessary
+}
+
+.quantity,
+.charge {
+  color: var(--primary-yellow);
+}
+
+.submitButton {
+  @include submit-button;
+}
+
+.backArrow {
+  display: flex;
+  gap: 10px;
+  color: var(--primary-blue);
+  grid-column: 1 / 2; /* Places the back button in the first column */
+  justify-self: start; 
+}
+
+
+.title {
+  grid-column: 2 / 3; /* Places the heading in the second (middle) column */
+  justify-self: center; /* Centers the heading within the column */
+  margin: 0; /* Removes default margin */
+  color: var(--text-color);
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr; /* Creates a 3-column layout with the middle column twice as wide */
+  align-items: center;
+  padding: 10px 20px; /* Adjust padding as needed */
+}
+
+.text {
+  color: var(--text-color);
+}

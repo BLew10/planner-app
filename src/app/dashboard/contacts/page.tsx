@@ -6,7 +6,7 @@ import styles from "./page.module.scss";
 import Table from "@/app/(components)/general/Table";
 import { getContactsByAddressBook, ContactTableData } from "@/lib/data/contact";
 import { getAllAddressBooks } from "@/lib/data/addressBook";
-import deleteAddressBook from "@/actions/address-book/deleteAddressBook";
+import deleteConact from "@/actions/contact/deleteContact";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import { CATEGORIES } from "@/lib/constants";
 import { AddressBook } from "@prisma/client";
@@ -104,10 +104,10 @@ const ContactsPage = () => {
         : "",
       <div className={styles.modWrapper}>
         <Link
-          href={`/dashboard/contacts/overview/${c.id}`}
+          href={`/dashboard/contacts/${c.id}/purchase`}
           className={styles.overviewAction}
         >
-          View
+          Add Purchase
         </Link>
         <Link
           href={`/dashboard/contacts/${c.id}`}
@@ -115,7 +115,7 @@ const ContactsPage = () => {
         >
           Edit
         </Link>
-        <form action={deleteAddressBook}>
+        <form action={deleteConact}>
           <button type="submit" className={styles.deleteAction}>
             Delete
           </button>

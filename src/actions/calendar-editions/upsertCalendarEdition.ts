@@ -37,9 +37,7 @@ const upserCalendarEdition = async (formData: FormData) => {
         data,
       });
     } else {
-      // If the data does not have an id, create a new calendar edition
       const result = prisma.$transaction(async (prisma) => {
-        // Create the calendar edition
         const calendarEdition = await prisma.calendarEdition.create({
           data: {
             userId,
@@ -47,7 +45,6 @@ const upserCalendarEdition = async (formData: FormData) => {
           },
         });
 
-        // Generate months for each year from startYear to endYear
         const startYear = new Date().getFullYear();
         const endYear = startYear + 2;
         const monthsData = [];
@@ -60,7 +57,6 @@ const upserCalendarEdition = async (formData: FormData) => {
             });
           }
         }
-        console.log(monthsData);
 
         // Bulk create the month entries
         await prisma.month.createMany({
@@ -80,7 +76,7 @@ const upserCalendarEdition = async (formData: FormData) => {
     };
   }
 
-  // redirect("/dashboard/calendar-editions");
+  redirect("/dashboard/calendar-editions");
 }
 
 

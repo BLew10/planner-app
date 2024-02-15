@@ -5,11 +5,12 @@ import styles from "./CheckboxGroup.module.scss";
 interface CheckboxGroupProps {
   name: string;
   options: { label: any; value: any; checked: boolean }[];
+  useGrid?: boolean;
 }
 
-const CheckboxGroup = ({ name, options }: CheckboxGroupProps) => {
+const CheckboxGroup = ({ name, options, useGrid = true }: CheckboxGroupProps) => {
   return (
-    <div className={styles.checkboxGrid}>
+    <div className={`${useGrid ? styles.checkboxGrid : ''}`}>
       {options.map((option, index) => (
         <CheckboxInput
           key={index}
