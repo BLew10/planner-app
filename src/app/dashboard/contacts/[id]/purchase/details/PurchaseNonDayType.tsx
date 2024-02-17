@@ -11,7 +11,6 @@ interface PurchaseNonDayTypeProps {
 
 const PurchaseNonDayType = ({ purchase }: PurchaseNonDayTypeProps) => {
   const monthGroups = Array.from({ length: 12 }).map((_, monthIndex) => {
-    console.log(purchase?.perMonth);
     const options = Array.from({ length: Number(purchase?.perMonth) || 0 }).map(
       (_, index) => ({
         label: `${index + 1}`,
@@ -25,7 +24,7 @@ const PurchaseNonDayType = ({ purchase }: PurchaseNonDayTypeProps) => {
     return (
       <div key={monthIndex}>
         <h4 className={styles.text}>{monthNames[monthIndex]}</h4>
-        <CheckboxGroup name={`month-${monthIndex + 1}`} options={options} useGrid={false}/>
+        <CheckboxGroup name={`adid-${purchase?.advertisementId}-month-${monthIndex+1}`} options={options} useGrid={false}/>
       </div>
     );
   });

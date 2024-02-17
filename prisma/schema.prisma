@@ -94,21 +94,10 @@ model ContactAddress {
 }
 
 model CalendarEdition {
-  id     String  @id @default(uuid())
+  id     String @id @default(uuid())
   userId String
   name   String
-  user   User    @relation(fields: [userId], references: [id])
-  months Month[]
-}
-
-model Month {
-  monthId         Int
-  year            Int
-  editionId       String
-  purchases       AdvertisementPurchase[]
-  calendarEdition CalendarEdition         @relation(fields: [editionId], references: [id])
-
-  @@unique([monthId, year, editionId])
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 model Advertisement {
@@ -132,19 +121,26 @@ model AddressBook {
 }
 
 model AdvertisementPurchase {
-  id              String        @id @default(uuid())
+  id              String         @id @default(uuid())
+  contactId       String
   advertisementId String
-  amount          Int
-  cost            Decimal
+  charge          Decimal
+  quantity        Int
   userId          String
-  monthId         Int
   editionId       String
   year            Int
-  advertisement   Advertisement @relation(fields: [advertisementId], references: [id])
-  user            User          @relation(fields: [userId], references: [id])
-  month           Month         @relation(fields: [monthId, year, editionId], references: [monthId, year, editionId])
-  contact         Contact?      @relation(fields: [contactId], references: [id])
-  contactId       String?
+  Contact         Contact        @relation(fields: [contactId], references: [id])
+  advertisement   Advertisement  @relation(fields: [advertisementId], references: [id])
+  user            User           @relation(fields: [userId], references: [id])
+  purchaseSlots   PurchaseSlot[]
+}
 
-  @@unique([advertisementId, userId, monthId, year])
+model PurchaseSlot {
+  id                      String                @id @default(uuid())
+  advertisementPurchaseId String
+  month                   Int
+  slot                    Int
+  advertisementPurchase   AdvertisementPurchase @relation(fields: [advertisementPurchaseId], references: [id])
+
+  @@unique([advertisementPurchaseId, month, slot])
 }

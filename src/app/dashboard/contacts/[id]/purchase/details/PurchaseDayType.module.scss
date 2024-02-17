@@ -47,6 +47,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      flex-direction: column;
       &:hover {
         background-color: var(--primary-green-dark);
       }
@@ -63,4 +64,11 @@
   text-align: center;
   color: var(--text-white);
   padding: 10px 0;
+}
+
+.tileContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }

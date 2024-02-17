@@ -85,7 +85,7 @@ const Purchase: React.FC<PurchaseProps> = ({
       .map((at): Purchase | null => {
         if (at.id && formData[at.id]?.charge && formData[at.id]?.quantity) {
           return {
-            id: at.id,
+            advertisementId: at.id,
             name: at.name || "",
             quantity: parseInt(formData[at.id]?.quantity || "0", 10),
             charge: parseFloat(formData[at.id]?.charge || "0"),

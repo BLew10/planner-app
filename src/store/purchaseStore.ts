@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 
 export interface Purchase {
   name?: string;
-  id?: string;
+  advertisementId?: string;
   quantity?: number;
   charge?: number;
   isDayType?: boolean;

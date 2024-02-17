@@ -44,24 +44,6 @@ const upserCalendarEdition = async (formData: FormData) => {
             name: data.name,
           },
         });
-
-        const startYear = new Date().getFullYear();
-        const endYear = startYear + 2;
-        const monthsData = [];
-        for (let year = startYear; year <= endYear; year++) {
-          for (let monthId = 0; monthId <= 11; monthId++) {
-            monthsData.push({
-              monthId,
-              year,
-              editionId: calendarEdition.id,
-            });
-          }
-        }
-
-        // Bulk create the month entries
-        await prisma.month.createMany({
-          data: monthsData,
-        });
       });
     }
   } catch (error: any) {
