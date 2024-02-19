@@ -1,3 +1,8 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+
 :root {
 --primary-yellow:rgb(253, 178, 8);
 --primary-yellow-opacity: rgba(253, 178, 8, 0.5);

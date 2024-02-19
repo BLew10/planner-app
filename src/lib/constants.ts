@@ -573,13 +573,28 @@ export const YEARS = [
   {
     value: String(new Date().getFullYear()),
     label: String(new Date().getFullYear()),
-  }, // Current year
+  },
   {
     value: String(new Date().getFullYear() + 1),
     label: String(new Date().getFullYear() + 1),
-  }, // Next year
+  },
   {
     value: String(new Date().getFullYear() + 2),
     label: String(new Date().getFullYear() + 2),
-  }
+  },
+];
+
+export const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];

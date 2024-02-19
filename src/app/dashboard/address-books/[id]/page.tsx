@@ -17,9 +17,9 @@ const UpdateAddressBookPage = async ({
   return (
     <section className={styles.container}>
       <AddressBookForm
-        addressBookName={addressBook?.name}
-        displayLevel={addressBook.displayLevel}
-        id={addressBook.id}
+        addressBookName={addressBook?.name || ""}
+        displayLevel={addressBook.displayLevel || "private"}
+        id={addressBook.id || ""}
       />
     </section>
   );

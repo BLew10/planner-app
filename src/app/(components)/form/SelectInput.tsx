@@ -11,6 +11,7 @@ interface SelectInputProps {
   validate?: (value: string) => string | null;
   options: { label: string | undefined; value: string | undefined }[];
   usesState?: boolean;
+  id?: string;
 }
 
 const SelectInput: React.FC<SelectInputProps> = ({
@@ -20,9 +21,10 @@ const SelectInput: React.FC<SelectInputProps> = ({
   onChange,
   validate,
   options,
+  id,
 }) => {
   const [error, setError] = useState<string | null>(null);
-  const [valueState, setValueState] = useState<string | null>(value || options[0].value || null);
+  const [valueState, setValueState] = useState<string | null>(value || options[0]?.value || null);
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     if (validate) {
@@ -41,11 +43,12 @@ const SelectInput: React.FC<SelectInputProps> = ({
       <select
         className={styles.select}
         name={name}
-        value={valueState || options[0].value}
+        value={valueState || options[0]?.value}
+        id={id}
         onChange={(onChange || validate) ? handleChange : e => setValueState(e.target.value)}
       >
         {options.map((option, index) => (
-          <option key={index} value={option.value}>
+          <option key={index} value={option?.value}>
             {option.label}
           </option>
         ))}

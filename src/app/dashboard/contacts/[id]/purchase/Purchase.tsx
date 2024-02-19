@@ -34,13 +34,18 @@ const Purchase: React.FC<PurchaseProps> = ({
 }) => {
   const router = useRouter();
   const purchaseStore = usePurchasesStore();
-  useEffect(() => {
+
+  const savePurchaseData = () => {
     purchaseStore.setPurchaseData({
       purchases: [],
       contactId: contact?.id,
       companyName: contact?.contactContactInformation?.company || "",
     });
-  }, [contact]);
+  }
+  
+  useEffect(() => {
+    savePurchaseData();
+  }, [contact, savePurchaseData]);
 
   const [formData, setFormData] = useState<FormData>(() => {
     if (advertisementTypes) {

@@ -5,7 +5,7 @@
     "md": 768px,
     "lg": 1024px,
     "xl": 1200px,
-    "2xl": 1400px
+    "2xl": 1400px,
   )
 );
 
@@ -79,7 +79,7 @@
 @mixin form-instructions {
   font-size: 1rem;
   margin-bottom: 1rem;
-  color: var(--text-color); 
+  color: var(--text-color);
 }
 
 @mixin label {
@@ -167,4 +167,10 @@
   &:hover {
     background-color: var(--primary-green-dark);
   }
+}
+
+@mixin grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
 }

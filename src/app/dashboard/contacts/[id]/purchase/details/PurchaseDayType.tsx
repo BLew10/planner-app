@@ -55,6 +55,7 @@ const PurchaseDayType: React.FC<PurchaseDayTypeProps> = ({
           type="checkbox"
           name={`adid-${purchase?.advertisementId}-month-${month + 1}`}
           checked={isSelected}
+          defaultChecked={isSelected}
           className={styles.checkbox}
         />
       );

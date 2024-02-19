@@ -1,0 +1,51 @@
+.card {
+  margin: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-shadow: 0 2px 3px #ccc;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+  background-color: var(--primary-color);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  &:hover {
+    box-shadow: 0 4px 6px #ccc;
+  }
+  &Title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--text-white);
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 5px;
+  }
+
+
+  &Body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+.filled {
+  color: var(--primary-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.availableSlots {
+  color: var(--text-white);
+}
+
+.advertisementName {
+  color : var(--text-color);
+  margin-bottom: 5px;
+}

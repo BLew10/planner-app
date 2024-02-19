@@ -9,9 +9,9 @@ import upsertAddressBook from "@/actions/address-book/upsertAddressBook";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 
 interface AddressBookFormProps {
-  addressBookName: string | null;
-  displayLevel: string | null;
-  id?: number;
+  addressBookName?: string | null;
+  displayLevel?: string | null;
+  id?: string | null;
 }
 
 const AddressBookForm = ({

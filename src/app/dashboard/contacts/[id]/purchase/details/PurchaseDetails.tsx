@@ -72,7 +72,7 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
 
         const selectedDates = Array.from(checkboxes).map((checkbox, index) => ({
           month: month + 1,
-          slot: index,
+          slot: index + 1,
           checked: checkbox.checked,
         }));
 

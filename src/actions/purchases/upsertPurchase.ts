@@ -115,5 +115,5 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
       },
     };
   }
-  //   redirect(`/dashboard/contacts/${contactId}`);
+    redirect(`/dashboard`);
 }

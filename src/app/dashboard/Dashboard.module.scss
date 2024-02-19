@@ -1,0 +1,12 @@
+@use "/src/styles/mixins" as *;
+
+.container {
+  width: 100%;
+}
+.monthGrid {
+  @include grid3;
+  width: 100%;
+  text-align: center;
+  justify-items: center;
+  margin-top: 20px;
+}
