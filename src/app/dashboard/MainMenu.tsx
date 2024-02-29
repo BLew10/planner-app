@@ -7,7 +7,8 @@ import {
   MdDateRange,
   MdMenuBook,
   MdLogout,
-  MdOutlineTopic
+  MdOutlineTopic,
+  MdAttachMoney
 } from "react-icons/md";
 
 import styles from "./MainMenu.module.scss";
@@ -36,6 +37,11 @@ const MainMenu = () => {
               icon={MdDashboard}
               label="Dashboard"
               urlPath="/dashboard"
+            />
+            <MenuItem
+              icon={MdAttachMoney}
+              label="Purchases"
+              urlPath="/dashboard/purchases"
             />
             <MenuItem
               icon={MdMenuBook}

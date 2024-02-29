@@ -42,10 +42,10 @@ const Purchase: React.FC<PurchaseProps> = ({
       companyName: contact?.contactContactInformation?.company || "",
     });
   }
-  
+
   useEffect(() => {
     savePurchaseData();
-  }, [contact, savePurchaseData]);
+  }, [contact]);
 
   const [formData, setFormData] = useState<FormData>(() => {
     if (advertisementTypes) {
@@ -104,6 +104,7 @@ const Purchase: React.FC<PurchaseProps> = ({
       purchaseStore.setPurchaseData({
         contactId: contact.id,
         companyName: contact.contactContactInformation?.company || "",
+        
         purchases,
       });
       router.push(`/dashboard/contacts/${contact.id}/purchase/details`);

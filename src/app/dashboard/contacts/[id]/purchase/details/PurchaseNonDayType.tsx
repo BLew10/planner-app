@@ -14,7 +14,7 @@ const PurchaseNonDayType = ({ purchase }: PurchaseNonDayTypeProps) => {
     const options = Array.from({ length: Number(purchase?.perMonth) || 0 }).map(
       (_, index) => ({
         label: `${index + 1}`,
-        value: `${monthIndex + 1}-${index + 1}`,
+        value: "",
         checked: false,
       })
     );

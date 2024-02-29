@@ -1,6 +1,11 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
+interface PurchaseSlot {
+  date: Date;
+  slot: number;
+}
+
 export interface Purchase {
   name?: string;
   advertisementId?: string;
@@ -17,6 +22,12 @@ export interface Purchase {
 export interface PurchaseData {
   contactId?: string;
   companyName?: string;
+  year?: string;
+  calendarId?: string;
+  paymentStartDate?: Date;
+  paymentEndDate?: Date;
+  amountOwed?: number;
+  paymentFrequency?: number;
   purchases?: (Purchase | null)[] | null;
 }
 

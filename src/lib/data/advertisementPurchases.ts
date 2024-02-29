@@ -98,6 +98,7 @@ export interface PurchaseSlot {
   advertisementId?: string | null;
   companyName?: string | null;
   contactId?: string | null;
+  date?: Date | null;
 }
 
 export const getPurchasesByMonthCalendarIdAndYear = async (monthIndex: number, calendarId: string, year: number): Promise<PurchaseSlot[] | null> => {
@@ -119,6 +120,7 @@ export const getPurchasesByMonthCalendarIdAndYear = async (monthIndex: number, c
     select: {
       id: true,
       slot: true,
+      date: true,
       advertisementPurchase: {
         select: {
           advertisement: {
@@ -146,6 +148,7 @@ export const getPurchasesByMonthCalendarIdAndYear = async (monthIndex: number, c
     return {
       id: purchase.id,
       slot: purchase.slot,
+      date: purchase.date,
       advertisementName: purchase.advertisementPurchase.advertisement.name,
       advertisementId: purchase.advertisementPurchase.advertisement.id,
       companyName: purchase.advertisementPurchase?.Contact?.contactContactInformation?.company,

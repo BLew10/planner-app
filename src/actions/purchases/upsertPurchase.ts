@@ -8,10 +8,18 @@ export interface UpsertPurchaseData {
   year: string;
   calendarId: string;
   contactId: string;
+  startDate: Date;
+  endDate: Date;
+  frequency: number;
   purchaseData: Record<
     string,
     {
-      selectedDates: { month: number; slot: number; checked: boolean }[];
+      selectedDates: {
+        month: number;
+        slot: number;
+        checked?: boolean;
+        date: Date | null;
+      }[];
       charge?: number;
       quantity?: number;
     }
@@ -19,7 +27,6 @@ export interface UpsertPurchaseData {
 }
 
 export async function upsertPurchase(data: UpsertPurchaseData) {
-  console.log("Upserting purchase", data);
   const session = await auth();
   if (!session) {
     return {
@@ -32,9 +39,57 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
   }
   const userId = session.user?.id;
 
-  const { year, calendarId, contactId, purchaseData } = data;
+  const { year, calendarId, contactId, purchaseData, frequency, startDate, endDate} = data;
   try {
     const result = await prisma.$transaction(async (prisma) => {
+
+      const amountOwed = Object.values(purchaseData).reduce(
+        (acc, { charge = 0 }) => acc + charge,
+        0
+      );
+
+      let purchaseOverview = await prisma.purchaseOverview.findFirst({
+        where: {
+          year: parseInt(year),
+          contactId,
+          editionId: calendarId,
+        },
+      });
+
+      if (purchaseOverview) {
+        await prisma.purchaseOverview.update({
+          where: { id: purchaseOverview.id },
+          data: {
+            year: parseInt(year),
+            contactId,
+            editionId: calendarId,
+            amountOwed: amountOwed,
+            paymentStartDate: startDate,
+            paymentEndDate: endDate,
+            paymentsMade: 0,
+            paymentStatus: "Pending",
+            paymentFrequency: frequency,
+            paymentType: "Weekly",
+          },
+        });
+      } else {
+        purchaseOverview = await prisma.purchaseOverview.create({
+          data: {
+            userId,
+            year: parseInt(year),
+            contactId,
+            editionId: calendarId,
+            amountOwed: amountOwed,
+            paymentStartDate: startDate,
+            paymentEndDate: endDate,
+            paymentsMade: 0,
+            paymentStatus: "Pending",
+            paymentFrequency: frequency,
+            paymentType: "Weekly",
+          },
+        });
+      }
+
       for (const [
         advertisementId,
         { selectedDates, charge, quantity },
@@ -42,9 +97,7 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
         let adPurchase = await prisma.advertisementPurchase.findFirst({
           where: {
             advertisementId,
-            year: parseInt(year),
-            contactId,
-            editionId: calendarId,
+            purchaseId: purchaseOverview.id,
           },
         });
 
@@ -60,23 +113,18 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
           adPurchase = await prisma.advertisementPurchase.create({
             data: {
               advertisementId,
-              contactId,
-              userId,
               charge: charge || 0,
-              editionId: calendarId,
-              year: parseInt(year),
               quantity: quantity || 0,
             },
           });
         }
-
 
         // Delete all slots for this purchase and re-add the selected ones
         await prisma.purchaseSlot.deleteMany({
           where: { advertisementPurchaseId: adPurchase.id },
         });
 
-        for (const { month, slot, checked } of selectedDates) {
+        for (const { month, slot, checked, date } of selectedDates) {
           const slotExists = await prisma.purchaseSlot.findFirst({
             where: {
               advertisementPurchaseId: adPurchase.id,
@@ -91,6 +139,7 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
                   advertisementPurchaseId: adPurchase.id,
                   month,
                   slot,
+                  date,
                 },
               });
             }
@@ -104,7 +153,6 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
         }
       }
     });
-    console.log("Upserted purchase", result);
   } catch (error: any) {
     console.error("Error upserting purchase", error);
     return {
@@ -115,5 +163,5 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
       },
     };
   }
-    redirect(`/dashboard`);
+  redirect(`/dashboard`);
 }

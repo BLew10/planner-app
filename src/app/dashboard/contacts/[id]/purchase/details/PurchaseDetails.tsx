@@ -47,7 +47,12 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
     let purchaseData: Record<
       string,
       {
-        selectedDates: { month: number; slot: number; checked: boolean }[];
+        selectedDates: {
+          month: number;
+          slot: number;
+          checked: boolean;
+          date: Date | null;
+        }[];
         charge?: number;
         quantity?: number;
       }
@@ -68,12 +73,12 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
         const checkboxes = document.getElementsByName(
           `adid-${advertisementId}-month-${month + 1}`
         ) as NodeListOf<HTMLInputElement>;
-        console.log(checkboxes);
 
         const selectedDates = Array.from(checkboxes).map((checkbox, index) => ({
           month: month + 1,
           slot: index + 1,
           checked: checkbox.checked,
+          date: checkbox.value != "" ? new Date(checkbox.value) : null,
         }));
 
         purchaseData[advertisementId].selectedDates.push(
@@ -86,6 +91,9 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
       contactId: id as string,
       year: selectedYear,
       calendarId: selectedCalendar,
+      startDate: new Date(),
+      endDate: new Date(),
+      frequency: 0,
       purchaseData,
     };
     upsertPurchase(data);
@@ -160,7 +168,10 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
               <span className={styles.quantity}>{purchase?.quantity}</span>
             </h4>
             <div className={styles.grid}>
-              <PurchaseNonDayType key={purchase?.advertisementId} purchase={purchase} />
+              <PurchaseNonDayType
+                key={purchase?.advertisementId}
+                purchase={purchase}
+              />
             </div>
           </div>
         );

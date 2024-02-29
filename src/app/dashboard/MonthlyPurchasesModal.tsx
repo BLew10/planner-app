@@ -54,12 +54,15 @@ export default function MonthlyPurchasesModal({
   const renderPurchases = () => {
     return Object.entries(groupedPurchases).map(([adId, purchases]) => {
       const ad = advertisements?.find((ad) => ad.id === adId);
+    
       return (
         <div key={adId}>
           <h4 className={styles.adName}>{ad?.name}</h4>
           {purchases.map((purchase) => (
             <div key={purchase.id} className={styles.purchase}>
-              {purchase.companyName} - Slot: {purchase.slot}
+              {ad?.isDayType && purchase.date ?
+              `${purchase.companyName} - ${purchase.date.toLocaleDateString()}` :
+              `${purchase.companyName} - Slot: ${purchase.slot}`}
             </div>
           ))}
         </div>
@@ -92,10 +95,10 @@ export default function MonthlyPurchasesModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+              <Dialog.Panel className={`w-full max-w-md transform overflow-hidden rounded-2xl p-6 text-left align-middle shadow-xl transition-all ${styles.modal}`}>
                 <Dialog.Title
                   as="h3"
-                  className="text-lg font-medium leading-6 text-gray-900"
+                  className={`text-lg font-medium leading-6 text-gray-900 ${styles.title}`}
                 >
                   Purchases for {MONTHS[monthIndex]} {year}
                 </Dialog.Title>
@@ -107,7 +110,7 @@ export default function MonthlyPurchasesModal({
                     className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                     onClick={closeModal}
                   >
-                    Got it, thanks!
+                    Close
                   </button>
                 </div>
               </Dialog.Panel>
