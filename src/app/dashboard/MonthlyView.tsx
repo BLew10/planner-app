@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { MONTHS } from "@/lib/constants";
 import { Advertisement } from "@prisma/client";
-import { PurchaseSlotDetails } from "@/lib/data/advertisementPurchases";
+import { PurchaseSlotDetails } from "@/lib/data/purchase";
 import styles from "./MonthlyView.module.scss";
 import { MdDoneAll } from "react-icons/md";
 import MonthlyPurchasesModal from "./MonthlyPurchasesModal";
@@ -80,7 +80,7 @@ const MonthlyView: React.FC<MonthlyViewProps> = ({
       <MonthlyPurchasesModal
         isOpen={openModal}
         closeModal={() => setOpenModal(false)}
-        monthIndex={monthIndex+1}
+        monthIndex={monthIndex}
         calendarId={calendarId}
         year={year}
         advertisements={advertisements}

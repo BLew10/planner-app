@@ -90,10 +90,13 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
         });
       }
 
+      console.log(purchaseData);
       for (const [
         advertisementId,
         { selectedDates, charge, quantity },
       ] of Object.entries(purchaseData)) {
+        console.log(advertisementId);
+        console.log(selectedDates);
         let adPurchase = await prisma.advertisementPurchase.findFirst({
           where: {
             advertisementId,
@@ -113,6 +116,7 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
           adPurchase = await prisma.advertisementPurchase.create({
             data: {
               advertisementId,
+              purchaseId: purchaseOverview.id,
               charge: charge || 0,
               quantity: quantity || 0,
             },
@@ -136,6 +140,7 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
             if (!slotExists) {
               await prisma.purchaseSlot.create({
                 data: {
+                  purchaseId: purchaseOverview.id,
                   advertisementPurchaseId: adPurchase.id,
                   month,
                   slot,

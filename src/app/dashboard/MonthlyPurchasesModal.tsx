@@ -1,8 +1,8 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useEffect, useState } from "react";
-import { getPurchasesByMonthCalendarIdAndYear } from "@/lib/data/advertisementPurchases";
+import { getPurchasesByMonthCalendarIdAndYear } from "@/lib/data/purchase";
 import { Advertisement } from "@prisma/client";
-import { PurchaseSlot } from "@/lib/data/advertisementPurchases";
+import { PurchaseSlot } from "@/lib/data/purchase";
 import { MONTHS } from "@/lib/constants";
 import styles from "./MonthlyPurchasesModal.module.scss";
 
@@ -30,7 +30,7 @@ export default function MonthlyPurchasesModal({
   useEffect(() => {
     const fetchData = async () => {
       const purchases = await getPurchasesByMonthCalendarIdAndYear(
-        monthIndex,
+        monthIndex+1,
         calendarId,
         year
       );
@@ -52,23 +52,26 @@ export default function MonthlyPurchasesModal({
   }, [monthIndex, calendarId, year]);
 
   const renderPurchases = () => {
+    console.log(groupedPurchases);
     return Object.entries(groupedPurchases).map(([adId, purchases]) => {
       const ad = advertisements?.find((ad) => ad.id === adId);
-    
       return (
         <div key={adId}>
           <h4 className={styles.adName}>{ad?.name}</h4>
           {purchases.map((purchase) => (
             <div key={purchase.id} className={styles.purchase}>
-              {ad?.isDayType && purchase.date ?
-              `${purchase.companyName} - ${purchase.date.toLocaleDateString()}` :
-              `${purchase.companyName} - Slot: ${purchase.slot}`}
+              {ad?.isDayType && purchase.date
+                ? `${
+                    purchase.companyName
+                  } - ${purchase.date.toLocaleDateString()}`
+                : `${purchase.companyName} - Slot: ${purchase.slot}`}
             </div>
           ))}
         </div>
       );
     });
   };
+
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-10" onClose={closeModal}>
@@ -95,14 +98,20 @@ export default function MonthlyPurchasesModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className={`w-full max-w-md transform overflow-hidden rounded-2xl p-6 text-left align-middle shadow-xl transition-all ${styles.modal}`}>
+              <Dialog.Panel
+                className={`w-full max-w-md transform overflow-hidden rounded-2xl p-6 text-left align-middle shadow-xl transition-all ${styles.modal}`}
+              >
                 <Dialog.Title
                   as="h3"
                   className={`text-lg font-medium leading-6 text-gray-900 ${styles.title}`}
                 >
                   Purchases for {MONTHS[monthIndex]} {year}
                 </Dialog.Title>
-                <div className="mt-2">{renderPurchases()}</div>
+                <div className="mt-2">
+                  {groupedPurchases && Object.keys(groupedPurchases).length > 0
+                    ? renderPurchases()
+                    : "No purchases found"}
+                </div>
 
                 <div className="mt-4">
                   <button

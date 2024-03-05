@@ -4,7 +4,7 @@ import React, {useState, useEffect} from "react";
 import styles from "./Dashboard.module.scss";
 import { getAllCalendars } from "@/lib/data/calendarEdition";
 import { getAllAdvertisementTypes } from "@/lib/data/advertisementType";
-import { getAdvertisementPurchasesByYearAndCalendarId } from "@/lib/data/advertisementPurchases";
+import { getAdvertisementPurchasesByYearAndCalendarId } from "@/lib/data/purchase";
 import SelectInput from "../(components)/form/SelectInput";
 import MonthlyView from "./MonthlyView";
 import { MONTHS } from "@/lib/constants";
@@ -22,10 +22,10 @@ const Dashboard = () => {
     const fetchData = async () => {
       const calendars = await getAllCalendars();
       setSelectedCalendar(calendars?.[0]?.id || "");
-      setCalendarData(calendars);
+      setCalendarData(calendars || []);
 
       const advertisementTypes = await getAllAdvertisementTypes();
-      setAdvertisementTypes(advertisementTypes);
+      setAdvertisementTypes(advertisementTypes || []);
     };
 
     fetchData();
@@ -45,14 +45,13 @@ const Dashboard = () => {
         selectedCalendar,
         selectedYear
       );
-      setPurchaseData(purchases);
-      console.log(purchases);
-      console.log(selectedYear);
-      console.log(selectedCalendar);
+      setPurchaseData(purchases || []);
     };
 
     fetchData();
   }, [selectedYear, selectedCalendar]);
+
+  console.log('purchasedata', purchaseData);
 
   return (
     <div className={styles.container}>

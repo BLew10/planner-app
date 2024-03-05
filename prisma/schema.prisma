@@ -136,6 +136,7 @@ model PurchaseOverview {
   paymentType      String
   paymentStatus    String
   paymentsMade     Int
+  purchaseSlots    PurchaseSlot[]
 }
 
 model AdvertisementPurchase {
@@ -156,6 +157,8 @@ model PurchaseSlot {
   slot                    Int
   date                    DateTime?
   advertisementPurchase   AdvertisementPurchase @relation(fields: [advertisementPurchaseId], references: [id])
+  purchaseId              String?
+  purchaseOverview        PurchaseOverview?     @relation(fields: [purchaseId], references: [id])
 
   @@unique([advertisementPurchaseId, month, slot])
 }

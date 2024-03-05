@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma/prisma";
-import { AddressBook, AdvertisementPurchase } from "@prisma/client";
+import { AddressBook } from "@prisma/client";
 import { auth } from "@/auth";
 
 export const getPurchaseById = async (
@@ -11,11 +11,53 @@ export const getPurchaseById = async (
   return null;
 };
 
+export interface PurchaseTableData {
+  id: string;
+  amountOwed: number;
+  contactId: string;
+  companyName: string;
+
+}
 export const getAllPurchases = async (): Promise<
-  Partial<AddressBook>[] | null
+  Partial<PurchaseTableData>[] | null
 > => {
   const session = await auth();
-  return null;
+  if (!session) {
+    return null;
+  }
+
+  const userId = session.user.id;
+
+  const purchases = await prisma.purchaseOverview.findMany({
+    where: {
+        userId,
+    },
+    select: {
+      id: true,
+      amountOwed: true,
+      Contact: {
+          select: {
+              id: true,
+              contactContactInformation: {
+                select: {
+                  company: true,
+                }
+              }
+          }
+      }
+    },
+  });
+  
+  const allPurchases: PurchaseTableData[] = purchases.map((purchase) => {
+    return {
+      id: purchase.id,
+      amountOwed: parseFloat(purchase.amountOwed.toString()) || 0,
+      contactId: purchase.Contact.id,
+      companyName: purchase.Contact?.contactContactInformation?.company || "",
+    }
+  })
+
+  return allPurchases;
 };
 
 export const getAdvertisementPurchasesByContactId = async (
@@ -25,8 +67,7 @@ export const getAdvertisementPurchasesByContactId = async (
   return null;
 };
 
-
- export interface PurchaseByMonth {
+export interface PurchaseByMonth {
   [key: number]: PurchaseSlotDetails[];
 }
 
@@ -44,7 +85,7 @@ export interface PurchaseSlotDetails {
 export const getAdvertisementPurchasesByYearAndCalendarId = async (
   calendarId: string,
   year: number
-): Promise<PurchaseByMonth | null>=> {
+): Promise<PurchaseByMonth | null> => {
   const session = await auth();
   if (!session || !session.user || !calendarId || !year) {
     return null;
@@ -53,10 +94,10 @@ export const getAdvertisementPurchasesByYearAndCalendarId = async (
   const userId = session.user.id;
   const purchases = await prisma.purchaseSlot.findMany({
     where: {
-      advertisementPurchase: {
-        userId,
+      purchaseOverview: {
         year: year,
         editionId: calendarId,
+        userId,
       },
     },
     select: {
@@ -86,8 +127,7 @@ export const getAdvertisementPurchasesByYearAndCalendarId = async (
     }
     acc[month].push(curr);
     return acc;
-  }, {} as { [key: number]: { month: number; slot: number; advertisementPurchase: { advertisement: { name: string, id: string } } }[] });
-
+  }, {} as { [key: number]: { month: number; slot: number; advertisementPurchase: { advertisement: { name: string; id: string } } }[] });
   return purchasesByMonth;
 };
 
@@ -101,7 +141,11 @@ export interface PurchaseSlot {
   date?: Date | null;
 }
 
-export const getPurchasesByMonthCalendarIdAndYear = async (monthIndex: number, calendarId: string, year: number): Promise<PurchaseSlot[] | null> => {
+export const getPurchasesByMonthCalendarIdAndYear = async (
+  monthIndex: number,
+  calendarId: string,
+  year: number
+): Promise<PurchaseSlot[] | null> => {
   const session = await auth();
   if (!session || !session.user || !calendarId || !year) {
     return null;
@@ -111,10 +155,10 @@ export const getPurchasesByMonthCalendarIdAndYear = async (monthIndex: number, c
   const purchases = await prisma.purchaseSlot.findMany({
     where: {
       month: monthIndex,
-      advertisementPurchase: {
-        userId,
-        year: year,
-        editionId: calendarId,
+        purchaseOverview: {
+          userId,
+          year,
+          editionId: calendarId,
       },
     },
     select: {
@@ -129,6 +173,12 @@ export const getPurchasesByMonthCalendarIdAndYear = async (monthIndex: number, c
               id: true,
             },
           },
+        },
+      },
+      purchaseOverview: {
+        select: {
+          year: true,
+          editionId: true,
           Contact: {
             select: {
               id: true,
@@ -151,10 +201,11 @@ export const getPurchasesByMonthCalendarIdAndYear = async (monthIndex: number, c
       date: purchase.date,
       advertisementName: purchase.advertisementPurchase.advertisement.name,
       advertisementId: purchase.advertisementPurchase.advertisement.id,
-      companyName: purchase.advertisementPurchase?.Contact?.contactContactInformation?.company,
-      contactId: purchase.advertisementPurchase.Contact.id,
+      companyName:
+        purchase.purchaseOverview?.Contact?.contactContactInformation?.company,
+      contactId: purchase.purchaseOverview?.Contact.id,
     };
-  })
+  });
 
   return monthData;
-}
+};

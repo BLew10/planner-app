@@ -1,20 +1,20 @@
 import Link from "next/link";
 import styles from "./page.module.scss";
 import Table from "@/app/(components)/general/Table";
-import { getAllCalendars } from "@/lib/data/calendarEdition";
+import { getAllPurchases } from "@/lib/data/purchase";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
-import deleteCalendar from "@/actions/calendar-editions/deleteCalendarEdition";
+import deletePurchase from "@/actions/purchases/deletePurchase";
 
 const PurchasesPage = async () => {
-  const purhcases = await getAllCalendars();
+  const purhcases = await getAllPurchases();
 
   const columns = [
     {
-      name: "Contact",
+      name: "Company Name",
       size: "default",
     },
     {
-      name: "Status",
+      name: "Cost",
       size: "default",
     },
     {
@@ -25,15 +25,16 @@ const PurchasesPage = async () => {
 
   const data = purhcases?.map((p) => {
     return [
-      p.name,
+      p.companyName,
+      p.amountOwed,
       <div className={styles.modWrapper}>
         <Link
-          href={`/dashboard/purchases/${p.id}`}
+          href={`/dashboard/contacts/${p.contactId}/purchase/${p.id}`}
           className={styles.editAction}
         >
           Edit
         </Link>
-        <form action={deleteCalendar}>
+        <form action={deletePurchase}>
           <button type="submit" className={styles.deleteAction}>
             Delete
           </button>
@@ -46,7 +47,7 @@ const PurchasesPage = async () => {
   return (
     <AnimateWrapper>
       <section className={styles.container}>
-        <Table tableName="Calendar Editions" columns={columns} data={data} addPath={'/dashboard/purchases/add'} />
+        <Table tableName="Purchases" columns={columns} data={data} addPath={'/dashboard/contacts'} />
       </section>
     </AnimateWrapper>
   );

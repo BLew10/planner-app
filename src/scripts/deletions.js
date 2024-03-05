@@ -9,3 +9,5 @@ async function deletePurchases() {
     console.error(error);
   }
 }
+
+deletePurchases()
