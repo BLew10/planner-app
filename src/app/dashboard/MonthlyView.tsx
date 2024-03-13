@@ -99,7 +99,7 @@ const MonthlyView: React.FC<MonthlyViewProps> = ({
                   </p>
                 ) : (
                   <p className={styles.availableSlots}>
-                    Available slots: {availableSlots[ad.id || ""]} of{" "}
+                    Available: {availableSlots[ad.id || ""]} of{" "}
                     {ad.perMonth}
                   </p>
                 )}

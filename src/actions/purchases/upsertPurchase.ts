@@ -8,6 +8,7 @@ export interface UpsertPurchaseData {
   year: string;
   calendarId: string;
   contactId: string;
+  purchaseId: string;
   startDate: Date;
   endDate: Date;
   frequency: number;
@@ -39,7 +40,7 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
   }
   const userId = session.user?.id;
 
-  const { year, calendarId, contactId, purchaseData, frequency, startDate, endDate} = data;
+  const { year, calendarId, contactId, purchaseData, frequency, startDate, endDate, purchaseId } = data;
   try {
     const result = await prisma.$transaction(async (prisma) => {
 
@@ -53,10 +54,12 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
           year: parseInt(year),
           contactId,
           editionId: calendarId,
+          id: purchaseId,
         },
       });
 
       if (purchaseOverview) {
+        console.log("updating purchase overview");
         await prisma.purchaseOverview.update({
           where: { id: purchaseOverview.id },
           data: {
@@ -90,13 +93,10 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
         });
       }
 
-      console.log(purchaseData);
       for (const [
         advertisementId,
         { selectedDates, charge, quantity },
       ] of Object.entries(purchaseData)) {
-        console.log(advertisementId);
-        console.log(selectedDates);
         let adPurchase = await prisma.advertisementPurchase.findFirst({
           where: {
             advertisementId,
@@ -105,6 +105,7 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
         });
 
         if (adPurchase) {
+          
           await prisma.advertisementPurchase.update({
             where: { id: adPurchase.id },
             data: {
@@ -129,13 +130,16 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
         });
 
         for (const { month, slot, checked, date } of selectedDates) {
+          console.log({ month, slot, checked, date });
           const slotExists = await prisma.purchaseSlot.findFirst({
             where: {
               advertisementPurchaseId: adPurchase.id,
+              purchaseId: purchaseOverview.id,
               month,
               slot,
             },
           });
+          console.log({ month, slot, checked, date }, slotExists);
           if (checked) {
             if (!slotExists) {
               await prisma.purchaseSlot.create({
@@ -147,6 +151,7 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
                   date,
                 },
               });
+              console.log({ month, slot, checked, date },"created");
             }
           } else {
             if (slotExists) {
@@ -157,6 +162,10 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
           }
         }
       }
+    },
+    {
+      maxWait: 5000, // default: 2000
+      timeout: 10000, // default: 5000
     });
   } catch (error: any) {
     console.error("Error upserting purchase", error);

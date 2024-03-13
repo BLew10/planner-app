@@ -4,11 +4,93 @@ import prisma from "@/lib/prisma/prisma";
 import { AddressBook } from "@prisma/client";
 import { auth } from "@/auth";
 
+
+export interface Purchase {
+  id: string;
+  contactId: string;
+  adPurchases: {
+    id: string;
+    charge: number;
+    quantity: number;
+    advertisement: {
+      id: string;
+      name: string;
+    };
+    slots?: {
+      id: string;
+      slot: number;
+      month: number;
+      date: Date | null;
+    }[]
+  }[];
+}
+
 export const getPurchaseById = async (
-  id: string
-): Promise<Partial<AddressBook> | null> => {
+  purchaseId: string | undefined = '-1',
+  contactId: string | undefined = '-1'
+): Promise<Partial<Purchase> | null> => {
   const session = await auth();
-  return null;
+  if (!session) {
+    return null;
+  }
+
+  const userId = session.user.id;
+
+  const purchase = await prisma.purchaseOverview.findFirst({
+    where: {
+      id: purchaseId,
+      userId,
+      contactId
+    },
+    select: {
+      id: true,
+      adPurchases: {
+        select: {
+          id: true,
+          charge: true,
+          quantity: true,
+          purchaseSlots: {
+            select: {
+              id: true,
+              slot: true,
+              month: true,
+              date: true,
+            }
+          },
+          advertisement: {
+            select: {
+              id: true,
+              name: true,
+            }
+          }
+
+        }
+      }
+    },
+  });
+
+  if (!purchase) {
+    return null;
+  }
+
+  const adPurchases = purchase.adPurchases.map((purchase) => ({
+    id: purchase.id,
+    charge: parseFloat(purchase.charge.toString()),
+    quantity: purchase.quantity,
+    advertisement: {
+      id: purchase.advertisement.id,
+      name: purchase.advertisement.name,
+    },
+    slots: purchase.purchaseSlots
+  }))
+
+  const purchaseOverview: Partial<Purchase> = {
+    id: purchase.id,
+    contactId: contactId,
+    adPurchases: adPurchases,
+  }
+
+  return purchaseOverview;
 };
 
 export interface PurchaseTableData {

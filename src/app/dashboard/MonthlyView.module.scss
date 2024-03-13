@@ -1,15 +1,15 @@
 .card {
   margin: 10px;
-  padding: 10px;
+  padding: 25px;
   border: 1px solid #ccc;
   border-radius: 5px;
   box-shadow: 0 2px 3px #ccc;
-  width: 300px;
+  width: 450px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  text-align: center;
+  text-align: left;
   background-color: var(--primary-color);
   transition: all 0.3s ease;
   cursor: pointer;
@@ -27,9 +27,9 @@
 
 
   &Body {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
   }
 }
 
@@ -37,7 +37,6 @@
   color: var(--primary-green);
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 5px;
 }
 

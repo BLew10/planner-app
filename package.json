@@ -25,6 +25,7 @@
     "react-calendar": "^4.8.0",
     "react-dom": "^18",
     "react-icons": "^5.0.1",
+    "react-loading-icons": "^1.1.0",
     "sass": "^1.70.0",
     "scss": "^0.2.4",
     "zustand": "^4.5.0"

@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./Dashboard.module.scss";
 import { getAllCalendars } from "@/lib/data/calendarEdition";
 import { getAllAdvertisementTypes } from "@/lib/data/advertisementType";
@@ -8,6 +8,8 @@ import { getAdvertisementPurchasesByYearAndCalendarId } from "@/lib/data/purchas
 import SelectInput from "../(components)/form/SelectInput";
 import MonthlyView from "./MonthlyView";
 import { MONTHS } from "@/lib/constants";
+import LoadingSpinner from "../(components)/general/LoadingSpinner";
+import AnimateWrapper from "../(components)/general/AnimateWrapper";
 
 const YEARS = Array.from({ length: 3 }, (_, i) => new Date().getFullYear() + i);
 
@@ -41,58 +43,64 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      setFetching(true);
       const purchases = await getAdvertisementPurchasesByYearAndCalendarId(
         selectedCalendar,
         selectedYear
       );
+      setFetching(false);
       setPurchaseData(purchases || []);
     };
 
     fetchData();
   }, [selectedYear, selectedCalendar]);
 
-  console.log('purchasedata', purchaseData);
-
   return (
-    <div className={styles.container}>
-      <div className={styles.selectWrapper}>
-        <SelectInput
-          name="year"
-          label="Year"
-          value={String(YEARS[0])}
-          onChange={handleYearChange}
-          options={YEARS.map((year) => ({
-            value: String(year),
-            label: String(year),
-          }))}
-        />
-        <SelectInput
-          name="calendar"
-          label="Calendar"
-          value={calendarData?.[0]?.id || ""}
-          onChange={handleCalendarChange}
-          options={
-            calendarData?.map((calendar: any) => ({
-              value: calendar.id,
-              label: calendar.name,
-            })) || []
-          }
-        />
+    <AnimateWrapper>
+      <div className={styles.container}>
+        <div className={styles.selectWrapper}>
+          <SelectInput
+            name="year"
+            label="Year"
+            value={String(YEARS[0])}
+            onChange={handleYearChange}
+            options={YEARS.map((year) => ({
+              value: String(year),
+              label: String(year),
+            }))}
+          />
+          <SelectInput
+            name="calendar"
+            label="Calendar"
+            value={calendarData?.[0]?.id || ""}
+            onChange={handleCalendarChange}
+            options={
+              calendarData?.map((calendar: any) => ({
+                value: calendar.id,
+                label: calendar.name,
+              })) || []
+            }
+          />
+        </div>
+        {fetching ? (
+          <LoadingSpinner />
+        ) : (
+          <div className={styles.monthGrid}>
+            {purchaseData &&
+              MONTHS.map((month, index) => (
+                <MonthlyView
+                  key={month}
+                  monthIndex={index}
+                  purchaseData={purchaseData[index + 1] || null}
+                  advertisements={advertisementTypes}
+                  calendarId={selectedCalendar}
+                  year={selectedYear}
+                />
+              ))}
+          </div>
+        )}
       </div>
-      <div className={styles.monthGrid}>
-        {purchaseData &&
-          MONTHS.map((month, index) => (
-            <MonthlyView
-              key={month}
-              monthIndex={index}
-              purchaseData={purchaseData[index + 1] || null}
-              advertisements={advertisementTypes}
-              calendarId={selectedCalendar}
-              year={selectedYear}
-            />
-          ))}
-      </div>
-    </div>
+    </AnimateWrapper>
   );
 };
 

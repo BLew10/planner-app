@@ -1,23 +1,27 @@
 "use client";
 
 import React from "react";
-import { Purchase } from "@/store/purchaseStore";
+import { AdvertisementPurchase } from "@/store/purchaseStore";
 import styles from "./PurchaseNonDayType.module.scss";
 import CheckboxGroup from "@/app/(components)/form/CheckboxGroup";
 
 interface PurchaseNonDayTypeProps {
-  purchase: Partial<Purchase> | null;
+  purchase: Partial<AdvertisementPurchase> | null;
 }
 
 const PurchaseNonDayType = ({ purchase }: PurchaseNonDayTypeProps) => {
   const monthGroups = Array.from({ length: 12 }).map((_, monthIndex) => {
     const options = Array.from({ length: Number(purchase?.perMonth) || 0 }).map(
-      (_, index) => ({
+      (_, index) => 
+
+      ({
         label: `${index + 1}`,
         value: "",
-        checked: false,
+        checked: purchase?.slots?.some((slot) => slot.month === monthIndex+1 && slot.slot === index + 1) || false,
       })
     );
+
+    console.log(purchase?.slots)
     const monthNames = ["January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"];
 

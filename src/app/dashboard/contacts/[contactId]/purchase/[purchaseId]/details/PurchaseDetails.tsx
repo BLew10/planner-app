@@ -26,7 +26,7 @@ const MONTHS: number[] = Array.from(new Array(12), (val, index) => index);
 
 const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
   const purchaseStore = usePurchasesStore();
-  const { id } = useParams();
+  const { contactId, purchaseId } = useParams();
   const [selectedYear, setSelectedYear] = useState<string>(
     new Date().getFullYear().toString()
   );
@@ -41,7 +41,7 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const purchases = purchaseStore.purchaseData?.purchases;
+    const purchases = purchaseStore.purchaseOverview?.purchases;
     if (!purchases) return;
 
     let purchaseData: Record<
@@ -57,7 +57,6 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
         quantity?: number;
       }
     > = {};
-    console.log(purchases);
 
     purchases.forEach((purchase) => {
       if (!purchase || !purchase.advertisementId) return;
@@ -78,7 +77,7 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
           month: month + 1,
           slot: index + 1,
           checked: checkbox.checked,
-          date: checkbox.value != "" ? new Date(checkbox.value) : null,
+          date: Number.isNaN(Number(checkbox.value)) ? new Date(checkbox.value) : null,
         }));
 
         purchaseData[advertisementId].selectedDates.push(
@@ -88,7 +87,8 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
     });
 
     const data: UpsertPurchaseData = {
-      contactId: id as string,
+      contactId: contactId as string,
+      purchaseId: purchaseId as string,
       year: selectedYear,
       calendarId: selectedCalendar,
       startDate: new Date(),
@@ -104,12 +104,12 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
       <div className={styles.header}>
         <Link
           className={styles.backArrow}
-          href={`/dashboard/contacts/${id}/purchase`}
+          href={`/dashboard/contacts/${contactId}/purchase/${purchaseId}`}
         >
           <MdArrowBack /> Edit Purchase Details
         </Link>
         <h2 className={styles.title}>
-          {purchaseStore.purchaseData?.companyName} Purchase Details{" "}
+          {purchaseStore.purchaseOverview?.companyName} Purchase Details{" "}
         </h2>
       </div>
       <SelectInput
@@ -131,7 +131,7 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
         }
         onChange={handleCalendarChange}
       />
-      {purchaseStore.purchaseData?.purchases?.map((purchase, index) => {
+      {purchaseStore.purchaseOverview?.purchases?.map((purchase, index) => {
         if (purchase?.isDayType) {
           return (
             <div key={`daytype-${index}`}>

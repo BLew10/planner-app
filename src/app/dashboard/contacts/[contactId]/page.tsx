@@ -1,4 +1,4 @@
-import ContactForm from "../../contacts/ContactForm";
+import ContactForm from "../ContactForm";
 import styles from "./page.module.scss";
 
 const UpdateContactPage = async ({

@@ -1,25 +1,28 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
-interface PurchaseSlot {
-  date: Date;
-  slot: number;
+export interface PurchaseSlot {
+  id?: string | null;
+  slot?: number | null;
+  month?: number | null;
+  advertisementName?: string | null;
+  advertisementId?: string | null;
+  companyName?: string | null;
+  contactId?: string | null;
+  date?: Date | null;
 }
 
-export interface Purchase {
+export interface AdvertisementPurchase {
   name?: string;
   advertisementId?: string;
   quantity?: number;
   charge?: number;
   isDayType?: boolean;
   perMonth?: number;
-  months?: {
-    monthIndex?: number;
-    slots?: number[];
-  };
+  slots?: PurchaseSlot[];
 }
 
-export interface PurchaseData {
+export interface PurchaseOverview {
   contactId?: string;
   companyName?: string;
   year?: string;
@@ -28,19 +31,19 @@ export interface PurchaseData {
   paymentEndDate?: Date;
   amountOwed?: number;
   paymentFrequency?: number;
-  purchases?: (Purchase | null)[] | null;
+  purchases?: (AdvertisementPurchase | null)[] | null;
 }
 
 interface PurchasesStore {
-  purchaseData?: PurchaseData | null;
-  setPurchaseData: (data: PurchaseData) => void;
+  purchaseOverview?: PurchaseOverview | null;
+  setPurchaseData: (data: PurchaseOverview) => void;
 }
 
 export const usePurchasesStore = create<PurchasesStore>()(
   persist(
     (set, get) => ({
-      purchaseData: null,
-      setPurchaseData: (data: PurchaseData) => set({ purchaseData: data }),
+      purchaseOverview: null,
+      setPurchaseData: (data: PurchaseOverview) => set({ purchaseOverview: data }),
     }),
     {
       name: "purchase-store",
