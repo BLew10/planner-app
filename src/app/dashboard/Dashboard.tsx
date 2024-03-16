@@ -55,6 +55,14 @@ const Dashboard = () => {
     fetchData();
   }, [selectedYear, selectedCalendar]);
 
+  if (calendarData.length === 0) {
+    return (
+      <div className={styles.noCalendars}>
+        <p>No Calendars Found. Please create a Calendar Edition</p>
+      </div>
+    )
+  }
+
   return (
     <AnimateWrapper>
       <div className={styles.container}>

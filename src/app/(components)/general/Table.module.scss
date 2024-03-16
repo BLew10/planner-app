@@ -18,7 +18,6 @@
   width: 100%;
   background-color: var(--primary-color);
   color: var(--text-color);
-  padding: 20px;
   border-radius: 10px;
   font-size: 0.8rem;
 }
@@ -29,6 +28,7 @@
   max-height: 560px;
   overflow-y: auto;
   overflow-x: auto;
+  padding: 10px;
   &::-webkit-scrollbar {
     width: 10px;
     border-radius: 10px;
@@ -42,6 +42,7 @@
   table-layout: fixed;
   width: 100%;
   position: sticky;
+  padding: 10px;
   top: 0;
   cursor: pointer;
 }
@@ -73,6 +74,7 @@
 .row {
   display: table;
   table-layout: fixed;
+  padding: 20px;
   width: 100%;
 }
 
@@ -87,7 +89,7 @@
 
 .searchWrapper {
   display: flex;
-  width: 400px;
+  width: 500px;
   gap: 20px;
   flex-direction: column;
   margin: 20px 0;

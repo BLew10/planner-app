@@ -23,6 +23,7 @@ const deleteCalendar = async (formData: FormData) => {
       await prisma.calendarEdition.delete({
         where: {
           id: calendarId,
+          userId,
         },
       });
     });

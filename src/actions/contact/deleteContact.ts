@@ -19,12 +19,21 @@ const deleteContact = async (formData: FormData) => {
     const contactId = formData.get("contactId")?.toString() || "-1";
     const userId = session.user?.id;
 
-    await prisma.contact.delete({
-      where: {
-        id: contactId,
-        userId,
-      },
-    });
+    await prisma.$transaction(async (prisma) => {
+      await prisma.contactAddressBook.deleteMany({
+        where: {
+          contactId: contactId,
+        },
+      });
+  
+      await prisma.contact.delete({
+        where: {
+          id: contactId,
+          userId,
+        },
+      });
+    })
+
   } catch (error: any) {
     // Handle any potential errors here
     console.error("Error deleting contact", error);

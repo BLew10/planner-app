@@ -5,6 +5,7 @@ import Link from "next/link";
 import styles from "./Table.module.scss";
 import TextInput from "../form/TextInput";
 import SelectInput from "../form/SelectInput";
+import LoadingSpinner from "./LoadingSpinner";
 
 interface TableProps {
   tableName: string;
@@ -25,6 +26,7 @@ const Table = ({
 }: TableProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState(data);
+  const [fetchingData, setFetchingData] = useState(!data);
   const [filteredColumn, setFilteredColumn] = useState<number | null>(null);
 
   useEffect(() => {
@@ -37,6 +39,7 @@ const Table = ({
             cell.toString().toLowerCase().includes(lowercasedQuery)
           )
     );
+    setFetchingData(false);
     setFilteredData(filtered);
   }, [searchQuery, data, filteredColumn]);
 
@@ -100,6 +103,7 @@ const Table = ({
           </Link>
         )}
       </div>
+      {fetchingData ? <LoadingSpinner /> :
       <table className={`${styles.table}`}>
         <thead className={styles.tableHead}>
           <tr className={styles.row}>
@@ -126,6 +130,7 @@ const Table = ({
           ))}
         </tbody>
       </table>
+      }
     </div>
   );
 };

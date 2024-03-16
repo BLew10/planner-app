@@ -2,6 +2,7 @@
 
 .container {
   width: 100%;
+  padding: 30px;
 }
 .monthGrid {
   @include grid3;
@@ -9,4 +10,25 @@
   text-align: center;
   justify-items: center;
   margin-top: 20px;
+}
+
+
+.selectWrapper {
+  width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.noCalendars {
+  text-align: center;
+  color: var(--text-color);
+  font-weight: bold;
+  margin-top: 20px;
+  font-size: 1.2rem;
+  padding: 20px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

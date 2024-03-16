@@ -36,11 +36,13 @@ export const getContactsByAddressBook = async (
     const contacts = await prisma.contact.findMany({
       where: {
         userId,
-        addressBooks: {
-          some: {
-            id: addressBookId,
+        ...(addressBookId !== "-1" && {
+          addressBooks: {
+            some: {
+              id: addressBookId,
+            },
           },
-        },
+        }),
       },
       select: {
         id: true,

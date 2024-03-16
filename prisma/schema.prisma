@@ -47,13 +47,14 @@ model Contact {
   customerSince             String?
   notes                     String?
   webAddress                String?
-  user                      User?                      @relation(fields: [userId], references: [id])
+  user                      User?                      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   addressBooks              AddressBook[]              @relation("ContactAddressBooks")
   category                  String?
   contactContactInformation ContactContactInformation?
   contactTelecomInformation ContactTelecomInformation?
   contactAddress            ContactAddress?
   purchases                 PurchaseOverview[]
+  ContactAddressBook        ContactAddressBook[]
 }
 
 model ContactContactInformation {
@@ -64,7 +65,7 @@ model ContactContactInformation {
   altContactLastName  String?
   salutation          String?
   company             String?
-  Contact             Contact @relation(fields: [contactId], references: [id])
+  Contact             Contact @relation(fields: [contactId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   contactId           String  @unique
 }
 
@@ -77,7 +78,7 @@ model ContactTelecomInformation {
   email     String?
   cellPhone String?
   homePhone String?
-  Contact   Contact? @relation(fields: [contactId], references: [id])
+  Contact   Contact? @relation(fields: [contactId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   contactId String?  @unique
 }
 
@@ -89,15 +90,16 @@ model ContactAddress {
   state     String?
   zip       String?
   country   String?
-  Contact   Contact? @relation(fields: [contactId], references: [id])
+  Contact   Contact? @relation(fields: [contactId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   contactId String?  @unique
 }
 
 model CalendarEdition {
-  id     String @id @default(uuid())
-  userId String
-  name   String
-  user   User   @relation(fields: [userId], references: [id])
+  id               String             @id @default(uuid())
+  userId           String
+  name             String
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  PurchaseOverview PurchaseOverview[]
 }
 
 model Advertisement {
@@ -108,26 +110,37 @@ model Advertisement {
   perMonth  Int                     @default(0)
   purchases AdvertisementPurchase[]
   userId    String
-  User      User                    @relation(fields: [userId], references: [id])
+  User      User                    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model AddressBook {
-  id           String    @id @default(uuid())
-  name         String
-  displayLevel String?
-  userId       String
-  User         User      @relation(fields: [userId], references: [id])
-  Contacts     Contact[] @relation("ContactAddressBooks")
+  id                 String               @id @default(uuid())
+  name               String
+  displayLevel       String?
+  userId             String
+  User               User                 @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  Contacts           Contact[]            @relation("ContactAddressBooks")
+  ContactAddressBook ContactAddressBook[]
+}
+
+model ContactAddressBook {
+  contactId     String
+  addressBookId String
+  contact       Contact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  addressBook   AddressBook @relation(fields: [addressBookId], references: [id], onDelete: Cascade)
+
+  @@id([contactId, addressBookId])
 }
 
 model PurchaseOverview {
   id               String                  @id @default(uuid())
   contactId        String
-  Contact          Contact                 @relation(fields: [contactId], references: [id])
+  Contact          Contact                 @relation(fields: [contactId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   adPurchases      AdvertisementPurchase[]
   userId           String
-  user             User                    @relation(fields: [userId], references: [id])
+  user             User                    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   editionId        String
+  calendarEdition  CalendarEdition         @relation(fields: [editionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   year             Int
   paymentStartDate DateTime?
   paymentEndDate   DateTime?
@@ -144,9 +157,9 @@ model AdvertisementPurchase {
   advertisementId  String
   charge           Decimal
   quantity         Int
-  advertisement    Advertisement     @relation(fields: [advertisementId], references: [id])
+  advertisement    Advertisement     @relation(fields: [advertisementId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   purchaseId       String?
-  purchaseOverview PurchaseOverview? @relation(fields: [purchaseId], references: [id])
+  purchaseOverview PurchaseOverview? @relation(fields: [purchaseId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   purchaseSlots    PurchaseSlot[]
 }
 
@@ -156,9 +169,9 @@ model PurchaseSlot {
   month                   Int
   slot                    Int
   date                    DateTime?
-  advertisementPurchase   AdvertisementPurchase @relation(fields: [advertisementPurchaseId], references: [id])
+  advertisementPurchase   AdvertisementPurchase @relation(fields: [advertisementPurchaseId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   purchaseId              String?
-  purchaseOverview        PurchaseOverview?     @relation(fields: [purchaseId], references: [id])
+  purchaseOverview        PurchaseOverview?     @relation(fields: [purchaseId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@unique([advertisementPurchaseId, month, slot])
 }

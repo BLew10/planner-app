@@ -14,8 +14,9 @@ interface ContactProps {
 
 const ContactForm = async ({ id }: ContactProps) => {
   const contact = await getContactById(id);
-  const contactAddressBooks = contact?.addressBooks.map((addressBook) => addressBook.id) || [];
-  console.log(contact)
+  const contactAddressBooks =
+    contact?.addressBooks.map((addressBook) => addressBook.id) || [];
+  console.log(contact);
 
   const addressBooks = await getAllAddressBooks();
   const checkboxData = addressBooks
@@ -29,7 +30,7 @@ const ContactForm = async ({ id }: ContactProps) => {
     <AnimateWrapper>
       <h1 className={styles.heading}>{id ? "Edit" : "Add"} Contact</h1>
       <form action={upsertContact} className={styles.form}>
-      {contact && <input type="hidden" name="contactId" value={contact.id} />}
+        {contact && <input type="hidden" name="contactId" value={contact.id} />}
         <div className={styles.formGroup}>
           <h2 className={styles.groupHeader}>Telecom Information</h2>
           <div className={styles.inputGroup}>
@@ -78,14 +79,16 @@ const ContactForm = async ({ id }: ContactProps) => {
             />
           </div>
         </div>
-        {checkboxData && checkboxData?.length > 0 ? (
-          <div className={styles.formGroup}>
-            <h2 className={styles.groupHeader}>Address Books</h2>
-            <CheckboxGroup name="addressBookIds" options={checkboxData}  />
-          </div>
-        ) : (
-          <p>No address books found</p>
-        )}
+
+        <div className={styles.formGroup}>
+          <h2 className={styles.groupHeader}>Address Books</h2>
+          {checkboxData && checkboxData?.length > 0 ? (
+            <CheckboxGroup name="addressBookIds" options={checkboxData} />
+          ) : (
+            <p className={styles.noAddressBooks}>No address books found</p>
+          )}
+        </div>
+
         <div className={styles.formGroup}>
           <h2 className={styles.groupHeader}>Contact Information</h2>
           <div className={styles.inputGroup}>
@@ -191,8 +194,7 @@ const ContactForm = async ({ id }: ContactProps) => {
             rows={4}
             cols={50}
             defaultValue={contact?.notes || ""}
-          >
-            </textarea>
+          ></textarea>
         </div>
         <button type="submit" className={styles.submitButton}>
           Submit

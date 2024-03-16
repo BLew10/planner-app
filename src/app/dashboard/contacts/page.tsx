@@ -11,14 +11,20 @@ import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import { CATEGORIES } from "@/lib/constants";
 import { AddressBook } from "@prisma/client";
 
+const firstOptionAddressBook: Partial<AddressBook> = {
+  id: "-1",
+  name: "All Address Books",
+  displayLevel: "",
+};
+
 const ContactsPage = () => {
   const [contacts, setContacts] = useState<
     Partial<ContactTableData>[] | null
   >();
-  const [addressBookId, setAddressBookId] = useState<string>("");
+  const [addressBookId, setAddressBookId] = useState<string>(firstOptionAddressBook.id || "-1");
   const [addressBooks, setAddressBooks] = useState<
     Partial<AddressBook>[] | null
-  >();
+  >([firstOptionAddressBook]);
 
   const fetchContacts = async (addressBoodId: string) => {
     const contacts = await getContactsByAddressBook(addressBoodId);
@@ -27,13 +33,16 @@ const ContactsPage = () => {
 
   useEffect(() => {
     fetchAddressBooks();
-    console.log(addressBookId);
+  },[])
+
+  useEffect(() => {
     fetchContacts(addressBookId);
   }, [addressBookId]);
 
   const fetchAddressBooks = async () => {
-    const addressBooks = await getAllAddressBooks();
-    setAddressBooks(addressBooks);
+    let userAddressBooks = await getAllAddressBooks();
+    userAddressBooks?.unshift(firstOptionAddressBook)
+    setAddressBooks(userAddressBooks);
   };
 
   const handleAddressBookChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -104,7 +113,7 @@ const ContactsPage = () => {
         : "",
       <div className={styles.modWrapper}>
         <Link
-          href={`/dashboard/contacts/${c.id}/purchase`}
+          href={`/dashboard/contacts/${c.id}/purchase/new`}
           className={styles.overviewAction}
         >
           Add Purchase

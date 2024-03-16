@@ -10,4 +10,17 @@ async function deletePurchases() {
   }
 }
 
-deletePurchases()
+async function deleteContacts() {
+  
+  try {
+    await prisma.contact.deleteMany();
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+deleteContacts();
+// async function deleteAddressBooks() {
+  
+// }
+// deletePurchases()
