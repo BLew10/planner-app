@@ -1,5 +1,6 @@
 import Link from "next/link";
 import styles from "./page.module.scss";
+import { MdCheck, MdOutlineCancel } from "react-icons/md";
 import Table from "@/app/(components)/general/Table";
 import { getAllPurchases } from "@/lib/data/purchase";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
@@ -14,7 +15,19 @@ const PurchasesPage = async () => {
       size: "default",
     },
     {
-      name: "Cost",
+      name: "Amount Owed",
+      size: "default",
+    },
+    {
+      name: "Calendar Edition",
+      size: "default",
+    },
+    {
+      name: "Year",
+      size: "default",
+    },
+    {
+      name: "Payment Scheduled",
       size: "default",
     },
     {
@@ -26,10 +39,25 @@ const PurchasesPage = async () => {
   const data = purhcases?.map((p) => {
     return [
       p.companyName,
-      p.amountOwed,
+      `$${p.amountOwed?.toFixed(2)}`,
+      p.calendarEdition,
+      p.year,
+      <div className={styles.paymentWrapper}>
+        {p.paymentScheduled ?
+          <MdCheck className={styles.paymentScheduled} />
+         : <MdOutlineCancel className={styles.paymentPending} />}
+      </div>,
       <div className={styles.modWrapper}>
+        {!p.paymentScheduled && (
+          <Link
+            href={`/dashboard/payments/add?contactId=${p.contactId}`}
+            className={styles.paymentAction}
+          >
+            Add Payment
+          </Link>
+        )}
         <Link
-          href={`/dashboard/contacts/${p.contactId}/purchase/${p.id}`}
+          href={`/dashboard/purchases/${p.id}?contactId=${p.contactId}`}
           className={styles.editAction}
         >
           Edit
@@ -47,7 +75,12 @@ const PurchasesPage = async () => {
   return (
     <AnimateWrapper>
       <section className={styles.container}>
-        <Table tableName="Purchases" columns={columns} data={data} addPath={'/dashboard/contacts'} />
+        <Table
+          tableName="Purchases"
+          columns={columns}
+          data={data}
+          addPath={"/dashboard/contacts"}
+        />
       </section>
     </AnimateWrapper>
   );

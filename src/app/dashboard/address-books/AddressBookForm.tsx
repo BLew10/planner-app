@@ -43,6 +43,7 @@ const AddressBookForm = ({
         label="Address Book Name"
         value={bookName}
         onChange={handleBookNameChange}
+        isRequired={true}
       />
       <SelectInput
         name="displayLevel"

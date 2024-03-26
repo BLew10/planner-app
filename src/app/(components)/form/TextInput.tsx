@@ -7,6 +7,7 @@ interface TextInputProps {
   name: string | null;
   value?: string | null;
   label: string;
+  subLabel?: string;
   type?: string;
   placeholder?: string;
   pattern?: string;
@@ -23,6 +24,7 @@ const TextInput: React.FC<TextInputProps> = ({
   name,
   value,
   label,
+  subLabel,
   id,
   type = "text",
   placeholder = "",
@@ -53,7 +55,7 @@ const TextInput: React.FC<TextInputProps> = ({
 
   return (
     <div className={styles.inputWrapper}>
-      <label className={styles.label}>{`${label} ${isRequired ? '*' : ''}`}</label>
+      <label className={styles.label}>{`${label} ${isRequired ? '*' : ''}`} {subLabel && <span className={styles.subLabel}>{subLabel}</span>}</label>
       <input
         type={type}
         placeholder={placeholder}

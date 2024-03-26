@@ -568,21 +568,21 @@ export const CATEGORIES = [
   { value: "219", label: "Water Treatment, Softeners, Systems" },
   { value: "220", label: "Weight Loss" },
 ];
+function generateFutureYears() {
+  const currentYear = new Date().getFullYear();
+  const years = [];
 
-export const YEARS = [
-  {
-    value: String(new Date().getFullYear()),
-    label: String(new Date().getFullYear()),
-  },
-  {
-    value: String(new Date().getFullYear() + 1),
-    label: String(new Date().getFullYear() + 1),
-  },
-  {
-    value: String(new Date().getFullYear() + 2),
-    label: String(new Date().getFullYear() + 2),
-  },
-];
+  for (let i = 0; i <= 25; i++) {
+    years.push({
+      value: String(currentYear + i),
+      label: String(currentYear + i),
+    });
+  }
+
+  return years;
+}
+
+export const YEARS = generateFutureYears();
 
 export const MONTHS = [
   "January",
@@ -598,3 +598,63 @@ export const MONTHS = [
   "November",
   "December",
 ];
+
+export const PAYMENT_FREQUENCIES = [
+  {
+    value: "Bi-Weekly",
+    label: "Bi-Weekly",
+  },
+  {
+    value: "Weekly",
+    label: "Weekly",
+  },
+  {
+    value: "Monthly",
+    label: "Monthly",
+  },
+  {
+    value: "Quarterly",
+    label: "Quarterly",
+  },
+  {
+    value: "Bi-Annual",
+    label: "Bi-Annual",
+  },
+]
+
+export type PaymentStatusType = 'Pending' | 'Paid' | 'Late' | 'Refunded' | 'Overdue' | 'Failed' | 'Void' | 'In Progress';
+
+export const PAYMENT_STATUSES = [
+  {
+    value: "Pending",
+    label: "Pending",
+  },
+  {
+    value: "In Progress",
+    label: "In Progress",
+  },
+  {
+    value: "Paid",
+    label: "Paid",
+  },
+  {
+    value: "Late",
+    label: "Late",
+  },
+  {
+    value: "Refunded",
+    label: "Refunded",
+  },
+  {
+    value: "Overdue",
+    label: "Overdue",
+  },
+  {
+    value: "Failed",
+    label: "Failed",
+  },
+  {
+    value: "Void",
+    label: "Void",
+  }
+]

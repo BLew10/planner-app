@@ -8,7 +8,8 @@ import {
   MdMenuBook,
   MdLogout,
   MdOutlineTopic,
-  MdAttachMoney
+  MdAttachMoney,
+  MdOutlinePayments
 } from "react-icons/md";
 
 import styles from "./MainMenu.module.scss";
@@ -37,6 +38,11 @@ const MainMenu = () => {
               icon={MdDashboard}
               label="Dashboard"
               urlPath="/dashboard"
+            />
+            <MenuItem
+              icon={MdOutlinePayments}
+              label="Payments"
+              urlPath="/dashboard/payments"
             />
             <MenuItem
               icon={MdAttachMoney}

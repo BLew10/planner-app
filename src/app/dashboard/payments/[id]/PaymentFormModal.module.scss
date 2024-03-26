@@ -1,0 +1,36 @@
+.modal {
+  background-color: var(--primary-color);
+}
+
+.title {
+  color: var(--text-white);
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 5px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+}
+
+.label {
+  color: var(--text-color);
+  font-weight: bold;
+  font-size: 1rem;
+  margin-bottom: 5px;
+  span {
+    color: var(--text-white);
+  }
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

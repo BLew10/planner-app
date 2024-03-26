@@ -9,9 +9,6 @@ export interface UpsertPurchaseData {
   calendarId: string;
   contactId: string;
   purchaseId: string;
-  startDate: Date;
-  endDate: Date;
-  frequency: number;
   purchaseData: Record<
     string,
     {
@@ -40,7 +37,7 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
   }
   const userId = session.user?.id;
 
-  const { year, calendarId, contactId, purchaseData, frequency, startDate, endDate, purchaseId } = data;
+  const { year, calendarId, contactId, purchaseData, purchaseId } = data;
   try {
     const result = await prisma.$transaction(async (prisma) => {
 
@@ -67,12 +64,6 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
             contactId,
             editionId: calendarId,
             amountOwed: amountOwed,
-            paymentStartDate: startDate,
-            paymentEndDate: endDate,
-            paymentsMade: 0,
-            paymentStatus: "Pending",
-            paymentFrequency: frequency,
-            paymentType: "Weekly",
           },
         });
       } else {
@@ -83,12 +74,6 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
             contactId,
             editionId: calendarId,
             amountOwed: amountOwed,
-            paymentStartDate: startDate,
-            paymentEndDate: endDate,
-            paymentsMade: 0,
-            paymentStatus: "Pending",
-            paymentFrequency: frequency,
-            paymentType: "Weekly",
           },
         });
       }
@@ -167,6 +152,14 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
       maxWait: 5000, // default: 2000
       timeout: 10000, // default: 5000
     });
+
+    return {
+      status: 200,
+      json: {
+        success: true,
+        message: "Purchase upserted successfully",
+      },
+    };
   } catch (error: any) {
     console.error("Error upserting purchase", error);
     return {
@@ -177,5 +170,4 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
       },
     };
   }
-  redirect(`/dashboard`);
 }

@@ -6,12 +6,14 @@ const UpdateContactPage = async ({
 }: {
   params: { id: string };
 }) => {
-  const { id } = params;
-
+  let  { id } = params;
+ if (id === 'add') {
+    id = '';
+  }
   return (
     <section className={styles.container}>
       <ContactForm
-      id={id}
+      id={id=== 'add' ? null : id}
       />
     </section>
   );

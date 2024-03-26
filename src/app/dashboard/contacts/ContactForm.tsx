@@ -9,14 +9,13 @@ import SelectInput from "@/app/(components)/form/SelectInput";
 import { COUNTRIES, STATES, CATEGORIES } from "@/lib/constants";
 
 interface ContactProps {
-  id: string;
+  id: string | null;
 }
 
 const ContactForm = async ({ id }: ContactProps) => {
-  const contact = await getContactById(id);
+  const contact = await getContactById(id as string);
   const contactAddressBooks =
     contact?.addressBooks.map((addressBook) => addressBook.id) || [];
-  console.log(contact);
 
   const addressBooks = await getAllAddressBooks();
   const checkboxData = addressBooks
@@ -96,6 +95,8 @@ const ContactForm = async ({ id }: ContactProps) => {
               name="contactFirstName"
               label="Contact First Name"
               value={contact?.contactContactInformation?.firstName}
+              isRequired={true}
+              title="Contact First Name is required"
             />
             <TextInput
               name="contactLastName"
@@ -125,6 +126,8 @@ const ContactForm = async ({ id }: ContactProps) => {
               name="company"
               label="Company"
               value={contact?.contactContactInformation?.company}
+              isRequired={true}
+              title="Company is required"
             />
           </div>
         </div>

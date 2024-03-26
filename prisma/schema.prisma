@@ -21,6 +21,7 @@ model User {
   Contacts         Contact[]
   Advertisement    Advertisement[]
   PurchaseOverview PurchaseOverview[]
+  Payment          Payment[]
 }
 
 model Account {
@@ -55,6 +56,7 @@ model Contact {
   contactAddress            ContactAddress?
   purchases                 PurchaseOverview[]
   ContactAddressBook        ContactAddressBook[]
+  Payment                   Payment[]
 }
 
 model ContactContactInformation {
@@ -133,23 +135,36 @@ model ContactAddressBook {
 }
 
 model PurchaseOverview {
-  id               String                  @id @default(uuid())
-  contactId        String
-  Contact          Contact                 @relation(fields: [contactId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  adPurchases      AdvertisementPurchase[]
-  userId           String
-  user             User                    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  editionId        String
-  calendarEdition  CalendarEdition         @relation(fields: [editionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  year             Int
-  paymentStartDate DateTime?
-  paymentEndDate   DateTime?
-  amountOwed       Decimal
-  paymentFrequency Int
-  paymentType      String
-  paymentStatus    String
-  paymentsMade     Int
-  purchaseSlots    PurchaseSlot[]
+  id              String                  @id @default(uuid())
+  contactId       String
+  Contact         Contact                 @relation(fields: [contactId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  adPurchases     AdvertisementPurchase[]
+  userId          String
+  user            User                    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  editionId       String
+  calendarEdition CalendarEdition         @relation(fields: [editionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  year            Int
+  amountOwed      Decimal
+  purchaseSlots   PurchaseSlot[]
+  Payment         Payment?                @relation(fields: [paymentId], references: [id])
+  paymentId       String?
+}
+
+model Payment {
+  id                 String             @id @default(uuid())
+  purchases          PurchaseOverview[]
+  totalOwed          Decimal
+  totalPaid          Decimal
+  frequency          String
+  totalPayments      Int
+  startDate          DateTime
+  anticipatedEndDate DateTime
+  status             String
+  paymentsMade       Int                @default(0)
+  contactId          String
+  contact            Contact            @relation(fields: [contactId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId             String
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model AdvertisementPurchase {

@@ -2,15 +2,15 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ContactTableData } from "@/lib/data/contact";
 import { Advertisement } from "@prisma/client";
 import TextInput from "@/app/(components)/form/TextInput";
 import styles from "./Purchase.module.scss";
 import { AdvertisementPurchase, usePurchasesStore } from "@/store/purchaseStore";
 import { Purchase } from "@/lib/data/purchase";
+import { getContactById } from "@/lib/data/contact";
+import { useSearchParams } from "next/navigation";
 
 interface PurchaseProps {
-  contact: Partial<ContactTableData> | null;
   advertisementTypes: Partial<Advertisement>[] | null;
   purchase?: Partial<Purchase> | null;
 }
@@ -18,6 +18,11 @@ interface PurchaseProps {
 interface AdvertisementType {
   id: string;
   name: string;
+}
+
+interface Contact {
+  id: string;
+  companyName: string;
 }
 
 // State to manage each advertisement's input values
@@ -31,32 +36,69 @@ interface FormData {
   };
 }
 const Purchase: React.FC<PurchaseProps> = ({
-  contact,
   advertisementTypes = [],
   purchase = null,
 }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const purchaseStore = usePurchasesStore();
+  const [contact, setContact] = useState<Contact | null>(null);
 
-  const savePurchaseData = () => {
-    purchaseStore.setPurchaseData({
-      purchases: purchase?.adPurchases || [],
-      contactId: contact?.id,
-      companyName: contact?.contactContactInformation?.company || "",
-    });
-  }
 
   useEffect(() => {
-    savePurchaseData();
-  }, [contact, purchase]);
+
+    const savePurchaseData = (contact: Contact) => {
+      console.log(purchase?.adPurchases)
+      console.log(purchaseStore.purchaseOverview?.purchases)
+      let purchases: AdvertisementPurchase[] = [];
+      if (purchase?.adPurchases) {
+        purchases = purchase?.adPurchases
+      } else if (purchaseStore.purchaseOverview?.purchases) {
+        purchases = purchaseStore.purchaseOverview?.purchases as AdvertisementPurchase[];
+      }
+      console.log(purchases);
+      purchaseStore.setPurchaseData({
+        purchases: purchases,
+        contactId: contact.id,
+        companyName: contact?.companyName || "",
+      });
+      // purchaseStore.setPurchaseData({
+      //   purchases: purchase?.adPurchases || purchaseStore.purchaseOverview?.purchases || [],
+      //   contactId: contact.id,
+      //   companyName: contact?.companyName || "",
+      // });
+    }
+
+    const fetchContact = async (contactId: string) => {
+      const contactData = await getContactById(contactId);
+      if (contactData) {
+        const contact = {
+          id: contactData.id,
+          companyName: contactData.contactContactInformation?.company || "",
+        }
+        setContact(contact);
+        savePurchaseData(contact);
+      } else {
+        router.push('/dashboard/contacts');
+      }
+    }
+    const contactId = searchParams?.get("contactId");
+    if (contactId) {
+      fetchContact(contactId);
+    } else {
+      router.push('/dashboard/contacts');
+    }
+  }, [purchase, searchParams]);
 
   const [formData, setFormData] = useState<FormData>(() => {
     if (advertisementTypes) {
-      const adPurchases = purchase?.adPurchases?.reduce(
+      const adPurchases = purchaseStore.purchaseOverview?.purchases?.reduce(
         (acc: Record<string, { quantity: string ; charge: string }>, curr) => {
-          const { advertisement } = curr;
-          if (advertisement) {
-            acc[advertisement.id] = { quantity: curr.quantity.toString(), charge: curr.charge.toString() };
+          if (curr) {
+            const { advertisementId } = curr;
+            if (advertisementId) {
+              acc[advertisementId] = { quantity: curr?.quantity?.toString() || "", charge: curr?.charge?.toString() || "" };
+            }
           }
           return acc;
         },
@@ -131,18 +173,19 @@ const Purchase: React.FC<PurchaseProps> = ({
     if (purchases.length > 0) {
       purchaseStore.setPurchaseData({
         contactId: contact.id,
-        companyName: contact.contactContactInformation?.company || "",
+        companyName: contact.companyName || "",
         purchases,
       });
-      router.push(`/dashboard/contacts/${contact.id}/purchase/${purchase?.id || "new"}/details`);
+      router.push(`/dashboard/purchases/${purchase?.id || "add"}/details?contactId=${contact.id}`);
     }
   };
   return (
     <section className={styles.container}>
       <h2 className={styles.title}>
-        Purchase: {purchaseStore.purchaseOverview?.companyName}{" "}
+        Purchase from <span className={styles.companyName}>{contact?.companyName}</span>
       </h2>
       <form onSubmit={onSubmit} className={styles.form}>
+        <div className={styles.formGroup}>
         {advertisementTypes
           ?.filter((at) => at.id != undefined)
           .map((at) => (
@@ -173,8 +216,9 @@ const Purchase: React.FC<PurchaseProps> = ({
               </div>
             </div>
           ))}
+        </div>
         <button type="submit" className={styles.submitButton}>
-          Submit
+          { purchase?.id ? "Update" : "Create"} 
         </button>
       </form>
     </section>

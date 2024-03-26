@@ -113,10 +113,16 @@ const ContactsPage = () => {
         : "",
       <div className={styles.modWrapper}>
         <Link
-          href={`/dashboard/contacts/${c.id}/purchase/new`}
-          className={styles.overviewAction}
+          href={`/dashboard/purchases/add?contactId=${c.id}`}
+          className={styles.purchaseAction}
         >
           Add Purchase
+        </Link>
+        <Link
+          href={`/dashboard/payments/add?contactId=${c.id}`}
+          className={styles.paymentAction}
+        >
+          Add Payment
         </Link>
         <Link
           href={`/dashboard/contacts/${c.id}`}

@@ -6,7 +6,7 @@ import { Advertisement } from "@prisma/client";
 import { PurchaseSlotDetails } from "@/lib/data/purchase";
 import styles from "./MonthlyView.module.scss";
 import { MdDoneAll } from "react-icons/md";
-import MonthlyPurchasesModal from "./MonthlyPurchasesModal";
+import MonthlyPurchasesModal from "./MonthlyPurchasesModal"
 
 interface MonthlyViewProps {
   monthIndex: number;

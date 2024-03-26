@@ -14,10 +14,17 @@
   flex-direction: column;
 }
 
-.overviewAction {
+.purchaseAction {
   @include overview-link;
   padding: 0.25rem;
 }
+
+.paymentAction {
+  color: var(--primary-blue);
+  padding: 0.25rem;
+  font-weight: 700
+}
+
 .deleteAction {
   @include delete-link;
   padding: 0.25rem;

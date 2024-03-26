@@ -55,7 +55,7 @@ const Table = ({
   return (
     <div className={styles.container}>
       <div className={styles.headerWrapper}>
-        <h1 className={styles.tableName}>{tableName}</h1>
+        <h1 className={styles.tableName}>{tableName} {" "}<span className={styles.resultsTotal}> Results: {data?.length}</span></h1>
       </div>
       <div className={styles.subHeading}>
         <div className={styles.searchWrapper}>

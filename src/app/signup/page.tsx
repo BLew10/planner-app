@@ -7,7 +7,7 @@ export default function SignUpPage() {
   return (
     <div className={styles.homeContainer}>
       <div className={styles.header}>
-        <h2>Calendar Planner</h2>
+        <h2 className={styles.heading}>Calendar Planner</h2>
         <Image
           src="/images/logo.png"
           alt="Calendar Planner Logo"
@@ -16,9 +16,9 @@ export default function SignUpPage() {
         />
       </div>
       <div className={styles.toggleLogin}>
-        <p>Already have an accoutn?</p>
+        <p className={styles.toggleLoginText}>Already have an account?</p>
         <Link href="/" className={styles.toggleLoginButton}>
-          login
+          Login
         </Link>
       </div>
       <div className={styles.componentWrapper}>

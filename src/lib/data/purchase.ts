@@ -1,13 +1,12 @@
 "use server";
 
 import prisma from "@/lib/prisma/prisma";
-import { AddressBook } from "@prisma/client";
+import { AddressBook, Contact, PurchaseOverview, ContactContactInformation, CalendarEdition } from "@prisma/client";
 import { auth } from "@/auth";
 
 
 export interface Purchase {
   id: string;
-  contactId: string;
   adPurchases: {
     id: string;
     charge: number;
@@ -26,8 +25,7 @@ export interface Purchase {
 }
 
 export const getPurchaseById = async (
-  purchaseId: string | undefined = '-1',
-  contactId: string | undefined = '-1'
+  purchaseId: string | undefined = '-1'
 ): Promise<Partial<Purchase> | null> => {
   const session = await auth();
   if (!session) {
@@ -40,7 +38,6 @@ export const getPurchaseById = async (
     where: {
       id: purchaseId,
       userId,
-      contactId
     },
     select: {
       id: true,
@@ -86,7 +83,6 @@ export const getPurchaseById = async (
 
   const purchaseOverview: Partial<Purchase> = {
     id: purchase.id,
-    contactId: contactId,
     adPurchases: adPurchases,
   }
 
@@ -95,13 +91,15 @@ export const getPurchaseById = async (
 
 export interface PurchaseTableData {
   id: string;
+  paymentScheduled: boolean;
   amountOwed: number;
   contactId: string;
   companyName: string;
-
+  year: number;
+  calendarEdition: string;
 }
 export const getAllPurchases = async (): Promise<
-  Partial<PurchaseTableData>[] | null
+  PurchaseTableData[] | null
 > => {
   const session = await auth();
   if (!session) {
@@ -117,6 +115,13 @@ export const getAllPurchases = async (): Promise<
     select: {
       id: true,
       amountOwed: true,
+      year: true,
+      paymentId: true,
+      calendarEdition: {
+        select: {
+          name: true
+        }
+      },
       Contact: {
           select: {
               id: true,
@@ -133,9 +138,12 @@ export const getAllPurchases = async (): Promise<
   const allPurchases: PurchaseTableData[] = purchases.map((purchase) => {
     return {
       id: purchase.id,
+      paymentScheduled: purchase.paymentId ? true : false,
       amountOwed: parseFloat(purchase.amountOwed.toString()) || 0,
       contactId: purchase.Contact.id,
       companyName: purchase.Contact?.contactContactInformation?.company || "",
+      year: purchase.year,
+      calendarEdition: purchase.calendarEdition?.name || ""
     }
   })
 
@@ -291,3 +299,38 @@ export const getPurchasesByMonthCalendarIdAndYear = async (
 
   return monthData;
 };
+
+
+export interface ContactInfo extends Contact {
+  contactContactInformation?: Partial<ContactContactInformation> | null;
+}
+
+export interface PurchaseInfo extends PurchaseOverview {
+  calendarEdition: CalendarEdition;
+}
+
+export const getPurchasesWithoutPayment = async (contactId: string): Promise<PurchaseInfo[] | null> => {
+  const session = await auth();
+  if (!session) {
+    return null;
+  }
+  const userId = session.user.id;
+
+  const purchasesWithoutPayment: PurchaseInfo[] = await prisma.purchaseOverview.findMany({
+    where: {
+      paymentId: null,
+      userId,
+      contactId
+    },
+    include: {
+      calendarEdition: true,
+    }
+  });
+
+  if (!purchasesWithoutPayment || purchasesWithoutPayment.length === 0) {
+    return null;
+  }
+
+
+  return purchasesWithoutPayment;
+}

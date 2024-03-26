@@ -1,0 +1,18 @@
+@use "../../../styles/mixins.scss" as *;
+
+.deleteAction {
+    @include delete-link;
+    padding: 0.25rem;
+  }
+  
+  .editAction {
+    @include edit-link;
+    padding: 0.25rem;
+  }
+
+  .paymentAction {
+    color: var(--primary-blue);
+    padding: 0.25rem;
+    font-weight: 700
+  }
+  
