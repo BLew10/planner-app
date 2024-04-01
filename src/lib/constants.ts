@@ -601,10 +601,6 @@ export const MONTHS = [
 
 export const PAYMENT_FREQUENCIES = [
   {
-    value: "Bi-Weekly",
-    label: "Bi-Weekly",
-  },
-  {
     value: "Weekly",
     label: "Weekly",
   },
@@ -613,12 +609,8 @@ export const PAYMENT_FREQUENCIES = [
     label: "Monthly",
   },
   {
-    value: "Quarterly",
-    label: "Quarterly",
-  },
-  {
-    value: "Bi-Annual",
-    label: "Bi-Annual",
+    value: "Annually",
+    label: "Annually",
   },
 ]
 

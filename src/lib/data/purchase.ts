@@ -174,7 +174,7 @@ export interface PurchaseSlotDetails {
 
 export const getAdvertisementPurchasesByYearAndCalendarId = async (
   calendarId: string,
-  year: number
+  year: string
 ): Promise<PurchaseByMonth | null> => {
   const session = await auth();
   if (!session || !session.user || !calendarId || !year) {
@@ -185,7 +185,7 @@ export const getAdvertisementPurchasesByYearAndCalendarId = async (
   const purchases = await prisma.purchaseSlot.findMany({
     where: {
       purchaseOverview: {
-        year: year,
+        year: Number(year),
         editionId: calendarId,
         userId,
       },
@@ -234,7 +234,7 @@ export interface PurchaseSlot {
 export const getPurchasesByMonthCalendarIdAndYear = async (
   monthIndex: number,
   calendarId: string,
-  year: number
+  year: string
 ): Promise<PurchaseSlot[] | null> => {
   const session = await auth();
   if (!session || !session.user || !calendarId || !year) {
@@ -247,7 +247,7 @@ export const getPurchasesByMonthCalendarIdAndYear = async (
       month: monthIndex,
         purchaseOverview: {
           userId,
-          year,
+          year: Number(year),
           editionId: calendarId,
       },
     },

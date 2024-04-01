@@ -155,6 +155,7 @@ export const parseContactFormData = (
   const contactTelecomInformation: TelecomInfoData = {
     data: {
       phone: formData.get("phoneNumber")?.toString() || "",
+      email: formData.get("email")?.toString() || "",
       extension: formData.get("extension")?.toString() || "",
       altPhone: formData.get("altPhoneNumber")?.toString() || "",
       fax: formData.get("fax")?.toString() || "",
@@ -230,6 +231,7 @@ export const getContactById = async (id: string) => {
         contactTelecomInformation: {
           select: {
             phone: true,
+            email: true,
             extension: true,
             altPhone: true,
             fax: true,

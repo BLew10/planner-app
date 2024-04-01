@@ -13,7 +13,7 @@ interface MonthlyViewProps {
   purchaseData: PurchaseSlotDetails[] | null;
   advertisements: Partial<Advertisement>[] | null;
   calendarId: string;
-  year: number;
+  year: string;
 }
 interface AvailableSlotsResult {
   [advertisementId: string]: number;

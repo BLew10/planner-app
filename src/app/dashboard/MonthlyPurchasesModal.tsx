@@ -12,7 +12,7 @@ interface MonthlyPurchasesModalProps {
   closeModal: () => void;
   monthIndex: number;
   calendarId: string;
-  year: number;
+  year: string;
 }
 
 export default function MonthlyPurchasesModal({

@@ -17,7 +17,6 @@ const deletePurchase = async (formData: FormData) => {
       };
     }
     const paymentId = formData.get("paymentId")?.toString() || "-1";
-
     await prisma.payment.delete({
       where: {
         id: paymentId,
@@ -37,7 +36,7 @@ const deletePurchase = async (formData: FormData) => {
     };
   }
 
-  revalidatePath("/dashboard/purchases");
+  revalidatePath("/dashboard/payments");
 };
 
 export default deletePurchase;

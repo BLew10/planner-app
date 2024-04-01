@@ -30,6 +30,7 @@
     "react-loading-icons": "^1.1.0",
     "sass": "^1.70.0",
     "scss": "^0.2.4",
+    "stripe": "^14.22.0",
     "zustand": "^4.5.0"
   },
   "devDependencies": {

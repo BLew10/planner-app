@@ -72,9 +72,16 @@ const ContactForm = async ({ id }: ContactProps) => {
               label="Web Address"
               type="url"
               placeholder="https://example.com"
-              pattern="^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$
-"
+              pattern="^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$"
               value={contact?.webAddress}
+            />
+            <TextInput
+              name="email"
+              label="Email"
+              type="email"
+              placeholder="john@example.com"
+              pattern="^[\w.%+-]+@[\w.-]+\.[a-zA-Z]{2,4}$"
+              value={contact?.contactTelecomInformation?.email}
             />
           </div>
         </div>

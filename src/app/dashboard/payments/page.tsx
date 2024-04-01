@@ -114,6 +114,7 @@ const PaymentsPage = () => {
   }
 
   const data = payments?.map((p) => {
+    console.log(p);
     return [
       p.companyName,
       `$${Number(p.totalOwed).toFixed(2)}`,

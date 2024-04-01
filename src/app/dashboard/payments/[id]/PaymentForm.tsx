@@ -30,7 +30,7 @@ interface Contact {
 const PaymentForm = ({ id }: PaymentFormProps) => {
   const router = useRouter();
   const [frequency, setFrequency] = useState<string>(
-    PAYMENT_FREQUENCIES[2].value
+    PAYMENT_FREQUENCIES[1].value
   );
   const [contact, setContact] = useState<Contact | null>();
   const [contactPurchases, setContactPurchases] = useState<
@@ -109,20 +109,11 @@ const PaymentForm = ({ id }: PaymentFormProps) => {
           // Add 7 days for each payment
           resultDate.setDate(resultDate.getDate() + 7 * totalPayments);
           break;
-        case "Bi-Weekly":
-          // Add 14 days for each payment
-          resultDate.setDate(resultDate.getDate() + 14 * totalPayments);
-          break;
         case "Monthly":
           resultDate.setMonth(resultDate.getMonth() + totalPayments);
           break;
-        case "Quarterly":
-          // 3 months per quarter
-          resultDate.setMonth(resultDate.getMonth() + 3 * totalPayments);
-          break;
-        case "Bi-Annual":
-          // 6 months per bi-annual period
-          resultDate.setMonth(resultDate.getMonth() + 6 * totalPayments);
+        case "Annually":
+          resultDate.setMonth(resultDate.getMonth() + 12 * totalPayments);
           break;
         default:
           console.warn(`Unhandled frequency: ${frequency}`);
@@ -136,7 +127,9 @@ const PaymentForm = ({ id }: PaymentFormProps) => {
 
   const onContinue = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!contact?.id || !contactPurchases) {
+    console.log(contactPurchases);
+    console.log(contact);
+    if (!contact?.id) {
       return;
     }
 
@@ -148,15 +141,17 @@ const PaymentForm = ({ id }: PaymentFormProps) => {
       Array.from(checkboxes)
         .filter((checkbox) => checkbox.checked)
         .map((checkbox) => checkbox.value);
-    const selectedPurchases = contactPurchases.filter((purchase) =>
+    const selectedPurchases = contactPurchases?.filter((purchase) =>
       selectedPurchasesIds.includes(purchase.id)
-    );
-    const total = checkboxes
+    ) || [];
+
+    const total = checkboxes && selectedPurchasesIds.length > 0
       ? selectedPurchases.reduce(
           (acc, purchase) => acc + Number(purchase.amountOwed),
           0
         )
-      : paymentTotal;
+      : (paymentTotal || 0);
+  
     const paymentData: UpsertPaymentData = {
       paymentId: id || null,
       contactId: contact.id,

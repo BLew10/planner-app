@@ -7,14 +7,13 @@ import { getAllAdvertisementTypes } from "@/lib/data/advertisementType";
 import { getAdvertisementPurchasesByYearAndCalendarId } from "@/lib/data/purchase";
 import SelectInput from "../(components)/form/SelectInput";
 import MonthlyView from "./MonthlyView";
-import { MONTHS } from "@/lib/constants";
+import { MONTHS, YEARS} from "@/lib/constants";
 import LoadingSpinner from "../(components)/general/LoadingSpinner";
 import AnimateWrapper from "../(components)/general/AnimateWrapper";
 
-const YEARS = Array.from({ length: 3 }, (_, i) => new Date().getFullYear() + i);
 
 const Dashboard = () => {
-  const [selectedYear, setSelectedYear] = useState(YEARS[0]);
+  const [selectedYear, setSelectedYear] = useState(YEARS[0].value);
   const [selectedCalendar, setSelectedCalendar] = useState("");
   const [purchaseData, setPurchaseData] = useState<any>([]);
   const [advertisementTypes, setAdvertisementTypes] = useState<any>([]);
@@ -34,7 +33,7 @@ const Dashboard = () => {
   }, []);
 
   const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedYear(Number(e.target.value));
+    setSelectedYear(String(e.target.value));
   };
 
   const handleCalendarChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -72,10 +71,7 @@ const Dashboard = () => {
             label="Year"
             value={String(YEARS[0])}
             onChange={handleYearChange}
-            options={YEARS.map((year) => ({
-              value: String(year),
-              label: String(year),
-            }))}
+            options={YEARS}
           />
           <SelectInput
             name="calendar"
