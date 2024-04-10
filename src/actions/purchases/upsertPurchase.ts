@@ -110,13 +110,12 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
         }
 
         // Delete all slots for this purchase and re-add the selected ones
-        await prisma.purchaseSlot.deleteMany({
+        await prisma.advertisementPurchaseSlot.deleteMany({
           where: { advertisementPurchaseId: adPurchase.id },
         });
 
         for (const { month, slot, checked, date } of selectedDates) {
-          console.log({ month, slot, checked, date });
-          const slotExists = await prisma.purchaseSlot.findFirst({
+          const slotExists = await prisma.advertisementPurchaseSlot.findFirst({
             where: {
               advertisementPurchaseId: adPurchase.id,
               purchaseId: purchaseOverview.id,
@@ -127,7 +126,7 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
           console.log({ month, slot, checked, date }, slotExists);
           if (checked) {
             if (!slotExists) {
-              await prisma.purchaseSlot.create({
+              await prisma.advertisementPurchaseSlot.create({
                 data: {
                   purchaseId: purchaseOverview.id,
                   advertisementPurchaseId: adPurchase.id,
@@ -136,11 +135,10 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
                   date,
                 },
               });
-              console.log({ month, slot, checked, date },"created");
             }
           } else {
             if (slotExists) {
-              await prisma.purchaseSlot.delete({
+              await prisma.advertisementPurchaseSlot.delete({
                 where: { id: slotExists.id },
               });
             }

@@ -109,6 +109,7 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
       purchaseData,
     };
     await upsertPurchase(data);
+    purchaseStore.setPurchaseData(null);
     setShowNavigationModal(true);
   };
 

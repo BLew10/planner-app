@@ -1,10 +1,19 @@
 "use server";
 
-import Stripe from "stripe";
 import { auth } from "@/auth";
+import { PrismaClient } from "@prisma/client";
+import {
+  PrismaClientOptions,
+  DefaultArgs,
+} from "@prisma/client/runtime/library";
 import prisma from "@/lib/prisma/prisma";
 import { Payment } from "@prisma/client";
 import { redirect } from "next/navigation";
+import {
+  findOrCreateStripeCustomer,
+  createStripeSubscriptionSchedule,
+  createStripePrice,
+} from "@/lib/helpers/stripeHelpers";
 
 export interface UpsertPaymentData {
   paymentId?: string | null;
@@ -19,8 +28,6 @@ export interface UpsertPaymentData {
   totalPayments: number;
   paymentsMade: number;
 }
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
-
 // TODO: Send invoices automatically with cron job or webhook
 // await stripe.invoices.sendInvoice(invoiceId);
 export async function upsertPayment(data: UpsertPaymentData) {
@@ -37,122 +44,47 @@ export async function upsertPayment(data: UpsertPaymentData) {
     }
 
     const userId = session.user?.id;
-    let payment: Payment | null = null;
-    let {
-      paymentId,
-      startDate,
-      anticipatedEndDate,
-      status,
-      contactId,
-      totalOwed,
-      totalPaid,
-      totalPayments,
-      paymentsMade,
-      purchasesIds,
-      frequency,
-    } = data;
-    const result = await prisma.$transaction(
-      async (prisma) => {
-        const contact = await prisma.contact.findFirst({
-          where: { id: data.contactId },
-          include: {
-            contactTelecomInformation: true,
-          },
-        });
+    const { frequency } = data;
+    const result = await prisma.$transaction(async (prismaClient) => {
+      const contact = await prismaClient.contact.findFirst({
+        where: { id: data.contactId },
+        include: {
+          contactTelecomInformation: true,
+          contactContactInformation: true,
+        },
+      });
+      if (!contact) {
+        return {
+          status: 404,
+          json: { success: false, message: "Contact not found" },
+        };
+      }
+      const stripeCustomer = await findOrCreateStripeCustomer(contact.contactTelecomInformation?.email || "");
+      if (!stripeCustomer) {
+        return {
+          status: 404,
+          json: { success: false, message: "Stripe customer not found" },
+        };
+      }
 
-        if (!contact) {
-          return {
-            status: 404,
-            json: { success: false, message: "Contact not found" },
-          };
-        }
-
-        if (paymentId) {
-          payment = await prisma.payment.findFirst({
-            where: { id: paymentId },
-          });
-        }
-        if (payment) {
-          // If a paymentId is provided, update the existing payment record
-          payment = await prisma.payment.update({
-            where: { id: payment.id },
-            data: {
-              startDate,
-              anticipatedEndDate,
-              status,
-              contactId,
-              totalOwed,
-              totalPaid,
-              totalPayments,
-              paymentsMade,
-              frequency,
-              userId,
-              purchases: {
-                connect: purchasesIds.map((id) => ({ id })),
-              },
-            },
-          });
-        } else {
-          // If no paymentId, create a new payment record
-          payment = await prisma.payment.create({
-            data: {
-              startDate,
-              frequency,
-              userId,
-              anticipatedEndDate,
-              status,
-              contactId,
-              totalOwed,
-              totalPaid,
-              totalPayments,
-              paymentsMade,
-              purchases: {
-                connect: purchasesIds.map((id) => ({ id })),
-              },
-            },
-          });
-        }
-
-        if (!payment) {
-          throw new Error("Payment not found");
-        }
-        const stripeCustomerId = await findOrCreateStripeCustomer(
-          contact.contactTelecomInformation?.email || ""
-        );
-        // Calculate the invoice amounts and generate dates based on the frequency and total payments
-        const invoiceDates = generateInvoiceDates(
-          data.startDate,
-          data.frequency,
-          data.totalPayments
-        );
-        const amountPerInvoice = Math.round(
-          (data.totalOwed * 100) / data.totalPayments
-        ); // in cents
-
-        // Create the invoices in Stripe
-        if (!payment) {
-          throw new Error("Payment not found");
-        }
-        for (const invoiceDate of invoiceDates) {
-          const { invoiceItem, invoice } = await createStripeInvoice(
-            stripeCustomerId,
-            invoiceDate,
-            amountPerInvoice
-          );
-
-          const stripeInvoice = await prisma.stripeInvoice.create({
-            data: {
-              customerEmail: invoice.customer_email || "",
-              stripeInvoiceId: invoiceItem.id,
-              paymentId: payment.id,
-              paid: false,
-              updatedAt: new Date(),
-              cost: amountPerInvoice,
-              dueDate: invoiceDate,
-            },
-          });
-        }
-        console.log("Payment upserted successfully");
+      const payment = await createPrismaPayment(data, prismaClient, userId);
+      const paymentPerPeriodInCents = Math.ceil((data.totalOwed / data.totalPayments) * 100);
+      const price = await createStripePrice(paymentPerPeriodInCents, frequency, contact.contactContactInformation?.company || "");
+      if (!price) {
+        return {
+          status: 404,
+          json: { success: false, message: "Price not found" },
+        };
+      }
+      const schedule = await createStripeSubscriptionSchedule(stripeCustomer.id, price.id, data.startDate.toISOString().split("T")[0], data.totalPayments);
+      if (!schedule) {
+        return {
+          status: 404,
+          json: { success: false, message: "Schedule not found" },
+        };
+      }
+      await addStripeScheduleIdToPayment(payment.id, schedule.id, prismaClient, userId);
+      console.log("Subscription Schedule created:", schedule.id);
       },
       {
         maxWait: 5000, // default: 2000
@@ -173,66 +105,77 @@ export async function upsertPayment(data: UpsertPaymentData) {
   redirect("/dashboard/payments");
 }
 
-async function findOrCreateStripeCustomer(email: string) {
-  // Attempt to find the customer by email
-  const customers = await stripe.customers.list({ email: email, limit: 1 });
-  if (customers.data.length > 0) {
-    return customers.data[0].id; // Return existing Stripe customer ID
-  } else {
-    // Create a new Stripe customer with this email
-    const newCustomer = await stripe.customers.create({ email: email });
-    return newCustomer.id; // Return new Stripe customer ID
-  }
-}
-
-function generateInvoiceDates(
-  startDate: Date,
-  frequency: string,
-  totalPayments: number
-): Date[] {
-  let dates = [];
-  let currentDate = new Date(startDate);
-
-  for (let i = 0; i < totalPayments; i++) {
-    switch (frequency) {
-      case "Weekly":
-        currentDate.setDate(currentDate.getDate() + 7);
-        break;
-      case "Monthly":
-        currentDate.setMonth(currentDate.getMonth() + 1);
-        break;
-      case "Annually":
-        currentDate.setFullYear(currentDate.getFullYear() + 1);
-        break;
-      default:
-        throw new Error(`Unsupported frequency: ${frequency}`);
-    }
-    dates.push(new Date(currentDate));
-  }
-
-  return dates;
-}
-
-async function createStripeInvoice(
-  stripeCustomerId: string,
-  dueDate: Date,
-  amount: number
+async function createPrismaPayment(
+  paymentData: UpsertPaymentData,
+  prisma: Omit<
+    PrismaClient<PrismaClientOptions, never, DefaultArgs>,
+    "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
+  >,
+  userId: string
 ) {
-
-  const invoice = await stripe.invoices.create({
-    customer: stripeCustomerId,
-    auto_advance: true,
-    collection_method: "send_invoice",
-    due_date: Math.floor(dueDate.getTime() / 1000),
+  const payment: Payment = await prisma.payment.create({
+    data: {
+      startDate: paymentData.startDate,
+      frequency: paymentData.frequency,
+      userId,
+      anticipatedEndDate: paymentData.anticipatedEndDate,
+      status: paymentData.status,
+      contactId: paymentData.contactId,
+      totalOwed: paymentData.totalOwed,
+      totalPaid: paymentData.totalPaid,
+      totalPayments: paymentData.totalPayments,
+      paymentsMade: paymentData.paymentsMade,
+      purchases: {
+        connect: paymentData.purchasesIds.map((id) => ({ id })),
+      },
+    },
   });
+  return payment;
+}
 
-  const invoiceItem = await stripe.invoiceItems.create({
-    customer: stripeCustomerId,
-    amount: amount,
-    currency: "usd",
-    description: "Scheduled payment",
-    invoice: invoice.id,
+async function updatePrismaPayment(
+  paymentId: string,
+  paymentData: UpsertPaymentData,
+  prisma: Omit<
+    PrismaClient<PrismaClientOptions, never, DefaultArgs>,
+    "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
+  >,
+  userId: string
+) {
+  const payment: Payment = await prisma.payment.update({
+    where: { id: paymentId, userId },
+    data: {
+      startDate: paymentData.startDate,
+      frequency: paymentData.frequency,
+      anticipatedEndDate: paymentData.anticipatedEndDate,
+      status: paymentData.status,
+      contactId: paymentData.contactId,
+      totalOwed: paymentData.totalOwed,
+      totalPaid: paymentData.totalPaid,
+      totalPayments: paymentData.totalPayments,
+      paymentsMade: paymentData.paymentsMade,
+      purchases: {
+        connect: paymentData.purchasesIds.map((id) => ({ id })),
+      },
+    },
   });
+  return payment;
+}
 
-  return { invoice, invoiceItem };
+async function addStripeScheduleIdToPayment(
+  paymentId: string,
+  stripeScheduleId: string,
+  prisma: Omit<
+    PrismaClient<PrismaClientOptions, never, DefaultArgs>,
+    "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
+  >,
+  userId: string
+) {
+  const payment: Payment = await prisma.payment.update({
+    where: { id: paymentId, userId },
+    data: {
+      stripeScheduleId,
+    },
+  });
+  return payment;
 }

@@ -14,13 +14,10 @@ interface ContactProps {
 
 const ContactForm = async ({ id }: ContactProps) => {
   const contact = await getContactById(id as string);
-  const contactAddressBooks =
-    contact?.addressBooks.map((addressBook) => addressBook.id) || [];
+  const contactAddressBooks = contact?.addressBooks?.map((addressBook) => addressBook.id) || [];
 
   const addressBooks = await getAllAddressBooks();
-  const checkboxData = addressBooks
-    ?.filter((addressBook) => addressBook.name && addressBook.id)
-    .map((addressBook) => ({
+  const checkboxData = addressBooks?.filter((addressBook) => addressBook.name && addressBook.id).map((addressBook) => ({
       value: addressBook.id,
       label: addressBook.name,
       checked: contactAddressBooks.includes(addressBook.id || ""),
@@ -37,6 +34,10 @@ const ContactForm = async ({ id }: ContactProps) => {
               name="phoneNumber"
               label="Phone Number"
               value={contact?.contactTelecomInformation?.phone || ""}
+              pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+              title="Phone number must be in the format XXX-XXX-XXXX"
+              subLabel="(XXX-XXX-XXXX)"
+              placeholder="123-456-7890"
             />
             <TextInput
               name="extension"
@@ -59,6 +60,8 @@ const ContactForm = async ({ id }: ContactProps) => {
               name="cell"
               label="Cell"
               value={contact?.contactTelecomInformation?.cellPhone}
+              title="Cell must be in the format XXX-XXX-XXXX"
+              placeholder="123-456-7890"
             />
             <TextInput
               name="homePhone"
@@ -81,6 +84,8 @@ const ContactForm = async ({ id }: ContactProps) => {
               type="email"
               placeholder="john@example.com"
               pattern="^[\w.%+-]+@[\w.-]+\.[a-zA-Z]{2,4}$"
+              isRequired={true}
+              title="Email is required"
               value={contact?.contactTelecomInformation?.email}
             />
           </div>

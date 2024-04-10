@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 
-const deletePurchase = async (formData: FormData) => {
+const deletePurchase = async (purchaseId: string) => {
   try {
     const session = await auth();
     if (!session) {
@@ -16,11 +16,10 @@ const deletePurchase = async (formData: FormData) => {
         },
       };
     }
-    const purchaseId = formData.get("purchaseId")?.toString() || "-1";
 
     await prisma.$transaction(async (prisma) => {
 
-      await prisma.purchaseSlot.deleteMany({
+      await prisma.advertisementPurchaseSlot.deleteMany({
         where: {
           purchaseId,
         }

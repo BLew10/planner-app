@@ -55,7 +55,7 @@ const TextInput: React.FC<TextInputProps> = ({
 
   return (
     <div className={styles.inputWrapper}>
-      <label className={styles.label}>{`${label} ${isRequired ? '*' : ''}`} {subLabel && <span className={styles.subLabel}>{subLabel}</span>}</label>
+      <label className={styles.label}>{label} {isRequired && <span className={styles.required}>*</span>} {subLabel && <span className={styles.subLabel}>{subLabel}</span>}</label>
       <input
         type={type}
         placeholder={placeholder}

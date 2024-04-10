@@ -5,10 +5,15 @@ async function deletePurchases() {
   try {
     await prisma.purchaseSlot.deleteMany();
     await prisma.advertisementPurchase.deleteMany();
+    await prisma.purchaseOverview.deleteMany();
+    await prisma.stripeInvoice.deleteMany();
+    await prisma.payment.deleteMany();
+    
   } catch (error) {
     console.error(error);
   }
 }
+
 
 async function deleteContacts() {
   
@@ -19,8 +24,8 @@ async function deleteContacts() {
   }
 }
 
-deleteContacts();
+// c
 // async function deleteAddressBooks() {
   
 // }
-// deletePurchases()
+deletePurchases()

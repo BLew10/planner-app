@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 
-const deleteAddressBook = async (formData: FormData) => {
+const deleteAddressBook = async (addressId: string) => {
   try {
     const session = await auth();
     if (!session) {
@@ -16,7 +16,6 @@ const deleteAddressBook = async (formData: FormData) => {
         },
       };
     }
-    const addressId = formData.get("addressId")?.toString() || "-1";
     const userId = session.user?.id;
 
     await prisma.$transaction(async (prisma) => {

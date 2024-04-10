@@ -9,7 +9,7 @@ import LoadingSpinner from "./LoadingSpinner";
 
 interface TableProps {
   tableName: string;
-  columns: {name: string, size: string}[];
+  columns: {name: string, size: string, wrap?: boolean}[];
   data?: any[][];
   addPath?: string;
   filterOptions?:  { value: string; label: string }[];
@@ -121,8 +121,8 @@ const Table = ({
         <tbody className={styles.tableBody}>
           {filteredData?.map((rowData, rowIndex) => (
             <tr key={rowIndex} className={styles.row}>
-              {rowData.map((cellData, cellIndex) => (
-                <td key={cellIndex} className={`${styles.cell} ${styles[columns[cellIndex].size]}`}>
+              {rowData.filter((cellData, cellIndex) => columns[cellIndex]).map((cellData, cellIndex) => (
+                <td key={cellIndex} className={`${styles.cell} ${styles[columns[cellIndex].size]} ${columns[cellIndex].wrap ? styles.wrap : ""}`}>
                   {cellData}
                 </td>
               ))}

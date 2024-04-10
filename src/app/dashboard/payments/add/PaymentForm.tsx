@@ -18,77 +18,43 @@ import TextInput from "@/app/(components)/form/TextInput";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import PaymentFormModal from "./PaymentFormModal";
 
-interface PaymentFormProps {
-  id: string | null;
-}
-
 interface Contact {
   id: string;
   companyName: string;
 }
 
-const PaymentForm = ({ id }: PaymentFormProps) => {
+const PaymentForm = () => {
   const router = useRouter();
-  const [frequency, setFrequency] = useState<string>(
-    PAYMENT_FREQUENCIES[1].value
-  );
+  const [frequency, setFrequency] = useState<string>(PAYMENT_FREQUENCIES[2].value);
   const [contact, setContact] = useState<Contact | null>();
-  const [contactPurchases, setContactPurchases] = useState<
-    PurchaseInfo[] | null
-  >(null);
-  const [startDate, setStartDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
-  ); // Use current date as default
+  const [contactPurchases, setContactPurchases] = useState<PurchaseInfo[] | null>(null);
+  const [startDate, setStartDate] = useState<string>(new Date().toISOString().split("T")[0]);
   const [totalPayments, setTotalPayments] = useState<number>(12);
   const [paymentTotal, setPaymentTotal] = useState<number>(0);
   const [openPaymentModal, setOpenPaymentModal] = useState<boolean>(false);
-  const [paymentData, setPaymentData] = useState<UpsertPaymentData | null>(
-    null
-  );
+  const [paymentData, setPaymentData] = useState<UpsertPaymentData | null>(null);
   const [endDate, setEndDate] = useState<string>("");
-
   const searchParams = useSearchParams();
 
+
   useEffect(() => {
-    if (id) {
-      const fetchPayment = async () => {
-        const payment = await getPaymentById(id);
-        if (payment) {
-          const contact = {
-            id: payment.contact.id,
-            companyName: payment.contact.contactContactInformation?.company || "",
-          };
-          setContactPurchases(payment.purchases);
-          setContact(contact);
-          setStartDate(payment?.startDate.toISOString().split("T")[0]);
-          setTotalPayments(payment?.totalPayments);
-          setPaymentTotal(Number(payment?.totalOwed));
-          setFrequency(payment?.frequency);
-        }
-      };
-      fetchPayment();
-    }
-  }, [id]);
-  useEffect(() => {
-    if (id) {
-      setPaymentData(null);
-      return;
-    }
     const contactId = searchParams.get("contactId");
     if (!contactId) {
-      router.push(`/dashboard/purchases`);
+      router.push(`/dashboard/contacts`);
       return;
     }
     const fetchPurchases = async (contactId: string) => {
-      const purchases: PurchaseInfo[] | null = await getPurchasesWithoutPayment(
-        contactId
-      );
-      if (purchases && purchases?.length > 0) {
-        setContactPurchases(purchases);
+      const contactPurchases: PurchaseInfo[] | null = await getPurchasesWithoutPayment(contactId);
+      if (contactPurchases && contactPurchases?.length > 0) {
+        setContactPurchases(contactPurchases);
       }
     };
     const fetchContact = async (contactId: string) => {
       const contactData = await getContactById(contactId);
+      if (!contactData) {
+        router.push(`/dashboard/contacts`);
+        return;
+      }
       const contact = {
         id: contactId,
         companyName: contactData?.contactContactInformation?.company || "",
@@ -127,8 +93,6 @@ const PaymentForm = ({ id }: PaymentFormProps) => {
 
   const onContinue = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(contactPurchases);
-    console.log(contact);
     if (!contact?.id) {
       return;
     }
@@ -141,19 +105,15 @@ const PaymentForm = ({ id }: PaymentFormProps) => {
       Array.from(checkboxes)
         .filter((checkbox) => checkbox.checked)
         .map((checkbox) => checkbox.value);
-    const selectedPurchases = contactPurchases?.filter((purchase) =>
-      selectedPurchasesIds.includes(purchase.id)
-    ) || [];
+    const selectedPurchases =
+      contactPurchases?.filter((purchase) =>
+        selectedPurchasesIds.includes(purchase.id)
+      ) || [];
 
-    const total = checkboxes && selectedPurchasesIds.length > 0
-      ? selectedPurchases.reduce(
-          (acc, purchase) => acc + Number(purchase.amountOwed),
-          0
-        )
-      : (paymentTotal || 0);
-  
+    const total = checkboxes && selectedPurchasesIds.length > 0 ? selectedPurchases.reduce((acc, purchase) => acc + Number(purchase.amountOwed),0): paymentTotal || 0;
+
     const paymentData: UpsertPaymentData = {
-      paymentId: id || null,
+      paymentId: null,
       contactId: contact.id,
       purchasesIds: selectedPurchasesIds || [],
       status: "Pending",
@@ -192,7 +152,7 @@ const PaymentForm = ({ id }: PaymentFormProps) => {
           <p className={styles.contact}>
             Contact: <span>{contact?.companyName}</span>
           </p>
-          {!contactPurchases ? (
+          {!contactPurchases || contactPurchases.length === 0 ? (
             <div>
               <p className={styles.noPurchases}>
                 No purchases found. However, you can still create a payment with
@@ -221,7 +181,7 @@ const PaymentForm = ({ id }: PaymentFormProps) => {
                   label: `${purchase.calendarEdition.name} - ${
                     purchase.year
                   } - $${Number(purchase.amountOwed).toFixed(2)}`,
-                  checked: id ? true : false,
+                  checked: false,
                 }))}
               />
             </div>

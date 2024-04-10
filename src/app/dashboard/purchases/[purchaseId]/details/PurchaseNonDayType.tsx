@@ -21,7 +21,6 @@ const PurchaseNonDayType = ({ purchase }: PurchaseNonDayTypeProps) => {
       })
     );
 
-    console.log(purchase?.slots)
     const monthNames = ["January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"];
 

@@ -19,7 +19,7 @@ export const getCalendarById = async (
 
   try {
     const calendar = await prisma.calendarEdition.findFirst({
-      where: { id: calendarId, userId: userId },
+      where: { id: calendarId, userId: userId, isDeleted: false},
       select: {
         id: true,
         name: true,
@@ -47,6 +47,7 @@ export const getAllCalendars = async (): Promise<
     const calendars = await prisma.calendarEdition.findMany({
       where: {
         userId,
+        isDeleted: false
       },
       select: {
         id: true,

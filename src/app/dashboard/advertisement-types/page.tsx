@@ -1,3 +1,6 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "./page.module.scss";
 import Table from "@/app/(components)/general/Table";
@@ -5,9 +8,26 @@ import { getAllAdvertisementTypes } from "@/lib/data/advertisementType";
 import deleteAdvertisementType from "@/actions/advertisement-types/deleteAdvertisementType";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import { MdCheck } from "react-icons/md";
+import DeleteButton from "@/app/(components)/general/DeleteButton";
+import { Advertisement } from "@prisma/client";
 
-const AdvertisementsPage = async () => {
-  const advertisements = await getAllAdvertisementTypes();
+const AdvertisementsPage = () => {
+  const [advertisementTypes, setAdvertisementTypes] = useState<
+  Partial<Advertisement>[] | null
+>();
+  const fetchAdvertisementTypes = async () => {
+    const advertisements = await getAllAdvertisementTypes();
+    setAdvertisementTypes(advertisements);
+  };
+
+  useEffect(() => {
+    fetchAdvertisementTypes();
+  }, []);
+
+  const onAdvertisementTypeDelete = async (adTypeId?: string) => {
+    await deleteAdvertisementType(adTypeId || "-1");
+    await fetchAdvertisementTypes()
+  }
 
   const columns = [
     {
@@ -28,24 +48,23 @@ const AdvertisementsPage = async () => {
     },
   ];
 
-  const data = advertisements?.map((at) => {
+  const data = advertisementTypes?.map((at) => {
     return [
       at.name,
       at.perMonth,
       at.isDayType ? <MdCheck /> : "",
-      <div className={styles.modWrapper}>
+      <div className={styles.modWrapper} key={at.id}>
         <Link
           href={`/dashboard/advertisement-types/${at.id}`}
           className={styles.editAction}
         >
           Edit
         </Link>
-        <form action={deleteAdvertisementType}>
-          <button type="submit" className={styles.deleteAction}>
-            Delete
-          </button>
-          <input type="hidden" name="advertisementId" value={at.id} />
-        </form>
+        <DeleteButton
+          title="Delete Advertisement Type"
+          onDelete={() => onAdvertisementTypeDelete(at.id)}
+          text={`Are you sure you want to delete ${at.name}?`}
+        />
       </div>,
     ];
   });

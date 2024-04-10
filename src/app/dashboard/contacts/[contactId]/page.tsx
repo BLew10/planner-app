@@ -1,20 +1,16 @@
-import ContactForm from "../ContactForm";
+import ContactForm from "./ContactForm";
 import styles from "./page.module.scss";
 
 const UpdateContactPage = async ({
   params,
 }: {
-  params: { id: string };
+  params: { contactId: string };
 }) => {
-  let  { id } = params;
- if (id === 'add') {
-    id = '';
-  }
+  let  { contactId } = params;
+
   return (
     <section className={styles.container}>
-      <ContactForm
-      id={id=== 'add' ? null : id}
-      />
+      <ContactForm id={contactId === 'add' ? null : contactId} />
     </section>
   );
 };

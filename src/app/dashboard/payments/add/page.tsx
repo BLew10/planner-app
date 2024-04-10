@@ -1,12 +1,11 @@
 import PaymentForm from "./PaymentForm";
 import styles from "./page.module.scss";
 
-const PaymentsPage = async ({ params }: { params: { id: string} }) => {
-  let { id } = params;
+const PaymentsPage = async () => {
 
   return (
     <section className={styles.container}>
-      <PaymentForm id={id === 'add' ? null : id} />
+      <PaymentForm  />
     </section>
   );
 };

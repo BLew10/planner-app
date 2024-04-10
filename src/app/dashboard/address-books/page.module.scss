@@ -11,12 +11,8 @@
 
 .modWrapper {
   display: flex;
-  gap: 20px;
-}
-
-.deleteAction {
-  @include delete-link;
-  padding: 0.25rem;
+  flex-direction: column;
+  gap: 5px;
 }
 
 .editAction {

@@ -1,13 +1,26 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "./page.module.scss";
 import { MdCheck, MdOutlineCancel } from "react-icons/md";
 import Table from "@/app/(components)/general/Table";
-import { getAllPurchases } from "@/lib/data/purchase";
+import { getAllPurchases, PurchaseTableData } from "@/lib/data/purchase";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import deletePurchase from "@/actions/purchases/deletePurchase";
+import SimpleModal from "@/app/(components)/general/SimpleModal";
+import DeleteButton from "@/app/(components)/general/DeleteButton";
 
-const PurchasesPage = async () => {
-  const purhcases = await getAllPurchases();
+const PurchasesPage = () => {
+  const [showModal, setShowModal] = useState(false);
+  const [purchases, setPurchases] = useState<PurchaseTableData[] | null>([]);
+  useEffect(() => {
+    const fetchPurchases = async () => {
+      const purhcases = await getAllPurchases();
+      setPurchases(purhcases);
+    };
+    fetchPurchases();
+  }, []);
 
   const columns = [
     {
@@ -36,18 +49,25 @@ const PurchasesPage = async () => {
     },
   ];
 
-  const data = purhcases?.map((p) => {
+  const onDeletePurchase = async (purchaseId: string) => {
+    await deletePurchase(purchaseId);
+    const newPurchases = purchases?.filter((p) => p.id !== purchaseId);
+    setPurchases(newPurchases || null);
+  };
+  const data = purchases?.map((p) => {
     return [
       p.companyName,
       `$${p.amountOwed?.toFixed(2)}`,
       p.calendarEdition,
       p.year,
-      <div className={styles.paymentWrapper}>
-        {p.paymentScheduled ?
+      <div className={styles.paymentWrapper} key={p.id}>
+        {p.paymentScheduled ? (
           <MdCheck className={styles.paymentScheduled} />
-         : <MdOutlineCancel className={styles.paymentPending} />}
+        ) : (
+          <MdOutlineCancel className={styles.paymentPending} />
+        )}
       </div>,
-      <div className={styles.modWrapper}>
+      <div className={styles.modWrapper} key={p.id}>
         {!p.paymentScheduled && (
           <Link
             href={`/dashboard/payments/add?contactId=${p.contactId}`}
@@ -62,27 +82,39 @@ const PurchasesPage = async () => {
         >
           Edit
         </Link>
-        <form action={deletePurchase}>
-          <button type="submit" className={styles.deleteAction}>
-            Delete
-          </button>
-          <input type="hidden" name="purchaseId" value={p.id} />
-        </form>
+          <DeleteButton
+            title="Delete Purchase"
+            text={`Are you sure you want to delete ${p.companyName}'s purchase for ${p.year} ${p.calendarEdition}?`}
+            onDelete={() => {
+              if (p.paymentScheduled) {
+                setShowModal(true);
+                return;
+              }
+              onDeletePurchase(p.id);
+            }}
+          />
       </div>,
     ];
   });
 
   return (
-    <AnimateWrapper>
-      <section className={styles.container}>
-        <Table
-          tableName="Purchases"
-          columns={columns}
-          data={data}
-          addPath={"/dashboard/contacts"}
-        />
-      </section>
-    </AnimateWrapper>
+    <>
+      <SimpleModal
+        isOpen={showModal}
+        closeModal={() => setShowModal(false)}
+        text="Purchase cannot be deleted. This purchase has payments scheduled."
+      />
+      <AnimateWrapper>
+        <section className={styles.container}>
+          <Table
+            tableName="Purchases"
+            columns={columns}
+            data={data}
+            addPath={"/dashboard/contacts"}
+          />
+        </section>
+      </AnimateWrapper>
+    </>
   );
 };
 

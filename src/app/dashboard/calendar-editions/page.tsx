@@ -1,13 +1,32 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "./page.module.scss";
 import Table from "@/app/(components)/general/Table";
 import { getAllCalendars } from "@/lib/data/calendarEdition";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import deleteCalendar from "@/actions/calendar-editions/deleteCalendarEdition";
+import { CalendarEdition } from "@prisma/client";
+import DeleteButton from "@/app/(components)/general/DeleteButton";
 
-const CalendarsPage = async () => {
-  const calendars = await getAllCalendars();
-  console.log(calendars);
+const CalendarsPage = () => {
+  const [calendars, setCalendars] = useState<Partial<CalendarEdition>[] | null>(
+    []
+  );
+  const fetchCalendars = async () => {
+    const calendars = await getAllCalendars();
+    setCalendars(calendars);
+  };
+
+  useEffect(() => {
+    fetchCalendars();
+  }, []);
+
+  const onCalendarDelete = async (adTypeId?: string) => {
+    await deleteCalendar(adTypeId || "-1");
+    await fetchCalendars();
+  };
 
   const columns = [
     {
@@ -23,19 +42,18 @@ const CalendarsPage = async () => {
   const data = calendars?.map((c) => {
     return [
       c.name,
-      <div className={styles.modWrapper}>
+      <div className={styles.modWrapper} key={c.id}>
         <Link
           href={`/dashboard/calendar-types/${c.id}`}
           className={styles.editAction}
         >
           Edit
         </Link>
-        <form action={deleteCalendar}>
-          <button type="submit" className={styles.deleteAction}>
-            Delete
-          </button>
-          <input type="hidden" name="calendarId" value={c.id} />
-        </form>
+        <DeleteButton
+          title="Delete Calendar"
+          onDelete={() => onCalendarDelete(c.id)}
+          text={`Are you sure you want to delete ${c.name}?`}
+        />
       </div>,
     ];
   });
@@ -43,7 +61,12 @@ const CalendarsPage = async () => {
   return (
     <AnimateWrapper>
       <section className={styles.container}>
-        <Table tableName="Calendar Editions" columns={columns} data={data} addPath={'/dashboard/calendar-editions/add'} />
+        <Table
+          tableName="Calendar Editions"
+          columns={columns}
+          data={data}
+          addPath={"/dashboard/calendar-editions/add"}
+        />
       </section>
     </AnimateWrapper>
   );

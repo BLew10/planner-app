@@ -52,7 +52,6 @@ export default function MonthlyPurchasesModal({
   }, [monthIndex, calendarId, year]);
 
   const renderPurchases = () => {
-    console.log(groupedPurchases);
     return Object.entries(groupedPurchases).map(([adId, purchases]) => {
       const ad = advertisements?.find((ad) => ad.id === adId);
       return (

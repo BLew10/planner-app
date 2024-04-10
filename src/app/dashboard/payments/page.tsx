@@ -4,28 +4,125 @@ import React, { useState, useEffect } from "react";
 
 import { PaymentTableData } from "@/lib/data/payment";
 import { PaymentStatusType, PAYMENT_STATUSES } from "@/lib/constants";
-import Link from "next/link";
 import styles from "./page.module.scss";
 import Table from "@/app/(components)/general/Table";
 import { getAllPayments } from "@/lib/data/payment";
 import deletePayment from "@/actions/payments/deletePayment";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
+import DeleteButton from "@/app/(components)/general/DeleteButton";
+import InvoicesModal from "./InvoicesModal";
 
+const defaultColumns = [
+  {
+    name: "Contact",
+    size: "default",
+  },
+  {
+    name: "Total",
+    size: "default",
+  },
+  {
+    name: "Amount Paid",
+    size: "default",
+  },
+  {
+    name: "Status",
+    size: "default",
+  },
+  {
+    name: "Payment Start Date",
+    size: "default",
+  },
+  {
+    name: "Payment End Date",
+    size: "default",
+  },
+  {
+    name: "Next Payment Due Date",
+    size: "default",
+  },
+  {
+    name: "Action",
+    size: "default",
+  },
+];
 const PaymentsPage = () => {
   const [payments, setPayments] = useState<
     Partial<PaymentTableData>[] | null
   >();
+  const [formattedTableData, setFormattedTableData] = useState<any>([]);
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatusType>(
     PAYMENT_STATUSES[0].value as PaymentStatusType
   );
+  const [columnsToDisplay, setColumnsToDisplay] =
+    useState<any[]>(defaultColumns);
+  const [openInvoiceModal, setOpenInvoiceModal] = useState(false);
+  const [paymentId, setPaymentId] = useState("");
 
-  const fetchPayments = async (paymentStatus: PaymentStatusType) => {
-    const payments = await getAllPayments(paymentStatus);
-    setPayments(payments);
+  const onCancelPayment = async (paymentId?: string, scheduleId?: string) => {
+    await deletePayment(paymentId || "-1", scheduleId || "-1");
+    const newPayments = payments?.filter((p) => p.id !== paymentId);
+    setPayments(newPayments || []);
   };
 
   useEffect(() => {
-    fetchPayments(paymentStatus);
+    const mappedPayments = payments?.map((p) => {
+      let rowData: any[] = [
+        p.companyName,
+        `$${Number(p.totalOwed).toFixed(2)}`,
+        `$${Number(p.totalPaid).toFixed(2)}`,
+        p.status,
+        p.startDate?.toISOString().split("T")[0],
+        p.anticipatedEndDate?.toISOString().split("T")[0],
+        getNextPaymentDate(
+          p.startDate || new Date(),
+          p.anticipatedEndDate || new Date(),
+          p.frequency || ""
+        ),
+      ];
+
+      const actionsData = (
+        <div key={p.id} className={styles.modWrapper}>
+          <div
+            className={styles.invoicesButton}
+            onClick={() => handleViewInvoices(p.id as string)}
+          >
+            View Invoices
+          </div>
+          {paymentStatus === "Pending" && typeof p.id == "string" && (
+            <div className={styles.modWrapper} >
+              <DeleteButton
+                onDelete={() => onCancelPayment(p.id, p.stripeScheduleId)}
+                deleteText="Cancel"
+                text={`Are you sure you want to cancel the pending payment for ${
+                  p.companyName
+                } from ${p.startDate?.toISOString().split("T")[0]} to ${
+                  p.anticipatedEndDate?.toISOString().split("T")[0]
+                }`}
+                title="Cancel Payment"
+              />
+            </div>
+          )}
+        </div>
+      );
+      rowData.push(actionsData);
+
+      return rowData;
+    });
+    setFormattedTableData(mappedPayments || []);
+  }, [payments]);
+
+  const handleViewInvoices = (paymentId: string) => {
+    setOpenInvoiceModal(true);
+    setPaymentId(paymentId);
+  };
+
+  useEffect(() => {
+    const paymentStatusChanged = async () => {
+      const payments = await getAllPayments(paymentStatus);
+      setPayments(payments);
+    };
+    paymentStatusChanged();
   }, [paymentStatus]);
 
   const handlePaymentStatusChange = (
@@ -33,41 +130,6 @@ const PaymentsPage = () => {
   ) => {
     setPaymentStatus(e.target.value as PaymentStatusType);
   };
-
-  const columns = [
-    {
-      name: "Contact",
-      size: "default",
-    },
-    {
-      name: "Total",
-      size: "default",
-    },
-    {
-      name: "Amount Paid",
-      size: "default",
-    },
-    {
-      name: "Status",
-      size: "default",
-    },
-    {
-      name: "Payment Start Date",
-      size: "default",
-    },
-    {
-      name: "Payment End Date",
-      size: "default",
-    },
-    {
-      name: "Next Payment Due Date",
-      size: "default",
-    },
-    {
-      name: "Actions",
-      size: "default",
-    },
-  ];
 
   function getNextPaymentDate(
     startDate: Date,
@@ -113,51 +175,25 @@ const PaymentsPage = () => {
     return nextPaymentDate.toISOString().split("T")[0];
   }
 
-  const data = payments?.map((p) => {
-    console.log(p);
-    return [
-      p.companyName,
-      `$${Number(p.totalOwed).toFixed(2)}`,
-      `$${Number(p.totalPaid).toFixed(2)}`,
-      p.status,
-      p.startDate?.toISOString().split("T")[0],
-      p.anticipatedEndDate?.toISOString().split("T")[0],
-      getNextPaymentDate(
-        p.startDate || new Date(),
-        p.anticipatedEndDate || new Date(),
-        p.frequency || ""
-      ),
-      <div className={styles.modWrapper}>
-        {p.status === "Pending" && (
-          <Link
-            href={`/dashboard/payments/${p.id}`}
-            className={styles.editAction}
-          >
-            Edit
-          </Link>
-        )}
-        <form action={deletePayment}>
-          <button type="submit" className={styles.deleteAction}>
-            Delete
-          </button>
-          <input type="hidden" name="paymentId" value={p.id} />
-        </form>
-      </div>,
-    ];
-  });
-
   return (
-    <AnimateWrapper>
-      <section className={styles.container}>
-        <Table
-          tableName="Payments"
-          columns={columns}
-          data={data}
-          filterOptions={PAYMENT_STATUSES}
-          handleFilterChange={handlePaymentStatusChange}
-        />
-      </section>
-    </AnimateWrapper>
+    <>
+      <InvoicesModal
+        isOpen={openInvoiceModal}
+        closeModal={() => setOpenInvoiceModal(false)}
+        paymentId={paymentId}
+      />
+      <AnimateWrapper>
+        <section className={styles.container}>
+          <Table
+            tableName="Payments"
+            columns={columnsToDisplay}
+            data={formattedTableData}
+            filterOptions={PAYMENT_STATUSES}
+            handleFilterChange={handlePaymentStatusChange}
+          />
+        </section>
+      </AnimateWrapper>
+    </>
   );
 };
 

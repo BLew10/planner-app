@@ -43,9 +43,7 @@ const ATForm = ({ id }: ATProps) => {
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsDayType(e.target.checked);
-    console.log(e.target.checked);
     if (e.target.checked) {
-      console.log("setting to 35");
       setQuantityPerMonth("35");
     }
   };
@@ -67,13 +65,13 @@ const ATForm = ({ id }: ATProps) => {
           Use this form to either add a new advertisement type or edit an
           existing one.
           <p className={styles.subInstructions}>
-            The "Quantity per Month" field indicates the total number of this
-            advertisement type that can be used each month.
+            {`The "Quantity per Month" field indicates the total number of this
+            advertisement type that can be used each month.`}
           </p>
           <p className={styles.subInstructions}>
-            For "Day Type" advertisements, this quantity is automatically set to
+            {`For "Day Type" advertisements, this quantity is automatically set to
             35 and cannot be altered, reflecting the fixed availability of
-            day-specific slots within a month.
+            day-specific slots within a month.`}
           </p>
         </div>
         <TextInput

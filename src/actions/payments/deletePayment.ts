@@ -3,8 +3,13 @@
 import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { cancelStripeSchedule } from "@/lib/helpers/stripeHelpers";
+import { PaymentStatusType } from "@/lib/constants";
+import Stripe from "stripe";
 
-const deletePurchase = async (formData: FormData) => {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+
+const deletePayment = async (paymentId: string, stripeScheduleId: string) => {
   try {
     const session = await auth();
     if (!session) {
@@ -16,14 +21,18 @@ const deletePurchase = async (formData: FormData) => {
         },
       };
     }
-    const paymentId = formData.get("paymentId")?.toString() || "-1";
-    await prisma.payment.delete({
+    console.log("Deleting payment", paymentId);
+    await cancelStripeSchedule(stripeScheduleId);
+    await prisma.payment.update({
       where: {
         id: paymentId,
       },
-    })
+      data: {
+        status: "Cancelled" as PaymentStatusType,
+      },
+    });
 
-
+    console.log("Deleted payment", paymentId);
   } catch (error: any) {
     console.error("Error deleting purchase", error);
 
@@ -39,4 +48,61 @@ const deletePurchase = async (formData: FormData) => {
   revalidatePath("/dashboard/payments");
 };
 
-export default deletePurchase;
+export default deletePayment;
+
+export const deletePaymentByScheduleId = async (
+  stripeSchedule: Stripe.SubscriptionSchedule
+) => {
+  try {
+    await prisma.$transaction(async (prisma) => {
+      // Update payment status
+      await prisma.payment.updateMany({
+        where: {
+          stripeScheduleId: stripeSchedule.id,
+        },
+        data: {
+          status: "Cancelled",
+        },
+      });
+
+      const firstPayment = await prisma.payment.findFirst({
+        where: {
+          stripeScheduleId: stripeSchedule.id,
+        },
+      });
+
+      const paymentId = firstPayment?.id || "-1";
+      await prisma.purchaseOverview.updateMany({
+        where: {
+          paymentId,
+        },
+        data: {
+          paymentId: null
+        },
+      })
+
+      const invoices = await prisma.paymentInvoice.findMany({
+        where: {
+          stripeScheduleId: stripeSchedule.id,
+        },
+      });
+      for (const invoice of invoices) {
+        await stripe.invoices.del(invoice.stripeInvoiceId);
+      }
+
+      await prisma.paymentInvoice.updateMany({
+        where: {
+          stripeScheduleId: stripeSchedule.id,
+        },
+        data: {
+          status: "Cancelled",
+        }
+      });
+    });
+
+    return true;
+  } catch (error: any) {
+    console.error("Error deleting purchase", error);
+    return false;
+  }
+};

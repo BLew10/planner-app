@@ -8,8 +8,10 @@ import { getContactsByAddressBook, ContactTableData } from "@/lib/data/contact";
 import { getAllAddressBooks } from "@/lib/data/addressBook";
 import deleteConact from "@/actions/contact/deleteContact";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
+import SimpleModal from "@/app/(components)/general/SimpleModal";
 import { CATEGORIES } from "@/lib/constants";
 import { AddressBook } from "@prisma/client";
+import DeleteButton from "@/app/(components)/general/DeleteButton";
 
 const firstOptionAddressBook: Partial<AddressBook> = {
   id: "-1",
@@ -21,19 +23,23 @@ const ContactsPage = () => {
   const [contacts, setContacts] = useState<
     Partial<ContactTableData>[] | null
   >();
-  const [addressBookId, setAddressBookId] = useState<string>(firstOptionAddressBook.id || "-1");
+  const [addressBookId, setAddressBookId] = useState<string>(
+    firstOptionAddressBook.id || "-1"
+  );
   const [addressBooks, setAddressBooks] = useState<
     Partial<AddressBook>[] | null
   >([firstOptionAddressBook]);
 
-  const fetchContacts = async (addressBoodId: string) => {
-    const contacts = await getContactsByAddressBook(addressBoodId);
+  const [openEmailModal, setOpenEmailModal] = useState(false);
+
+  const fetchContacts = async (addressBookId: string) => {
+    const contacts = await getContactsByAddressBook(addressBookId);
     setContacts(contacts);
   };
 
   useEffect(() => {
     fetchAddressBooks();
-  },[])
+  }, []);
 
   useEffect(() => {
     fetchContacts(addressBookId);
@@ -41,9 +47,15 @@ const ContactsPage = () => {
 
   const fetchAddressBooks = async () => {
     let userAddressBooks = await getAllAddressBooks();
-    userAddressBooks?.unshift(firstOptionAddressBook)
+    userAddressBooks?.unshift(firstOptionAddressBook);
     setAddressBooks(userAddressBooks);
   };
+
+  const onContactDelete = async (contactId?: string) => {
+    await deleteConact(contactId || "-1");
+    const newContacts = await getContactsByAddressBook(addressBookId);
+    setContacts(newContacts);
+  }
 
   const handleAddressBookChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setAddressBookId(e.target.value);
@@ -121,6 +133,15 @@ const ContactsPage = () => {
         <Link
           href={`/dashboard/payments/add?contactId=${c.id}`}
           className={styles.paymentAction}
+          onClick={(e) => {
+            if (!c.contactTelecomInformation?.email) {
+              e.preventDefault();
+              e.stopPropagation();
+              setOpenEmailModal(true);
+            } else {
+              setOpenEmailModal(false);
+            }
+          }}
         >
           Add Payment
         </Link>
@@ -130,29 +151,38 @@ const ContactsPage = () => {
         >
           Edit
         </Link>
-        <form action={deleteConact}>
-          <button type="submit" className={styles.deleteAction}>
-            Delete
-          </button>
-          <input type="hidden" name="contactId" value={c.id} />
-        </form>
+        <DeleteButton
+          title="Delete Contact"
+          onDelete={() => onContactDelete(c.id)}
+          text={`Are you sure you want to delete ${c.contactContactInformation?.company}?`}
+        />
       </div>,
     ];
   });
 
   return (
-    <AnimateWrapper>
-      <section className={styles.container}>
-        <Table
-          tableName="Contacts"
-          columns={columns}
-          data={data}
-          addPath="/dashboard/contacts/add"
-          filterOptions={addressBooksOptions}
-          handleFilterChange={handleAddressBookChange}
+    <>
+      {openEmailModal && (
+        <SimpleModal
+          isOpen={openEmailModal}
+          closeModal={() => setOpenEmailModal(false)}
+          title="Invalid Email"
+          text="A valid email is needed to create a payment. Please add an email and try again."
         />
-      </section>
-    </AnimateWrapper>
+      )}
+      <AnimateWrapper>
+        <section className={styles.container}>
+          <Table
+            tableName="Contacts"
+            columns={columns}
+            data={data}
+            addPath="/dashboard/contacts/add"
+            filterOptions={addressBooksOptions}
+            handleFilterChange={handleAddressBookChange}
+          />
+        </section>
+      </AnimateWrapper>
+    </>
   );
 };
 

@@ -8,6 +8,7 @@ import {
   ContactAddress,
   ContactTelecomInformation,
 } from "@prisma/client";
+import { ContactModel } from "../models/contact";
 
 /**
  * Grab a contact by its id and
@@ -36,6 +37,7 @@ export const getContactsByAddressBook = async (
     const contacts = await prisma.contact.findMany({
       where: {
         userId,
+        isDeleted: false,
         ...(addressBookId !== "-1" && {
           addressBooks: {
             some: {
@@ -50,36 +52,9 @@ export const getContactsByAddressBook = async (
         notes: true,
         category: true,
         webAddress: true,
-        contactContactInformation: {
-          select: {
-            firstName: true,
-            lastName: true,
-            altContactFirstName: true,
-            altContactLastName: true,
-            salutation: true,
-            company: true,
-          },
-        },
-        contactTelecomInformation: {
-          select: {
-            phone: true,
-            extension: true,
-            altPhone: true,
-            fax: true,
-            cellPhone: true,
-            homePhone: true,
-          },
-        },
-        contactAddress: {
-          select: {
-            address: true,
-            address2: true,
-            city: true,
-            state: true,
-            zip: true,
-            country: true,
-          },
-        },
+        contactContactInformation: true,
+        contactTelecomInformation: true,
+        contactAddress: true,
       },
     });
 
@@ -138,7 +113,6 @@ export const parseContactFormData = (
     return null;
   }
 
-  const contactId = formData.get("contactId")?.toString() || "";
   // Initialize the structure for ContactSaveData with default values
   const contactContactInformation: ContactInfoData = {
     data: {
@@ -184,6 +158,7 @@ export const parseContactFormData = (
 
   // Directly assigning other fields with simple validation or transformation as needed
   const contactData: ContactSaveData = {
+    isDeleted: false,
     userId,
     id: formData.get("contactId")?.toString() || "",
     customerSince: formData.get("customerSince")?.toString() || "",
@@ -199,7 +174,6 @@ export const parseContactFormData = (
   return contactData;
 };
 
-
 export const getContactById = async (id: string) => {
 
   if (!id) {
@@ -210,50 +184,20 @@ export const getContactById = async (id: string) => {
   const userId = session?.user?.id;
 
   try {
-    const contact = await prisma.contact.findFirst({
-      where: { id: contactId, userId: userId },
+    const contact: Partial<ContactModel> | null = await prisma.contact.findFirst({
+      where: { id: contactId, userId: userId,  isDeleted: false},
       select: {
         id: true,
         customerSince: true,
         notes: true,
         category: true,
         webAddress: true,
-        contactContactInformation: {
-          select: {
-            firstName: true,
-            lastName: true,
-            altContactFirstName: true,
-            altContactLastName: true,
-            salutation: true,
-            company: true,
-          },
-        },
-        contactTelecomInformation: {
-          select: {
-            phone: true,
-            email: true,
-            extension: true,
-            altPhone: true,
-            fax: true,
-            cellPhone: true,
-            homePhone: true,
-          },
-        },
-        contactAddress: {
-          select: {
-            address: true,
-            address2: true,
-            city: true,
-            state: true,
-            zip: true,
-            country: true,
-          },
-        },
-        addressBooks: {
-          select: {
-            id: true,
-          },
-        },
+        contactContactInformation: true,
+        contactTelecomInformation: true,
+        contactAddress: true,
+        addressBooks: true,
+        purchases: true,
+        payments: true,
       },
     });
     return contact;

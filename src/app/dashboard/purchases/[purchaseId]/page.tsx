@@ -1,6 +1,5 @@
-import { getContactById } from "@/lib/data/contact";
 import { getPurchaseById } from "@/lib/data/purchase";
-import Purchase from "./Purchase";
+import PurchaseForm from "./PurchaseForm";
 import styles from "./page.module.scss";
 import { getAllAdvertisementTypes } from "@/lib/data/advertisementType";
 
@@ -13,7 +12,7 @@ const PurchaseOverviewPage = async ({ params }: { params: { purchaseId: string} 
 
   return (
     <section className={styles.container}>
-      <Purchase advertisementTypes={advertisementTypes} purchase={purchase} />
+      <PurchaseForm advertisementTypes={advertisementTypes} purchase={purchase} />
     </section>
   );
 };

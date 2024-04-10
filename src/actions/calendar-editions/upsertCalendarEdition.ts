@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
 import { parseForm } from "@/lib/data/calendarEdition";
 
-const upserCalendarEdition = async (formData: FormData) => {
+const upsertCalendarEdition = async (formData: FormData) => {
   try {
     const session = await auth();
     if (!session) {
@@ -62,4 +62,4 @@ const upserCalendarEdition = async (formData: FormData) => {
 }
 
 
-export default upserCalendarEdition;
+export default upsertCalendarEdition;

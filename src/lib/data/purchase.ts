@@ -1,12 +1,19 @@
 "use server";
 
 import prisma from "@/lib/prisma/prisma";
-import { AddressBook, Contact, PurchaseOverview, ContactContactInformation, CalendarEdition } from "@prisma/client";
+import {
+  AddressBook,
+  Contact,
+  PurchaseOverview,
+  ContactContactInformation,
+  CalendarEdition,
+} from "@prisma/client";
 import { auth } from "@/auth";
-
 
 export interface Purchase {
   id: string;
+  year: number;
+  calendarEdition: string
   adPurchases: {
     id: string;
     charge: number;
@@ -20,12 +27,12 @@ export interface Purchase {
       slot: number;
       month: number;
       date: Date | null;
-    }[]
+    }[];
   }[];
 }
 
 export const getPurchaseById = async (
-  purchaseId: string | undefined = '-1'
+  purchaseId: string | undefined = "-1"
 ): Promise<Partial<Purchase> | null> => {
   const session = await auth();
   if (!session) {
@@ -38,6 +45,7 @@ export const getPurchaseById = async (
     where: {
       id: purchaseId,
       userId,
+      isDeleted: false,
     },
     select: {
       id: true,
@@ -46,23 +54,22 @@ export const getPurchaseById = async (
           id: true,
           charge: true,
           quantity: true,
-          purchaseSlots: {
+          adPurchaseSlots: {
             select: {
               id: true,
               slot: true,
               month: true,
               date: true,
-            }
+            },
           },
           advertisement: {
             select: {
               id: true,
               name: true,
-            }
-          }
-
-        }
-      }
+            },
+          },
+        },
+      },
     },
   });
 
@@ -78,13 +85,13 @@ export const getPurchaseById = async (
       id: purchase.advertisement.id,
       name: purchase.advertisement.name,
     },
-    slots: purchase.purchaseSlots
-  }))
+    slots: purchase.adPurchaseSlots,
+  }));
 
   const purchaseOverview: Partial<Purchase> = {
     id: purchase.id,
     adPurchases: adPurchases,
-  }
+  };
 
   return purchaseOverview;
 };
@@ -110,7 +117,8 @@ export const getAllPurchases = async (): Promise<
 
   const purchases = await prisma.purchaseOverview.findMany({
     where: {
-        userId,
+      userId,
+      isDeleted: false,
     },
     select: {
       id: true,
@@ -119,33 +127,33 @@ export const getAllPurchases = async (): Promise<
       paymentId: true,
       calendarEdition: {
         select: {
-          name: true
-        }
+          name: true,
+        },
       },
-      Contact: {
-          select: {
-              id: true,
-              contactContactInformation: {
-                select: {
-                  company: true,
-                }
-              }
-          }
-      }
+      contact: {
+        select: {
+          id: true,
+          contactContactInformation: {
+            select: {
+              company: true,
+            },
+          },
+        },
+      },
     },
   });
-  
+
   const allPurchases: PurchaseTableData[] = purchases.map((purchase) => {
     return {
       id: purchase.id,
       paymentScheduled: purchase.paymentId ? true : false,
       amountOwed: parseFloat(purchase.amountOwed.toString()) || 0,
-      contactId: purchase.Contact.id,
-      companyName: purchase.Contact?.contactContactInformation?.company || "",
+      contactId: purchase.contact.id,
+      companyName: purchase.contact?.contactContactInformation?.company || "",
       year: purchase.year,
-      calendarEdition: purchase.calendarEdition?.name || ""
-    }
-  })
+      calendarEdition: purchase.calendarEdition?.name || "",
+    };
+  });
 
   return allPurchases;
 };
@@ -182,8 +190,9 @@ export const getAdvertisementPurchasesByYearAndCalendarId = async (
   }
 
   const userId = session.user.id;
-  const purchases = await prisma.purchaseSlot.findMany({
+  const purchases = await prisma.advertisementPurchaseSlot.findMany({
     where: {
+      isDeleted: false,
       purchaseOverview: {
         year: Number(year),
         editionId: calendarId,
@@ -242,13 +251,14 @@ export const getPurchasesByMonthCalendarIdAndYear = async (
   }
 
   const userId = session.user.id;
-  const purchases = await prisma.purchaseSlot.findMany({
+  const purchases = await prisma.advertisementPurchaseSlot.findMany({
     where: {
+      isDeleted: false,
       month: monthIndex,
-        purchaseOverview: {
-          userId,
-          year: Number(year),
-          editionId: calendarId,
+      purchaseOverview: {
+        userId,
+        year: Number(year),
+        editionId: calendarId,
       },
     },
     select: {
@@ -269,7 +279,7 @@ export const getPurchasesByMonthCalendarIdAndYear = async (
         select: {
           year: true,
           editionId: true,
-          Contact: {
+          contact: {
             select: {
               id: true,
               contactContactInformation: {
@@ -292,14 +302,13 @@ export const getPurchasesByMonthCalendarIdAndYear = async (
       advertisementName: purchase.advertisementPurchase.advertisement.name,
       advertisementId: purchase.advertisementPurchase.advertisement.id,
       companyName:
-        purchase.purchaseOverview?.Contact?.contactContactInformation?.company,
-      contactId: purchase.purchaseOverview?.Contact.id,
+        purchase.purchaseOverview?.contact?.contactContactInformation?.company,
+      contactId: purchase.purchaseOverview?.contact.id,
     };
   });
 
   return monthData;
 };
-
 
 export interface ContactInfo extends Contact {
   contactContactInformation?: Partial<ContactContactInformation> | null;
@@ -309,28 +318,97 @@ export interface PurchaseInfo extends PurchaseOverview {
   calendarEdition: CalendarEdition;
 }
 
-export const getPurchasesWithoutPayment = async (contactId: string): Promise<PurchaseInfo[] | null> => {
+export const getPurchasesWithoutPayment = async (
+  contactId: string
+): Promise<PurchaseInfo[] | null> => {
   const session = await auth();
   if (!session) {
     return null;
   }
   const userId = session.user.id;
 
-  const purchasesWithoutPayment: PurchaseInfo[] = await prisma.purchaseOverview.findMany({
-    where: {
-      paymentId: null,
-      userId,
-      contactId
-    },
-    include: {
-      calendarEdition: true,
-    }
-  });
+  const purchasesWithoutPayment: PurchaseInfo[] =
+    await prisma.purchaseOverview.findMany({
+      where: {
+        paymentId: null,
+        userId,
+        contactId,
+        isDeleted: false,
+      },
+      include: {
+        calendarEdition: true,
+      },
+    });
 
   if (!purchasesWithoutPayment || purchasesWithoutPayment.length === 0) {
     return null;
   }
 
-
   return purchasesWithoutPayment;
-}
+};
+
+export const getPurchasesByContactId = async (
+  contactId: string | undefined = "-1"
+): Promise<Partial<Purchase>[][] | null> => {
+  const session = await auth();
+  if (!session) {
+    return null;
+  }
+
+  const userId = session.user.id;
+  const purchases = await prisma.purchaseOverview.findMany({
+    where: {
+      contactId: contactId,
+      userId,
+      isDeleted: false,
+    },
+    select: {
+      id: true,
+      calendarEdition: true,
+      year: true,
+      adPurchases: {
+        select: {
+          id: true,
+          charge: true,
+          quantity: true,
+          adPurchaseSlots: {
+            select: {
+              id: true,
+              slot: true,
+              month: true,
+              date: true,
+            },
+          },
+          advertisement: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!purchases) {
+    return null;
+  }
+  const purchasesData: Partial<Purchase>[][] | null = purchases.map(
+    (p) => {
+      return p.adPurchases.map((purchase) => ({
+        id: purchase.id,
+        year: p.year,
+        calendarEdition: p.calendarEdition.name,
+        charge: parseFloat(purchase.charge.toString()),
+        quantity: purchase.quantity,
+        advertisement: {
+          id: purchase.advertisement.id,
+          name: purchase.advertisement.name,
+        },
+        slots: purchase.adPurchaseSlots,
+      }));
+    }
+  );
+
+  return purchasesData;
+};

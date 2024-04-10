@@ -19,7 +19,7 @@ export const getAdvertisementTypeById = async (
 
   try {
     const advertisementType = await prisma.advertisement.findFirst({
-      where: { id: advertisementTypeId, userId: userId },
+      where: { id: advertisementTypeId, userId: userId, isDeleted: false },
       select: {
         id: true,
         name: true,
@@ -49,6 +49,7 @@ export const getAllAdvertisementTypes = async (): Promise<
     const advertisementTypes = await prisma.advertisement.findMany({
       where: {
         userId,
+        isDeleted: false
       },
       select: {
         id: true,

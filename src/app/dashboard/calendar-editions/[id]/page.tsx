@@ -6,7 +6,11 @@ const UpdateAdvertisement = async ({
 }: {
   params: { id: string };
 }) => {
-  const { id } = params;
+  let { id } = params;
+
+  if (id == "add") {
+    id = ''
+  }
 
   return (
     <section className={styles.container}>

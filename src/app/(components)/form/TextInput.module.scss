@@ -12,6 +12,9 @@
   color: red;
 }
 
+.required {
+  color: var(--primary-red-dark)
+}
 .inputWrapper {
   flex: 1;
 }
@@ -26,5 +29,5 @@
 
 .subLabel {
   color: var(--primary-blue);
-  font-size: 0.8rem;
+  font-size: 0.6rem;
 }

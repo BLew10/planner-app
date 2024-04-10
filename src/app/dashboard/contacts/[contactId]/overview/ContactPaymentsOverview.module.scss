@@ -1,0 +1,69 @@
+.groupHeader {
+  color: var(--primary-blue);
+}
+
+.label {
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+.info {
+  color: var(--text-white);
+  font-size: 0.9rem;
+}
+
+.noPurchases {
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+.contactPurchases {
+  margin-top: 20px;
+}
+
+.calendarAndYear {
+  color: var(--text-color);
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.purchase {
+  background-color: var(--primary-color);
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.purchaseHeading {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.adType {
+  color: var(--text-white);
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.adCharge {
+  color: var(--primary-yellow);
+  font-size: 0.8rem;
+}
+
+.purchases {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.slotMonth{
+  color: var(--text-color);
+}
+
+.slotText {
+  color: var(--text-white);
+  font-size: 0.8rem;
+}

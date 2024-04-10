@@ -1,0 +1,35 @@
+.modal {
+  background-color: var(--primary-color);
+  min-width: 1000px;
+}
+
+.title {
+  color: var(--text-white);
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+}
+
+.purchase {
+  color: var(--text-color);
+  font-size: 0.8rem;
+}
+
+.adName {
+  color: var(--primary-blue-dark);
+  font-weight: bold;
+  font-size: 1rem;
+  margin-bottom: 5px;
+}
+
+.headCell {
+  color: var(--text-color);
+  text-transform: uppercase;
+  
+}
+
+.invoiceLink {
+    color: var(--primary-blue-dark);
+}

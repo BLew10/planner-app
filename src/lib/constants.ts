@@ -599,7 +599,12 @@ export const MONTHS = [
   "December",
 ];
 
-export const PAYMENT_FREQUENCIES = [
+export type PaymentFrequencyType = "Daily" | "Weekly" | "Monthly" | "Annually";
+export const PAYMENT_FREQUENCIES: { value: PaymentFrequencyType, label: string }[] = [
+  {
+    value: "Daily",
+    label: "Daily",
+  },
   {
     value: "Weekly",
     label: "Weekly",
@@ -614,9 +619,10 @@ export const PAYMENT_FREQUENCIES = [
   },
 ]
 
-export type PaymentStatusType = 'Pending' | 'Paid' | 'Late' | 'Refunded' | 'Overdue' | 'Failed' | 'Void' | 'In Progress';
+export type PaymentStatusType = 'Pending' | 'Completed' | 'Cancelled' | 'In Progress';
+export type InvoiceStatusType = 'Pending' | 'Paid' | 'Late' | 'Refunded' | 'Failed' | 'Voided' | 'In Progress' | 'Cancelled' | 'Uncollectible';
 
-export const PAYMENT_STATUSES = [
+export const PAYMENT_STATUSES: { value: PaymentStatusType, label: string }[] = [
   {
     value: "Pending",
     label: "Pending",
@@ -626,27 +632,11 @@ export const PAYMENT_STATUSES = [
     label: "In Progress",
   },
   {
-    value: "Paid",
-    label: "Paid",
+    value: "Completed",
+    label: "Completed",
   },
   {
-    value: "Late",
-    label: "Late",
-  },
-  {
-    value: "Refunded",
-    label: "Refunded",
-  },
-  {
-    value: "Overdue",
-    label: "Overdue",
-  },
-  {
-    value: "Failed",
-    label: "Failed",
-  },
-  {
-    value: "Void",
-    label: "Void",
+    value: "Cancelled",
+    label: "Cancelled",
   }
 ]

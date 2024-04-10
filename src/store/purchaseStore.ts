@@ -36,14 +36,14 @@ export interface PurchaseOverview {
 
 interface PurchasesStore {
   purchaseOverview?: PurchaseOverview | null;
-  setPurchaseData: (data: PurchaseOverview) => void;
+  setPurchaseData: (data: PurchaseOverview | null) => void;
 }
 
 export const usePurchasesStore = create<PurchasesStore>()(
   persist(
     (set, get) => ({
       purchaseOverview: null,
-      setPurchaseData: (data: PurchaseOverview) => set({ purchaseOverview: data }),
+      setPurchaseData: (data: PurchaseOverview | null) => set({ purchaseOverview: data }),
     }),
     {
       name: "purchase-store",

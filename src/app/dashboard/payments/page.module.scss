@@ -10,9 +10,21 @@
     padding: 0.25rem;
   }
 
-  .paymentAction {
+  .paymentAction, .invoicesButton {
     color: var(--primary-blue);
     padding: 0.25rem;
-    font-weight: 700
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .modWrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
   
+
+  .headCell {
+    color: var(--text-white);
+    font-weight: 700;
+  }

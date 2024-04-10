@@ -48,29 +48,26 @@ const Purchase: React.FC<PurchaseProps> = ({
   useEffect(() => {
 
     const savePurchaseData = (contact: Contact) => {
-      console.log(purchase?.adPurchases)
-      console.log(purchaseStore.purchaseOverview?.purchases)
       let purchases: AdvertisementPurchase[] = [];
       if (purchase?.adPurchases) {
         purchases = purchase?.adPurchases
       } else if (purchaseStore.purchaseOverview?.purchases) {
         purchases = purchaseStore.purchaseOverview?.purchases as AdvertisementPurchase[];
       }
-      console.log(purchases);
       purchaseStore.setPurchaseData({
         purchases: purchases,
         contactId: contact.id,
         companyName: contact?.companyName || "",
       });
-      // purchaseStore.setPurchaseData({
-      //   purchases: purchase?.adPurchases || purchaseStore.purchaseOverview?.purchases || [],
-      //   contactId: contact.id,
-      //   companyName: contact?.companyName || "",
-      // });
+     
     }
 
     const fetchContact = async (contactId: string) => {
       const contactData = await getContactById(contactId);
+      if (!contactData) {
+        router.push('/dashboard/contacts');
+        return;
+      }
       if (contactData) {
         const contact = {
           id: contactData.id,

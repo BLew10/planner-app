@@ -7,7 +7,7 @@ import TextInput from "@/app/(components)/form/TextInput";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 
 import { getCalendarById } from "@/lib/data/calendarEdition";
-import upserCalendarEdition from "@/actions/calendar-editions/upsertCalendarEdition";
+import upsertCalendarEdition from "@/actions/calendar-editions/upsertCalendarEdition";
 import { CalendarEdition } from "@prisma/client";
 
 interface CalendarFormProps {
@@ -27,9 +27,10 @@ const CalendarForm = ({ id }: CalendarFormProps) => {
     }
   }, [id]);
 
+
   return (
     <AnimateWrapper>
-      <form action={upserCalendarEdition} className={styles.form}>
+      <form action={upsertCalendarEdition} className={styles.form}>
         {calendar && (
           <input type="hidden" name="calendarId" value={calendar.id} />
         )}
