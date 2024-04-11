@@ -29,7 +29,7 @@ const defaultColumns = [
     size: "default",
   },
   {
-    name: "Associated Purchases",
+    name: "Payments for:",
     size: "default",
     wrap: true,
   },
@@ -42,8 +42,6 @@ const ContactPaymentsOverview = ({
     Partial<PaymentTableData>[] | null
   >();
   const [formattedTableData, setFormattedTableData] = useState<any>([]);
-  const [columnsToDisplay, setColumnsToDisplay] =
-    useState<any[]>(defaultColumns);
 
 
   useEffect(() => {
@@ -54,9 +52,9 @@ const ContactPaymentsOverview = ({
         `$${Number(p.totalOwed).toFixed(2)}`,
         `$${Number(p.totalPaid).toFixed(2)}`,
         p.status,
-        p.startDate?.toISOString().split("T")[0],
-        p.anticipatedEndDate?.toISOString().split("T")[0],
-        purchases
+        p.startDate,
+        p.anticipatedEndDate,
+        purchases || "",
       ];
 
       return rowData;
@@ -78,7 +76,7 @@ const ContactPaymentsOverview = ({
       <section className={styles.container}>
         <Table
           tableName="Payments"
-          columns={columnsToDisplay}
+          columns={defaultColumns}
           data={formattedTableData}
         />
       </section>
