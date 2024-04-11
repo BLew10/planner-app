@@ -146,7 +146,6 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
           onChange={handleCalendarChange}
         />
         {purchaseStore.purchaseOverview?.purchases?.map((purchase, index) => {
-                console.log(purchase?.advertisement?.isDayType);
           if (purchase?.advertisement?.isDayType) {
             return (
               <div key={`daytype-${index}`}>

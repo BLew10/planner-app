@@ -53,7 +53,6 @@ const PurchaseDayType: React.FC<PurchaseDayTypeProps> = ({
   
   let slotIndex = 0;
 
-  console.log('purchase?.adPurchaseSlots', purchase?.adPurchaseSlots);
   const tileContent = ({ date, view }: { date: Date; view: string }) => {
     if (view === "month") {
       slotIndex++

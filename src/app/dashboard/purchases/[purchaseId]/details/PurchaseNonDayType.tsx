@@ -10,7 +10,6 @@ interface PurchaseNonDayTypeProps {
 }
 
 const PurchaseNonDayType = ({ purchase }: PurchaseNonDayTypeProps) => {
-  console.log('NonDayType', purchase);
   const monthGroups = Array.from({ length: 12 }).map((_, monthIndex) => {
     const options = Array.from({ length: Number(purchase?.advertisement?.perMonth) || 0 }).map(
       (_, index) => 

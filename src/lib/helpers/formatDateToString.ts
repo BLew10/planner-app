@@ -18,6 +18,5 @@
 export const formatDateToString = (date: Date): string => {
   const [year, month, day] = date.toISOString().split("T")[0].split("-");
   const newDateFormat = `${month}-${day}-${year}`;
-  console.log(newDateFormat);
   return newDateFormat;
 };

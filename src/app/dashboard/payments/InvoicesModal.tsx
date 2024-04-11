@@ -21,7 +21,6 @@ export default function InvoicesModal({
     const fetchData = async () => {
       const invoices = await getInvoicesForPayment(paymentId);
       if (invoices && invoices.length > 0) {
-        console.log(invoices);
         setInvoices(invoices);
       } else {
         setInvoices(null);

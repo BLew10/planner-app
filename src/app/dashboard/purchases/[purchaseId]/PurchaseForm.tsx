@@ -59,7 +59,6 @@ const Purchase: React.FC<PurchaseProps> = ({
       } else if (purchaseStore.purchaseOverview?.purchases) {
         purchases = purchaseStore.purchaseOverview?.purchases as AdvertisementPurchaseModel[];
       }
-      console.log(purchases);
       purchaseStore.setPurchaseData({
         purchases: purchases,
         contactId: contactData.id,
