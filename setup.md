@@ -3,6 +3,7 @@
 ## Stripe
 - Create Stripe Account with all relevant information
 - Grab the test and live API key
+- setup webhooks
 - Send to brandonlewis.10@gmail.com
 
 

@@ -6,8 +6,7 @@ import { updatePaymentFromStripeSchedule } from "@/lib/data/payment";
 import { handleInvoicePaid, updateInvoiceStatus, updateInvoice, updateInvoiceSentDate, createInvoice , updateInvoiceUrl } from "@/lib/data/paymentInvoice";
 
 // TODO: add webhook secret to env
-const endpointSecret =
-  "whsec_a431de84e9d9ce1c6fd44cab5735c88179dd3957bc824cc52b4747390de6fcec";
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY_TEST as string || process.env.STRIPE_SECRET_KEY_LIVE as string);
 export async function POST(request: NextRequest) {
