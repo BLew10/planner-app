@@ -4,20 +4,22 @@ import { PaymentStatusType, InvoiceStatusType} from "../constants";
 import prisma from "@/lib/prisma/prisma";
 import { PaymentInvoice, Prisma } from "@prisma/client";
 import Stripe from "stripe";
+import { formatDateToString } from "../helpers/formatDateToString";
+import { convertToDollars } from "../helpers/convertToDollars";
 
 export async function handleInvoicePaid(
-  stripeInvoiceId: string,
-  amount: number,
+  stripeInvoice: Stripe.Invoice,
   datePaid: Date
 ) {
   try {
     const invoice = await prisma.paymentInvoice.update({
-      where: { stripeInvoiceId: stripeInvoiceId },
+      where: { stripeInvoiceId: stripeInvoice.id },
       data: {
         isPaid: true,
-        amountOwed: new Prisma.Decimal(amount),
-        datePaid: datePaid,
-        invoiceLink: null,
+        status: "Paid",
+        amountOwed: new Prisma.Decimal(convertToDollars(stripeInvoice.total)),
+        datePaid: formatDateToString(datePaid),
+        invoiceLink: stripeInvoice.invoice_pdf,
       },
       include: { payment: true },
     });
@@ -31,12 +33,15 @@ export async function handleInvoicePaid(
       _sum: { amountOwed: true },
     });
 
+    const payment = await prisma.payment.findFirst({
+      where: { id: invoice.paymentId },
+    })
     await prisma.payment.update({
       where: { id: invoice.paymentId },
       data: {
         totalPaid: new Prisma.Decimal(amountPaid._sum.amountOwed?.toNumber() || 0),
         paymentsMade: totalInvoicesPaid,
-        status: new Prisma.Decimal(amountPaid._sum.amountOwed?.toNumber() || 0) >= invoice.payment.totalOwed
+        status: (amountPaid._sum.amountOwed || 0) >= (payment?.totalOwed || 0)
             ? ("Completed" as PaymentStatusType)
             : ("In Progress" as PaymentStatusType),
       },
@@ -70,7 +75,7 @@ export async function updateInvoice(
   stripeInvoice: Stripe.Invoice
 ) {
     let invoiceData: Partial<PaymentInvoice> = {
-        amountOwed: new Prisma.Decimal(stripeInvoice.total),
+        amountOwed: new Prisma.Decimal(convertToDollars(stripeInvoice.total)),
         isPaid: stripeInvoice.paid as boolean,
         invoiceLink: stripeInvoice.hosted_invoice_url,
     };
@@ -78,7 +83,7 @@ export async function updateInvoice(
     if (stripeInvoice.due_date) {
         invoiceData = {
             ...invoiceData,
-            dateDue: new Date(stripeInvoice.due_date * 1000),
+            dateDue: formatDateToString(new Date(stripeInvoice.due_date * 1000)),
         };
     }
   try {
@@ -105,14 +110,23 @@ export async function createInvoice(
     })
 
     console.log('stripeInvoice?.due_date', stripeInvoice?.due_date)
-    const invoice = await prisma.paymentInvoice.create({
+
+    let invoice = await prisma.paymentInvoice.findFirst({
+      where: { stripeScheduleId: stripeScheduleId },
+    })
+
+    if (invoice) {
+      return invoice
+    }
+
+    invoice = await prisma.paymentInvoice.create({
       data: {
         stripeInvoiceId: stripeInvoice.id,
         stripeScheduleId: stripeScheduleId,
-        amountOwed: new Prisma.Decimal(stripeInvoice.total / 100),
+        amountOwed: convertToDollars(stripeInvoice.total),
         isPaid: false,
         invoiceLink: stripeInvoice.invoice_pdf,
-        dateDue: stripeInvoice?.due_date ? new Date(stripeInvoice?.due_date * 1000) : null,
+        dateDue: stripeInvoice?.due_date ? formatDateToString(new Date(stripeInvoice?.due_date * 1000)) : null,
         dateSent: null,
         datePaid: null,
         status: 'Pending',
@@ -133,7 +147,8 @@ export async function updateInvoiceSentDate(
     const invoice = await prisma.paymentInvoice.update({
       where: { stripeInvoiceId: stripeInvoiceId },
       data: {
-        dateSent: new Date()
+        status: 'Sent',
+        dateSent: formatDateToString(new Date()),
       }
     });
     return invoice

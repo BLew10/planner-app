@@ -55,7 +55,7 @@ const ContactsPage = () => {
     await deleteConact(contactId || "-1");
     const newContacts = await getContactsByAddressBook(addressBookId);
     setContacts(newContacts);
-  }
+  };
 
   const handleAddressBookChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setAddressBookId(e.target.value);
@@ -109,21 +109,25 @@ const ContactsPage = () => {
 
   const data = contacts?.map((c) => {
     return [
-      `${c.contactContactInformation?.firstName} ${c.contactContactInformation?.lastName}`,
+      <Link
+        href={`/dashboard/contacts/${c.id}/overview`}
+        className={styles.contactLink}
+        key={c.id}
+      >{`${c.contactContactInformation?.firstName} ${c.contactContactInformation?.lastName}`}</Link>,
       c.contactContactInformation?.company,
       c.contactTelecomInformation?.phone,
       c.contactTelecomInformation?.extension,
       c.contactTelecomInformation?.cellPhone,
-      <Link href={`mailto:${c.contactTelecomInformation?.email}`}>
+      <Link href={`mailto:${c.contactTelecomInformation?.email}`} key={c.id}>
         {c.contactTelecomInformation?.email}
       </Link>,
-      <a rel="noopener noreferrer" href={`${c.webAddress}`}>
+      <a rel="noopener noreferrer" href={`${c.webAddress}`} key={c.id}>
         {c.webAddress}
       </a>,
       c.category != "0" && c.category
         ? CATEGORIES[parseInt(c.category || "0")].label
         : "",
-      <div className={styles.modWrapper}>
+      <div className={styles.modWrapper} key={c.id}>
         <Link
           href={`/dashboard/purchases/add?contactId=${c.id}`}
           className={styles.purchaseAction}

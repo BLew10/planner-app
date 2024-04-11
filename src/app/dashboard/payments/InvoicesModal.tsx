@@ -113,30 +113,26 @@ export default function InvoicesModal({
                         {invoices &&
                           invoices.map((invoice) => (
                             <tr key={invoice.id}>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                                 {invoice.status}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {invoice.dateDue?.toISOString().split("T")[0]}
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                {invoice.dateDue}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                                 {invoice.dateSent
                                   ? invoice.dateSent
-                                      ?.toISOString()
-                                      .split("T")[0]
                                   : "Not Sent"}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                                 {invoice.isPaid
                                   ? invoice.datePaid
-                                      ?.toISOString()
-                                      .split("T")[0]
                                   : "Not Paid"}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                                 ${Number(invoice.amountOwed).toFixed(2)}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                                 {invoice.invoiceLink && (
                                   <a
                                     href={invoice.invoiceLink}

@@ -9,6 +9,8 @@ import {
   CalendarEdition,
 } from "@prisma/client";
 import { auth } from "@/auth";
+import { formatDateToString } from "@/lib/helpers/formatDateToString";
+import { PurchaseOverviewModel } from "../models/purchaseOverview";
 
 export interface Purchase {
   id: string;
@@ -26,14 +28,14 @@ export interface Purchase {
       id: string;
       slot: number;
       month: number;
-      date: Date | null;
+      date: string | null;
     }[];
   }[];
 }
 
 export const getPurchaseById = async (
   purchaseId: string | undefined = "-1"
-): Promise<Partial<Purchase> | null> => {
+): Promise<Partial<PurchaseOverviewModel> | null> => {
   const session = await auth();
   if (!session) {
     return null;
@@ -50,25 +52,10 @@ export const getPurchaseById = async (
     select: {
       id: true,
       adPurchases: {
-        select: {
-          id: true,
-          charge: true,
-          quantity: true,
-          adPurchaseSlots: {
-            select: {
-              id: true,
-              slot: true,
-              month: true,
-              date: true,
-            },
-          },
-          advertisement: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
+        include: {
+          advertisement: true,
+          adPurchaseSlots: true,
+        }
       },
     },
   });
@@ -77,23 +64,7 @@ export const getPurchaseById = async (
     return null;
   }
 
-  const adPurchases = purchase.adPurchases.map((purchase) => ({
-    id: purchase.id,
-    charge: parseFloat(purchase.charge.toString()),
-    quantity: purchase.quantity,
-    advertisement: {
-      id: purchase.advertisement.id,
-      name: purchase.advertisement.name,
-    },
-    slots: purchase.adPurchaseSlots,
-  }));
-
-  const purchaseOverview: Partial<Purchase> = {
-    id: purchase.id,
-    adPurchases: adPurchases,
-  };
-
-  return purchaseOverview;
+  return purchase;
 };
 
 export interface PurchaseTableData {
@@ -237,7 +208,7 @@ export interface PurchaseSlot {
   advertisementId?: string | null;
   companyName?: string | null;
   contactId?: string | null;
-  date?: Date | null;
+  date?: string | null;
 }
 
 export const getPurchasesByMonthCalendarIdAndYear = async (
@@ -295,6 +266,7 @@ export const getPurchasesByMonthCalendarIdAndYear = async (
   });
 
   const monthData: PurchaseSlot[] = purchases.map((purchase) => {
+    console.log(purchase.date);
     return {
       id: purchase.id,
       slot: purchase.slot,

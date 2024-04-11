@@ -62,7 +62,7 @@ export default function MonthlyPurchasesModal({
               {ad?.isDayType && purchase.date
                 ? `${
                     purchase.companyName
-                  } - ${purchase.date.toLocaleDateString()}`
+                  } - ${purchase.date}`
                 : `${purchase.companyName} - Slot: ${purchase.slot}`}
             </div>
           ))}

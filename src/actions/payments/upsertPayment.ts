@@ -14,6 +14,7 @@ import {
   createStripeSubscriptionSchedule,
   createStripePrice,
 } from "@/lib/helpers/stripeHelpers";
+import { formatDateToString } from "@/lib/helpers/formatDateToString";
 
 export interface UpsertPaymentData {
   paymentId?: string | null;
@@ -115,10 +116,10 @@ async function createPrismaPayment(
 ) {
   const payment: Payment = await prisma.payment.create({
     data: {
-      startDate: paymentData.startDate,
+      startDate: formatDateToString(paymentData.startDate),
       frequency: paymentData.frequency,
       userId,
-      anticipatedEndDate: paymentData.anticipatedEndDate,
+      anticipatedEndDate: formatDateToString(paymentData.anticipatedEndDate),
       status: paymentData.status,
       contactId: paymentData.contactId,
       totalOwed: paymentData.totalOwed,
@@ -145,9 +146,9 @@ async function updatePrismaPayment(
   const payment: Payment = await prisma.payment.update({
     where: { id: paymentId, userId },
     data: {
-      startDate: paymentData.startDate,
+      startDate: formatDateToString(paymentData.startDate),
       frequency: paymentData.frequency,
-      anticipatedEndDate: paymentData.anticipatedEndDate,
+      anticipatedEndDate: formatDateToString(paymentData.anticipatedEndDate),
       status: paymentData.status,
       contactId: paymentData.contactId,
       totalOwed: paymentData.totalOwed,

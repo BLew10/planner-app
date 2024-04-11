@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
-import { redirect } from "next/navigation";
+import { formatDateToString } from "@/lib/helpers/formatDateToString";
 
 export interface UpsertPurchaseData {
   year: string;
@@ -132,7 +132,7 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
                   advertisementPurchaseId: adPurchase.id,
                   month,
                   slot,
-                  date,
+                  date: date ? formatDateToString(date) : null,
                 },
               });
             }

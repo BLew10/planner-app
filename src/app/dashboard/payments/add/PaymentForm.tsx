@@ -25,17 +25,24 @@ interface Contact {
 
 const PaymentForm = () => {
   const router = useRouter();
-  const [frequency, setFrequency] = useState<string>(PAYMENT_FREQUENCIES[2].value);
+  const [frequency, setFrequency] = useState<string>(
+    PAYMENT_FREQUENCIES[2].value
+  );
   const [contact, setContact] = useState<Contact | null>();
-  const [contactPurchases, setContactPurchases] = useState<PurchaseInfo[] | null>(null);
-  const [startDate, setStartDate] = useState<string>(new Date().toISOString().split("T")[0]);
+  const [contactPurchases, setContactPurchases] = useState<
+    PurchaseInfo[] | null
+  >(null);
+  const [startDate, setStartDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
   const [totalPayments, setTotalPayments] = useState<number>(12);
   const [paymentTotal, setPaymentTotal] = useState<number>(0);
   const [openPaymentModal, setOpenPaymentModal] = useState<boolean>(false);
-  const [paymentData, setPaymentData] = useState<UpsertPaymentData | null>(null);
+  const [paymentData, setPaymentData] = useState<UpsertPaymentData | null>(
+    null
+  );
   const [endDate, setEndDate] = useState<string>("");
   const searchParams = useSearchParams();
-
 
   useEffect(() => {
     const contactId = searchParams.get("contactId");
@@ -44,7 +51,8 @@ const PaymentForm = () => {
       return;
     }
     const fetchPurchases = async (contactId: string) => {
-      const contactPurchases: PurchaseInfo[] | null = await getPurchasesWithoutPayment(contactId);
+      const contactPurchases: PurchaseInfo[] | null =
+        await getPurchasesWithoutPayment(contactId);
       if (contactPurchases && contactPurchases?.length > 0) {
         setContactPurchases(contactPurchases);
       }
@@ -71,6 +79,9 @@ const PaymentForm = () => {
       if (!startDate || !frequency || !totalPayments) return;
       let resultDate = new Date(startDate);
       switch (frequency) {
+        case "Daily":
+          resultDate.setDate(resultDate.getDate() + totalPayments);
+          break;
         case "Weekly":
           // Add 7 days for each payment
           resultDate.setDate(resultDate.getDate() + 7 * totalPayments);
@@ -110,7 +121,13 @@ const PaymentForm = () => {
         selectedPurchasesIds.includes(purchase.id)
       ) || [];
 
-    const total = checkboxes && selectedPurchasesIds.length > 0 ? selectedPurchases.reduce((acc, purchase) => acc + Number(purchase.amountOwed),0): paymentTotal || 0;
+    const total =
+      checkboxes && selectedPurchasesIds.length > 0
+        ? selectedPurchases.reduce(
+            (acc, purchase) => acc + Number(purchase.amountOwed),
+            0
+          )
+        : paymentTotal || 0;
 
     const paymentData: UpsertPaymentData = {
       paymentId: null,

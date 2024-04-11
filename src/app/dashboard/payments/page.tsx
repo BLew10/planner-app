@@ -72,8 +72,8 @@ const PaymentsPage = () => {
         `$${Number(p.totalOwed).toFixed(2)}`,
         `$${Number(p.totalPaid).toFixed(2)}`,
         p.status,
-        p.startDate?.toISOString().split("T")[0],
-        p.anticipatedEndDate?.toISOString().split("T")[0],
+        p.startDate,
+        p.anticipatedEndDate,
         getNextPaymentDate(
           p.startDate || new Date(),
           p.anticipatedEndDate || new Date(),
@@ -96,8 +96,8 @@ const PaymentsPage = () => {
                 deleteText="Cancel"
                 text={`Are you sure you want to cancel the pending payment for ${
                   p.companyName
-                } from ${p.startDate?.toISOString().split("T")[0]} to ${
-                  p.anticipatedEndDate?.toISOString().split("T")[0]
+                } from ${p.startDate} to ${
+                  p.anticipatedEndDate
                 }`}
                 title="Cancel Payment"
               />
@@ -147,6 +147,9 @@ const PaymentsPage = () => {
 
     while (nextPaymentDate < today) {
       switch (frequency) {
+        case "Daily":
+          nextPaymentDate.setDate(nextPaymentDate.getDate() + 1);
+          break;
         case "Weekly":
           nextPaymentDate.setDate(nextPaymentDate.getDate() + 7);
           break;

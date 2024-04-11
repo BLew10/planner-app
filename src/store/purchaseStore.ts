@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { AdvertisementPurchaseModel } from "@/lib/models/advertisementPurchase";
 
 export interface PurchaseSlot {
   id?: string | null;
@@ -9,18 +10,19 @@ export interface PurchaseSlot {
   advertisementId?: string | null;
   companyName?: string | null;
   contactId?: string | null;
-  date?: Date | null;
+  date?: string | null;
 }
 
-export interface AdvertisementPurchase {
-  name?: string;
-  advertisementId?: string;
-  quantity?: number;
-  charge?: number;
-  isDayType?: boolean;
-  perMonth?: number;
-  slots?: PurchaseSlot[];
-}
+// export interface AdvertisementPurchase {
+//   name?: string;
+//   advertisementId?: string;
+//   quantity?: number;
+//   charge?: number;
+//   isDayType?: boolean;
+//   perMonth?: number;
+//   advertisement?: Advertisement | null;
+//   slots?: PurchaseSlot[];
+// }
 
 export interface PurchaseOverview {
   contactId?: string;
@@ -31,7 +33,7 @@ export interface PurchaseOverview {
   paymentEndDate?: Date;
   amountOwed?: number;
   paymentFrequency?: number;
-  purchases?: (AdvertisementPurchase | null)[] | null;
+  purchases?: (Partial<AdvertisementPurchaseModel> | null)[] | null;
 }
 
 interface PurchasesStore {

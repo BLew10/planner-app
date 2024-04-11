@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       const schedules = await stripe.subscriptionSchedules.list();
       const schedule = schedules.data.find((schedule) => schedule.subscription === invoice.subscription);
       subscriptionScheduleId = schedule?.id as string || null;
-      console.log(`Invoice ${invoice.id} was successful! Subscription Schedule ID: ${subscriptionScheduleId}`);
+  
     }
     switch (event.type) {
       
@@ -80,23 +80,26 @@ export async function POST(request: NextRequest) {
       case "invoice.created":
         const createdInvoice = event.data.object as Stripe.Invoice;
         console.log(`Created Invoice was successful! Invoice ID: ${createdInvoice.id}`);
+        if (!subscriptionScheduleId) {
+          console.error("Subscription Schedule ID not found", createdInvoice);
+          break
+        }
         await createInvoice(createdInvoice, subscriptionScheduleId as string);
+        break;
+      case "invoice.sent":
+        const sentInvoice = event.data.object as Stripe.Invoice;
+        console.log(`Sent Invoice was successful! Invoice ID: ${sentInvoice.id}`);
+        await updateInvoiceSentDate(sentInvoice.id);
         break;
       case "invoice.paid":
         const paidInvoice = event.data.object as Stripe.Invoice;
         console.log(`Paid Invoice was successful! Invoice ID: ${paidInvoice.id}`);
-        await handleInvoicePaid(paidInvoice.id, paidInvoice.total, new Date());
+        await handleInvoicePaid(paidInvoice, new Date());
         break;
       case "invoice.payment_failed":
         const paymentFailedInvoice = event.data.object as Stripe.Invoice;
         console.log(`Payment Failed Invoice was successful! Invoice ID: ${paymentFailedInvoice.id}`);
         await updateInvoiceStatus(paymentFailedInvoice.id, "Failed");
-        break;
-
-      case "invoice.sent":
-        const sentInvoice = event.data.object as Stripe.Invoice;
-        console.log(`Sent Invoice was successful! Invoice ID: ${sentInvoice.id}`);
-        await updateInvoiceSentDate(sentInvoice.id);
         break;
       case "invoice.finalized":
         // Not supporting finalized invoice as of now

@@ -1,7 +1,11 @@
 
-import { Advertisement, AdvertisementPurchase, PurchaseOverview, AdvertisementPurchaseSlot } from "@prisma/client"
+import { AdvertisementPurchase, Prisma } from "@prisma/client"
+import { PurchaseOverviewModel } from "./purchaseOverview";
+import { AdvertisementPurchaseSlotModel } from "./advertisementPurchaseSlots";
+import { AdvertisementModel } from "./advertisment";
 export interface AdvertisementPurchaseModel extends AdvertisementPurchase {
-    advertisement: Advertisement,
-    purchaseOverview: PurchaseOverview | null,
-    adPurchaseSlots: AdvertisementPurchaseSlot[] | null
+    advertisement: Partial<AdvertisementModel>,
+    charge: number | Prisma.Decimal,
+    purchaseOverview: Partial<PurchaseOverviewModel> | null,
+    adPurchaseSlots: Partial<AdvertisementPurchaseSlotModel>[] | null
 }

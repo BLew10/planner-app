@@ -34,3 +34,9 @@
   @include edit-link;
   padding: 0.25rem;
 }
+
+.contactLink {
+  color: var(--primary-blue-dark);
+  font-weight: 700;
+  text-decoration: underline;
+}

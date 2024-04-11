@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma/prisma";
 import { PaymentStatusType, PaymentFrequencyType } from "../constants";
+import { formatDateToString } from "../helpers/formatDateToString";
 import { auth } from "@/auth";
 import { PurchaseOverviewModel } from "../models/purchaseOverview";
 import Stripe from "stripe";
@@ -216,14 +217,14 @@ const stripeIntervalMap = (frequency: string): PaymentFrequencyType => {
 
 export const updatePaymentFromStripeSchedule = async (stripeSchedule: Stripe.SubscriptionSchedule) => {
     let paymentData: Partial<Payment> | null = {};
-    const start_date =new Date(stripeSchedule.phases[0].start_date * 1000) ;
-    const anticipatedEndDate = new Date(stripeSchedule.phases[0].end_date * 1000)
+    const startDate = formatDateToString(new Date(stripeSchedule.phases[0].start_date * 1000))
+    const anticipatedEndDate = formatDateToString(new Date(stripeSchedule.phases[0].end_date * 1000))
     const priceId = stripeSchedule.phases[0].items[0].price as string || "";
     const price = await getStripePriceById(priceId);
     const frequency = stripeIntervalMap(price?.recurring?.interval || "");
     paymentData.frequency = frequency;
     paymentData.anticipatedEndDate = anticipatedEndDate;
-    paymentData.startDate = start_date;
+    paymentData.startDate = startDate;
     
     // updateMany due to non-unique constraint cause stripeScheduleId is added after payment is created
     const payment = await prisma.payment.updateMany({

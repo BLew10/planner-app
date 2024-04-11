@@ -196,7 +196,15 @@ export const getContactById = async (id: string) => {
         contactTelecomInformation: true,
         contactAddress: true,
         addressBooks: true,
-        purchases: true,
+        purchases: {
+          include: {
+            adPurchases: {
+              include: {
+                adPurchaseSlots: true
+              }
+            },
+          }
+        },
         payments: true,
       },
     });

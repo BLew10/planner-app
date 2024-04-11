@@ -161,8 +161,8 @@ model Payment {
   totalPaid          Decimal
   frequency          String
   totalPayments      Int
-  startDate          DateTime
-  anticipatedEndDate DateTime
+  startDate          String
+  anticipatedEndDate String
   status             String
   paymentsMade       Int                @default(0)
   contactId          String
@@ -175,18 +175,18 @@ model Payment {
 }
 
 model PaymentInvoice {
-  id               String    @id @default(uuid())
-  stripeInvoiceId  String    @unique
+  id               String  @id @default(uuid())
+  stripeInvoiceId  String  @unique
   paymentId        String
-  stripeScheduleId String    @unique
+  stripeScheduleId String  @unique
   status           String
   amountOwed       Decimal
-  datePaid         DateTime?
-  dateSent         DateTime?
-  dateDue          DateTime?
+  datePaid         String?
+  dateSent         String?
+  dateDue          String?
   invoiceLink      String?
-  isPaid           Boolean   @default(false)
-  payment          Payment   @relation(fields: [paymentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  isPaid           Boolean @default(false)
+  payment          Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model AdvertisementPurchase {
@@ -206,7 +206,7 @@ model AdvertisementPurchaseSlot {
   advertisementPurchaseId String
   month                   Int
   slot                    Int
-  date                    DateTime?
+  date                    String?
   advertisementPurchase   AdvertisementPurchase @relation(fields: [advertisementPurchaseId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   purchaseId              String?
   purchaseOverview        PurchaseOverview?     @relation(fields: [purchaseId], references: [id], onDelete: Cascade, onUpdate: Cascade)

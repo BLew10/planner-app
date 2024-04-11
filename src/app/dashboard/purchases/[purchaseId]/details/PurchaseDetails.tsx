@@ -14,14 +14,11 @@ import {
   UpsertPurchaseData,
 } from "@/actions/purchases/upsertPurchase";
 import PurchaseNavigationModal from "./PurchaseNavigationModal";
+import { YEARS  } from "@/lib/constants";
 
 interface PurchaseDetailsProps {
   calendars: Partial<CalendarEdition>[] | null;
 }
-
-const YEARS: string[] = Array.from(new Array(3), (val, index) =>
-  (new Date().getFullYear() + index).toString()
-);
 
 const MONTHS: number[] = Array.from(new Array(12), (val, index) => index);
 
@@ -37,10 +34,8 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
       router.push("/dashboard/contacts");
       return;
     }
-  }, [searchParams]);
-  const [selectedYear, setSelectedYear] = useState<string>(
-    new Date().getFullYear().toString()
-  );
+  }, [searchParams, contactId]);
+  const [selectedYear, setSelectedYear] = useState<string>(YEARS[0].value);
   const [selectedCalendar, setSelectedCalendar] = useState<string>(
     calendars?.[0]?.id || ""
   );
@@ -77,7 +72,7 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
       const advertisementId = purchase.advertisementId;
       purchaseData[advertisementId] = {
         selectedDates: [],
-        charge: purchase.charge,
+        charge: Number(purchase.charge),
         quantity: purchase.quantity,
       };
 
@@ -135,7 +130,7 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
           label="Select a year"
           name="year"
           value={selectedYear}
-          options={YEARS.map((year) => ({ label: year, value: year }))}
+          options={YEARS}
           onChange={handleYearChange}
         />
         <SelectInput
@@ -151,13 +146,14 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
           onChange={handleCalendarChange}
         />
         {purchaseStore.purchaseOverview?.purchases?.map((purchase, index) => {
-          if (purchase?.isDayType) {
+                console.log(purchase?.advertisement?.isDayType);
+          if (purchase?.advertisement?.isDayType) {
             return (
               <div key={`daytype-${index}`}>
-                <h3 className={styles.text}>{purchase?.name}</h3>
+                <h3 className={styles.text}>{purchase?.advertisement.name}</h3>
                 <h4 className={styles.text}>
                   Charge:{" "}
-                  <span className={styles.charge}>${purchase?.charge}</span>
+                  <span className={styles.charge}>${Number(purchase?.charge)}</span>
                 </h4>
                 <h4 className={styles.text}>
                   Quantity:{" "}
@@ -178,10 +174,10 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
           }
           return (
             <div key={`nondaytype-${index}`}>
-              <h3 className={styles.text}>{purchase?.name}</h3>
+              <h3 className={styles.text}>{purchase?.advertisement?.name}</h3>
               <h4 className={styles.text}>
                 Charge:{" "}
-                <span className={styles.charge}>${purchase?.charge}</span>
+                <span className={styles.charge}>${Number(purchase?.charge)}</span>
               </h4>
               <h4 className={styles.text}>
                 Quantity:{" "}

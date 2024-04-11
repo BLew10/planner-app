@@ -5,14 +5,18 @@ import { useRouter } from "next/navigation";
 import { Advertisement } from "@prisma/client";
 import TextInput from "@/app/(components)/form/TextInput";
 import styles from "./Purchase.module.scss";
-import { AdvertisementPurchase, usePurchasesStore } from "@/store/purchaseStore";
-import { Purchase } from "@/lib/data/purchase";
+import { usePurchasesStore } from "@/store/purchaseStore";
+import { AdvertisementPurchaseModel } from "@/lib/models/advertisementPurchase";
+import { PurchaseOverviewModel } from "@/lib/models/purchaseOverview";
+import { AdvertisementPurchaseSlotModel } from "@/lib/models/advertisementPurchaseSlots";
+import { ContactModel } from "@/lib/models/contact";
 import { getContactById } from "@/lib/data/contact";
 import { useSearchParams } from "next/navigation";
+import { AdvertisementModel } from "@/lib/models/advertisment";
 
 interface PurchaseProps {
-  advertisementTypes: Partial<Advertisement>[] | null;
-  purchase?: Partial<Purchase> | null;
+  advertisementTypes: Partial<Advertisement>[];
+  purchase?: Partial<PurchaseOverviewModel> | null;
 }
 
 interface AdvertisementType {
@@ -36,30 +40,31 @@ interface FormData {
   };
 }
 const Purchase: React.FC<PurchaseProps> = ({
-  advertisementTypes = [],
+  advertisementTypes,
   purchase = null,
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const purchaseStore = usePurchasesStore();
   const [contact, setContact] = useState<Contact | null>(null);
+  const [formData, setFormData] = useState<FormData>();
 
 
   useEffect(() => {
 
-    const savePurchaseData = (contact: Contact) => {
-      let purchases: AdvertisementPurchase[] = [];
+    const savePurchaseData = (contactData: Partial<ContactModel>) => {
+      let purchases: Partial<AdvertisementPurchaseModel>[] = [];
       if (purchase?.adPurchases) {
         purchases = purchase?.adPurchases
       } else if (purchaseStore.purchaseOverview?.purchases) {
-        purchases = purchaseStore.purchaseOverview?.purchases as AdvertisementPurchase[];
+        purchases = purchaseStore.purchaseOverview?.purchases as AdvertisementPurchaseModel[];
       }
+      console.log(purchases);
       purchaseStore.setPurchaseData({
         purchases: purchases,
-        contactId: contact.id,
-        companyName: contact?.companyName || "",
+        contactId: contactData.id,
+        companyName: contactData?.contactContactInformation?.company || "",
       });
-     
     }
 
     const fetchContact = async (contactId: string) => {
@@ -70,11 +75,11 @@ const Purchase: React.FC<PurchaseProps> = ({
       }
       if (contactData) {
         const contact = {
-          id: contactData.id,
+          id: contactData.id as string,
           companyName: contactData.contactContactInformation?.company || "",
         }
         setContact(contact);
-        savePurchaseData(contact);
+        savePurchaseData(contactData);
       } else {
         router.push('/dashboard/contacts');
       }
@@ -87,38 +92,41 @@ const Purchase: React.FC<PurchaseProps> = ({
     }
   }, [purchase, searchParams]);
 
-  const [formData, setFormData] = useState<FormData>(() => {
-    if (advertisementTypes) {
-      const adPurchases = purchaseStore.purchaseOverview?.purchases?.reduce(
-        (acc: Record<string, { quantity: string ; charge: string }>, curr) => {
-          if (curr) {
-            const { advertisementId } = curr;
-            if (advertisementId) {
-              acc[advertisementId] = { quantity: curr?.quantity?.toString() || "", charge: curr?.charge?.toString() || "" };
-            }
-          }
-          return acc;
-        },
-        {}
-      );
-
-      return advertisementTypes.reduce(
-        (acc: FormData, curr: Partial<AdvertisementType>) => {
-          const { id } = curr;
-          if (id) {
-            const charge = adPurchases ? adPurchases[id]?.charge : "";
-            const quantity = adPurchases ? adPurchases[id]?.quantity : "";
-            acc[id] = {
-              quantity, charge
-            }
-          }
-          return acc;
-        },
-        {}
-      );
+  useEffect(() => {
+    if (purchaseStore.purchaseOverview?.purchases && purchaseStore.purchaseOverview?.purchases.length > 0) {
+      const newFormData = initializeFormData(advertisementTypes, purchaseStore.purchaseOverview.purchases);
+      setFormData(newFormData);
     }
-    return {};
-  });
+  }, [purchaseStore.purchaseOverview?.purchases, advertisementTypes]);
+
+  const initializeFormData = (advertisementTypes: Partial<Advertisement>[], purchases: (Partial<AdvertisementPurchaseModel> | null)[]) => {
+    const adPurchases = purchases?.reduce((acc: Record<string, { quantity: string ; charge: string }>, curr) => {
+        if (curr) {
+          const { advertisement } = curr;
+          if (advertisement?.id) {
+            acc[advertisement.id] = { quantity: curr?.quantity?.toString() || "", charge: curr?.charge?.toString() || "" };
+          }
+        }
+        return acc;
+      },
+      {}
+    );
+
+    return advertisementTypes.reduce(
+      (acc: FormData, curr: Partial<AdvertisementType>) => {
+        const { id } = curr;
+        if (id) {
+          const charge = adPurchases ? adPurchases[id]?.charge : "";
+          const quantity = adPurchases ? adPurchases[id]?.quantity : "";
+          acc[id] = {
+            quantity, charge
+          }
+        }
+        return acc;
+      },
+      {}
+    );
+  }
 
 
   const handleInputChange = (
@@ -126,13 +134,19 @@ const Purchase: React.FC<PurchaseProps> = ({
     field: "quantity" | "charge",
     value: string
   ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [id]: {
-        ...prev[id],
-        [field]: value,
-      },
-    }));
+    setFormData((prev) => {
+      if (!prev) {
+        return {}; 
+      }
+    
+      return {
+        ...prev,
+        [id]: {
+          ...prev[id],
+          [field]: value,
+        },
+      };
+    });
   };
 
   // Handle form submission
@@ -142,27 +156,33 @@ const Purchase: React.FC<PurchaseProps> = ({
       return;
     }
     const adPurchaseSlots = purchase?.adPurchases?.reduce(
-      (acc: Record<string, { slot: number; date: Date | null }[]>, curr) => {
+      (acc: Record<string, Partial<AdvertisementPurchaseSlotModel>[]>, curr) => {
         const { advertisement } = curr;
-        if (advertisement) {
-          acc[advertisement.id] = curr.slots || [];
+        if (advertisement?.id) {
+          acc[advertisement.id] = curr.adPurchaseSlots || [];
         }
         return acc;
       },
       {}
     );
 
-    const purchases: (AdvertisementPurchase | null)[] | null = advertisementTypes.filter((at) => at.id && formData[at.id]?.charge && formData[at.id]?.quantity)
-      .map((at): AdvertisementPurchase | null => {
-        if (at.id && formData[at.id]?.charge && formData[at.id]?.quantity) {
+    interface PurchaseDetailsData {
+      advertisementId?: string;
+      quantity?: number;
+      charge?: number;
+      adPurchaseSlots?: Partial<AdvertisementPurchaseSlotModel>[];
+      advertisement?: Partial<AdvertisementModel>;
+    }
+
+    const purchases: (Partial<PurchaseDetailsData> | null)[] | null = advertisementTypes.filter((at) => at.id && formData && formData[at.id]?.charge && formData[at.id]?.quantity)
+      .map((a) => {
+        if (a.id && formData && formData[a.id]?.charge && formData[a.id]?.quantity) {
           return {
-            advertisementId: at.id,
-            name: at.name || "",
-            quantity: parseInt(formData[at.id]?.quantity || "0", 10),
-            charge: parseFloat(formData[at.id]?.charge || "0"),
-            isDayType: at.isDayType || false,
-            perMonth: at.perMonth || 0,
-            slots: adPurchaseSlots ? adPurchaseSlots[at.id] : []
+            advertisementId: a.id,
+            quantity: parseInt(formData[a.id]?.quantity || "0", 10),
+            charge: parseFloat(formData[a.id]?.charge || "0"),
+            adPurchaseSlots: adPurchaseSlots ? adPurchaseSlots[a.id] : [],
+            advertisement: a
           };
         }
         return null;
@@ -170,12 +190,13 @@ const Purchase: React.FC<PurchaseProps> = ({
     if (purchases.length > 0) {
       purchaseStore.setPurchaseData({
         contactId: contact.id,
-        companyName: contact.companyName || "",
+        companyName: contact?.companyName || "",
         purchases,
       });
       router.push(`/dashboard/purchases/${purchase?.id || "add"}/details?contactId=${contact.id}`);
     }
   };
+
   return (
     <section className={styles.container}>
       <h2 className={styles.title}>
@@ -194,7 +215,7 @@ const Purchase: React.FC<PurchaseProps> = ({
                   name={`quantity-${at.id}`}
                   type="number"
                   placeholder="Quantity"
-                  value={at.id && formData[at.id]?.quantity}
+                  value={at.id && formData && formData[at.id]?.quantity}
                   onChange={(e) =>
                     at.id &&
                     handleInputChange(at.id, "quantity", e.target.value)
@@ -205,7 +226,7 @@ const Purchase: React.FC<PurchaseProps> = ({
                   name={`charge-${at.id}`}
                   type="text"
                   placeholder="Charge"
-                  value={at.id && formData[at.id]?.charge}
+                  value={at.id && formData && formData[at.id]?.charge}
                   onChange={(e) =>
                     at.id && handleInputChange(at.id, "charge", e.target.value)
                   }

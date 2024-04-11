@@ -81,15 +81,6 @@ export const deletePaymentByScheduleId = async (
         },
       })
 
-      const invoices = await prisma.paymentInvoice.findMany({
-        where: {
-          stripeScheduleId: stripeSchedule.id,
-        },
-      });
-      for (const invoice of invoices) {
-        await stripe.invoices.del(invoice.stripeInvoiceId);
-      }
-
       await prisma.paymentInvoice.updateMany({
         where: {
           stripeScheduleId: stripeSchedule.id,

@@ -1,23 +1,24 @@
 "use client";
 
 import React from "react";
-import { AdvertisementPurchase } from "@/store/purchaseStore";
+import { AdvertisementPurchaseModel } from "@/lib/models/advertisementPurchase";
 import styles from "./PurchaseNonDayType.module.scss";
 import CheckboxGroup from "@/app/(components)/form/CheckboxGroup";
 
 interface PurchaseNonDayTypeProps {
-  purchase: Partial<AdvertisementPurchase> | null;
+  purchase: Partial<AdvertisementPurchaseModel> | null;
 }
 
 const PurchaseNonDayType = ({ purchase }: PurchaseNonDayTypeProps) => {
+  console.log('NonDayType', purchase);
   const monthGroups = Array.from({ length: 12 }).map((_, monthIndex) => {
-    const options = Array.from({ length: Number(purchase?.perMonth) || 0 }).map(
+    const options = Array.from({ length: Number(purchase?.advertisement?.perMonth) || 0 }).map(
       (_, index) => 
 
       ({
         label: `${index + 1}`,
         value: "",
-        checked: purchase?.slots?.some((slot) => slot.month === monthIndex+1 && slot.slot === index + 1) || false,
+        checked: purchase?.adPurchaseSlots?.some((slot) => slot.month === monthIndex+1 && slot.slot === index + 1) || false,
       })
     );
 

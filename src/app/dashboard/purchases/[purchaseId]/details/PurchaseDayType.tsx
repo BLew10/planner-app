@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { AdvertisementPurchase } from "@/store/purchaseStore";
+import { AdvertisementPurchaseModel } from "@/lib/models/advertisementPurchase";
 import Calendar from "react-calendar";
 import styles from "./PurchaseDayType.module.scss";
 import "react-calendar/dist/Calendar.css";
@@ -7,7 +7,7 @@ import "react-calendar/dist/Calendar.css";
 interface PurchaseDayTypeProps {
   year: number;
   month: number;
-  purchase: Partial<AdvertisementPurchase> | null;
+  purchase: Partial<AdvertisementPurchaseModel> | null;
 }
 
 const PurchaseDayType: React.FC<PurchaseDayTypeProps> = ({
@@ -16,10 +16,10 @@ const PurchaseDayType: React.FC<PurchaseDayTypeProps> = ({
   month,
 }) => {
   const [selectedDays, setSelectedDays] = useState<Date[]>(() =>
-    purchase?.slots
-      ? purchase.slots
+    purchase?.adPurchaseSlots
+      ? purchase.adPurchaseSlots
           .filter((slot) => slot.date)
-          .map((slot) => new Date(slot.date as Date))
+          .map((slot) => new Date(slot.date as string))
       : []
   );
   const [activeStartDate, setActiveStartDate] = useState(new Date(year, month));
@@ -53,25 +53,21 @@ const PurchaseDayType: React.FC<PurchaseDayTypeProps> = ({
   
   let slotIndex = 0;
 
+  console.log('purchase?.adPurchaseSlots', purchase?.adPurchaseSlots);
   const tileContent = ({ date, view }: { date: Date; view: string }) => {
     if (view === "month") {
       slotIndex++
-      let isSelected = selectedDays.some(
-        (selectedDate) => selectedDate.getTime() === date.getTime()
-      );
+      let isSelected = selectedDays.some((selectedDate) => selectedDate.getTime() === date.getTime() && month === date.getMonth());
       const value = date.getMonth() === month ? date.toLocaleDateString() : "";
-
       if (!isSelected) {
-        isSelected = purchase?.slots?.some(s => s.slot === slotIndex) || false;
+        isSelected = purchase?.adPurchaseSlots?.some(s => s.slot === slotIndex/2 && s.month === month + 1) || false;
       }
-
-
 
       return (
         <input
           type="checkbox"
           name={`adid-${purchase?.advertisementId}-month-${month + 1}`}
-          value={value || (slotIndex/2)}
+          value={value ||  slotIndex/2}
           defaultChecked={isSelected}
           className={styles.checkbox}
         />
