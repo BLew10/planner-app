@@ -9,7 +9,7 @@ import { handleInvoicePaid, updateInvoiceStatus, updateInvoice, updateInvoiceSen
 const endpointSecret =
   "whsec_a431de84e9d9ce1c6fd44cab5735c88179dd3957bc824cc52b4747390de6fcec";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY_TEST as string || process.env.STRIPE_SECRET_KEY_LIVE as string);
 export async function POST(request: NextRequest) {
   try {
     // Ensure method is POST

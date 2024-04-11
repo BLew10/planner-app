@@ -7,7 +7,8 @@ import { cancelStripeSchedule } from "@/lib/helpers/stripeHelpers";
 import { PaymentStatusType } from "@/lib/constants";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY_TEST as string || process.env.STRIPE_SECRET_KEY_LIVE as string);
 
 const deletePayment = async (paymentId: string, stripeScheduleId: string) => {
   try {

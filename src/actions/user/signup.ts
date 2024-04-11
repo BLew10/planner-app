@@ -21,7 +21,6 @@ const signUp = async (formData: FormData) => {
         },
       };
     }
-
     const lowerCaseEmail = email.toLowerCase();
     const lowerCaseUsername = username.toLowerCase();
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -31,7 +30,7 @@ const signUp = async (formData: FormData) => {
         OR: [{ username: lowerCaseUsername }, { email: lowerCaseEmail }],
       },
     });
-
+    console.log("existingUser", existingUser);
     if (existingUser) {
       return {
         status: 400,
@@ -54,6 +53,7 @@ const signUp = async (formData: FormData) => {
     console.log("User created", user);
     await login(formData);
   } catch (error: any) {
+    console.error("Error signing up", error);
     return {
       status: 400,
       json: {

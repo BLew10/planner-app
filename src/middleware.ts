@@ -18,7 +18,7 @@ export default auth((req) => {
     if (isLoggedIn) {
       return Response.redirect(new URL(DEFAULT_REDIRECT_URL, nextUrl));
     } else {
-      return Response.redirect(new URL('/', nextUrl));
+      return null;
     }
   }
 
