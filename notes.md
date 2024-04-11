@@ -18,3 +18,7 @@
 - When Joyce clicks 'Sync', it should grab all subscriptions, check the status
     - if id does not exists, move status to `Cancelled`
 - My system should just interface with status, joyce will need to check stripe be see payment updates and issues. 
+
+
+## Setup
+- Have joyce setup a vercel account

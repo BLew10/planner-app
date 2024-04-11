@@ -35,7 +35,7 @@ const ContactOverview = ({ contactId }: ContactOverviewProps) => {
     <div className={styles.wrapper}>
       <div className={styles.contactHeader}>
         <h1 className={styles.heading}>
-          {contact?.contactContactInformation?.company}
+          {contact?.contactContactInformation?.company || contact?.contactContactInformation?.firstName + " " + contact?.contactContactInformation?.lastName}
         </h1>
         <Link
           href={`/dashboard/contacts/${contact?.id}`}

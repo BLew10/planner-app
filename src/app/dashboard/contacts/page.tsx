@@ -113,15 +113,25 @@ const ContactsPage = () => {
         href={`/dashboard/contacts/${c.id}/overview`}
         className={styles.contactLink}
         key={c.id}
+        dataset-search={`${c.contactContactInformation?.firstName} ${c.contactContactInformation?.lastName}`}
       >{`${c.contactContactInformation?.firstName} ${c.contactContactInformation?.lastName}`}</Link>,
       c.contactContactInformation?.company,
       c.contactTelecomInformation?.phone,
       c.contactTelecomInformation?.extension,
       c.contactTelecomInformation?.cellPhone,
-      <Link href={`mailto:${c.contactTelecomInformation?.email}`} key={c.id}>
+      <Link
+        href={`mailto:${c.contactTelecomInformation?.email}`}
+        key={c.id}
+        dataset-search={`${c.contactTelecomInformation?.email}`}
+      >
         {c.contactTelecomInformation?.email}
       </Link>,
-      <a rel="noopener noreferrer" href={`${c.webAddress}`} key={c.id}>
+      <a
+        rel="noopener noreferrer"
+        href={`${c.webAddress}`}
+        key={c.id}
+        dataset-search={`${c.webAddress}`}
+      >
         {c.webAddress}
       </a>,
       c.category != "0" && c.category
