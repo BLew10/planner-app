@@ -24,7 +24,7 @@ import { MenuItem } from "./MenuItem";
 import { MenuGroup } from "./MenuGroup";
 
 const MainMenu = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   return (
     <nav className={`${styles.mainNav} ${isOpen ? styles.open : styles.closed}`}>
       <div className={styles.nameContainer}>
