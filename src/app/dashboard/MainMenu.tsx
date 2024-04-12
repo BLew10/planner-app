@@ -1,4 +1,6 @@
-import React from "react";
+'use client';
+
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -9,7 +11,9 @@ import {
   MdLogout,
   MdOutlineTopic,
   MdAttachMoney,
-  MdOutlinePayments
+  MdOutlinePayments,
+  MdOutlineArrowCircleLeft,
+  MdOutlineArrowCircleRight
 } from "react-icons/md";
 
 import styles from "./MainMenu.module.scss";
@@ -20,17 +24,20 @@ import { MenuItem } from "./MenuItem";
 import { MenuGroup } from "./MenuGroup";
 
 const MainMenu = () => {
+  const [isOpen, setIsOpen] = useState(false);
   return (
-    <nav className={styles.mainNav}>
+    <nav className={`${styles.mainNav} ${isOpen ? styles.open : styles.closed}`}>
       <div className={styles.nameContainer}>
-        <Link href="/dashboard">Calendar Planner</Link>
+       { isOpen && <Link href="/" className={styles.name}>Calendar Planner</Link>}
         <Image
           src="/images/logo.png"
           alt="Calendar Planner Logo"
           width={50}
           height={50}
         />
+       {isOpen ? <MdOutlineArrowCircleLeft  className={styles.arrow} onClick={() => setIsOpen(false)}/> : <MdOutlineArrowCircleRight className={styles.arrow} onClick={() => setIsOpen(true)}/>}
       </div>
+      {isOpen && 
       <ul className={styles.navList}>
         <li>
           <MenuGroup title="Pages">
@@ -88,7 +95,7 @@ const MainMenu = () => {
             </form>
           </MenuGroup>
         </li>
-      </ul>
+      </ul>}
     </nav>
   );
 };

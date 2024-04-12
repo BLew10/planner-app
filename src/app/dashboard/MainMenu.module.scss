@@ -5,7 +5,18 @@
   align-items: center;
   flex-direction: column;
   min-height: 100vh;
-  min-width: 300px;
+  width: 350px;
+  position: relative;
+
+  &.closed {
+    width: 50px;
+    transition: width 0.3s ease;
+  }
+
+  &.open {
+    width: 350px;
+    transition: width 0.3s ease;
+  }
 }
 
 .navList {
@@ -27,4 +38,16 @@
 
 .logoutButton {
   width: 100%;
+}
+
+.arrow {
+  position: absolute;
+  font-size: 2rem;
+  right: 0;
+  top: 50px;
+  transform: translate(50%, -50%); 
+  &:hover {
+    cursor: pointer;
+    color: var(--primary-blue-dark);
+  }
 }
