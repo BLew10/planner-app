@@ -189,3 +189,16 @@ export async function cancelStripeSchedule(scheduleId: string): Promise<Stripe.S
         return null
     }
 }
+
+export async function setInvoiceToAutoAdvanced(
+  stripeInvoiceId: string
+) {
+  try {
+    const invoice = await stripe.invoices.update(stripeInvoiceId, {
+      auto_advance: true
+    })
+  } catch (e) {
+    console.log('Error setting invoice to auto advance', e)
+    return null
+  }
+}

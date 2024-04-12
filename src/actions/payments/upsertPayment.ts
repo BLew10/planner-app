@@ -29,8 +29,6 @@ export interface UpsertPaymentData {
   totalPayments: number;
   paymentsMade: number;
 }
-// TODO: Send invoices automatically with cron job or webhook
-// await stripe.invoices.sendInvoice(invoiceId);
 export async function upsertPayment(data: UpsertPaymentData) {
   try {
     const session = await auth();

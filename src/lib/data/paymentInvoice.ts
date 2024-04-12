@@ -6,6 +6,7 @@ import { PaymentInvoice, Prisma } from "@prisma/client";
 import Stripe from "stripe";
 import { formatDateToString } from "../helpers/formatDateToString";
 import { convertToDollars } from "../helpers/convertToDollars";
+import { setInvoiceToAutoAdvanced } from "../helpers/stripeHelpers";
 
 export async function handleInvoicePaid(
   stripeInvoice: Stripe.Invoice,
@@ -47,7 +48,7 @@ export async function handleInvoicePaid(
       },
     });
   } catch (e) {
-    console.log("Error updating payment status", e);
+    console.error("Error updating payment status", e);
     return null;
   }
 }
@@ -66,7 +67,7 @@ export async function updateInvoiceStatus(
     });
     return invoice
   } catch (e) {
-    console.log('Error updating invoice status', e)
+    console.error('Error updating invoice status', e)
     return null
   }
 }
@@ -95,7 +96,7 @@ export async function updateInvoice(
     });
     return invoice
   } catch (e) {
-    console.log('Error updating invoice status', e)
+    console.error('Error updating invoice status', e)
     return null
   }
 }
@@ -105,11 +106,11 @@ export async function createInvoice(
   stripeScheduleId: string
 ) {
   try {
+
+    await setInvoiceToAutoAdvanced(stripeInvoice.id)
     const payment = await prisma.payment.findFirst({
       where: { stripeScheduleId: stripeScheduleId },
     })
-
-    console.log('stripeInvoice?.due_date', stripeInvoice?.due_date)
 
     let invoice = await prisma.paymentInvoice.findFirst({
       where: { stripeScheduleId: stripeScheduleId },
@@ -135,7 +136,7 @@ export async function createInvoice(
     });
     return invoice
   } catch (e) {
-    console.log('Error updating invoice status', e)
+    console.error('Error updating invoice status', e)
     return null
   }
 }
@@ -153,7 +154,7 @@ export async function updateInvoiceSentDate(
     });
     return invoice
   } catch (e) {
-    console.log('Error updating invoice status', e)
+    console.error('Error updating invoice status', e)
     return null
   }
 }
@@ -168,7 +169,7 @@ export async function updateInvoiceUrl(stripeInvoice: Stripe.Invoice) {
         });
         return invoice
     } catch (e) {
-        console.log('Error updating invoice status', e)
+        console.error('Error updating invoice status', e)
         return null
     }
 }
