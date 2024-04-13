@@ -78,7 +78,7 @@ model ContactTelecomInformation {
   phone     String?
   altPhone  String?
   fax       String?
-  email     String?
+  email     String?  @unique
   cellPhone String?
   homePhone String?
   contact   Contact? @relation(fields: [contactId], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -185,6 +185,7 @@ model PaymentInvoice {
   dateSent         String?
   dateDue          String?
   invoiceLink      String?
+  stripeUrl        String?
   isPaid           Boolean @default(false)
   payment          Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }

@@ -21,6 +21,7 @@ export async function handleInvoicePaid(
         amountOwed: new Prisma.Decimal(convertToDollars(stripeInvoice.total)),
         datePaid: formatDateToString(datePaid),
         invoiceLink: stripeInvoice.invoice_pdf,
+        stripeUrl: stripeInvoice.hosted_invoice_url,
       },
       include: { payment: true },
     });
@@ -126,6 +127,7 @@ export async function createInvoice(
         amountOwed: convertToDollars(stripeInvoice.total),
         isPaid: false,
         invoiceLink: stripeInvoice.invoice_pdf,
+        stripeUrl: stripeInvoice.hosted_invoice_url,
         dateDue: stripeInvoice?.due_date ? formatDateToString(new Date(stripeInvoice?.due_date * 1000)) : null,
         dateSent: null,
         datePaid: null,
@@ -163,7 +165,8 @@ export async function updateInvoiceUrl(stripeInvoice: Stripe.Invoice) {
         const invoice = await prisma.paymentInvoice.update({
             where: { stripeInvoiceId: stripeInvoice.id },
             data: {
-                invoiceLink: stripeInvoice.invoice_pdf
+                invoiceLink: stripeInvoice.invoice_pdf,
+                stripeUrl: stripeInvoice.hosted_invoice_url
             }
         });
         return invoice

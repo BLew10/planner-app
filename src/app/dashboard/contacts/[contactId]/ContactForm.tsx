@@ -212,6 +212,7 @@ const ContactForm = ({ id }: ContactProps) => {
               isRequired={true}
               title="Email is required"
               value={formData?.email}
+              subLabel="Verify the email address is valid"
               onChange={handleInputChange}
             />
           </div>

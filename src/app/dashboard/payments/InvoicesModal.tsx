@@ -124,14 +124,12 @@ export default function InvoicesModal({
                                   : "Not Sent"}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                                {invoice.isPaid
-                                  ? invoice.datePaid
-                                  : "Not Paid"}
+                                {invoice.isPaid ? invoice.datePaid : "Not Paid"}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                                 ${Number(invoice.amountOwed).toFixed(2)}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-white flex justify-center items-center gap-2 flex-col">
                                 {invoice.invoiceLink && (
                                   <a
                                     href={invoice.invoiceLink}
@@ -139,10 +137,18 @@ export default function InvoicesModal({
                                     rel="noopener noreferrer"
                                     className={styles.invoiceLink}
                                   >
-                                    {" "}
                                     Download Invoice
                                   </a>
                                 )}
+                                {invoice.stripeUrl && (
+                                  <a
+                                    href={invoice.stripeUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={styles.stripeUrl}
+                                  >
+                                    View on Stripe
+                                </a>)}
                               </td>
                             </tr>
                           ))}
