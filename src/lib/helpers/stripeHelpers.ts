@@ -202,3 +202,14 @@ export async function setInvoiceToAutoAdvanced(
     return null
   }
 }
+
+export async function sendInvoiceEmail(
+  stripeInvoiceId: string
+) {
+  try {
+    const invoice = await stripe.invoices.sendInvoice(stripeInvoiceId)
+  } catch (e) {
+    console.log('Error sending invoice email', e)
+    return null
+  }
+}
