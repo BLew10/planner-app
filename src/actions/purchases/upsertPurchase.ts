@@ -26,15 +26,7 @@ export interface UpsertPurchaseData {
 
 export async function upsertPurchase(data: UpsertPurchaseData) {
   const session = await auth();
-  if (!session) {
-    return {
-      status: 401,
-      json: {
-        success: false,
-        message: "Not authenticated",
-      },
-    };
-  }
+  if (!session) return false;
   const userId = session.user?.id;
 
   const { year, calendarId, contactId, purchaseData, purchaseId } = data;
@@ -123,7 +115,6 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
               slot,
             },
           });
-          console.log({ month, slot, checked, date }, slotExists);
           if (checked) {
             if (!slotExists) {
               await prisma.advertisementPurchaseSlot.create({
@@ -151,21 +142,9 @@ export async function upsertPurchase(data: UpsertPurchaseData) {
       timeout: 10000, // default: 5000
     });
 
-    return {
-      status: 200,
-      json: {
-        success: true,
-        message: "Purchase upserted successfully",
-      },
-    };
+   return true
   } catch (error: any) {
     console.error("Error upserting purchase", error);
-    return {
-      status: 500,
-      json: {
-        success: false,
-        message: "Error upserting purchase",
-      },
-    };
+    return false;
   }
 }

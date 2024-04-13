@@ -13,15 +13,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY_TEST as string || proces
 const deletePayment = async (paymentId: string, stripeScheduleId: string) => {
   try {
     const session = await auth();
-    if (!session) {
-      return {
-        status: 401,
-        json: {
-          success: false,
-          message: "Not authenticated",
-        },
-      };
-    }
+    const userId = session?.user?.id;
     console.log("Deleting payment", paymentId);
     await cancelStripeSchedule(stripeScheduleId);
     await prisma.payment.update({
@@ -34,19 +26,11 @@ const deletePayment = async (paymentId: string, stripeScheduleId: string) => {
     });
 
     console.log("Deleted payment", paymentId);
+    return true;
   } catch (error: any) {
     console.error("Error deleting purchase", error);
-
-    return {
-      status: 500,
-      json: {
-        success: false,
-        message: "Error deleting calendar edition",
-      },
-    };
+    return false;
   }
-
-  revalidatePath("/dashboard/payments");
 };
 
 export default deletePayment;

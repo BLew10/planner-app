@@ -7,16 +7,7 @@ import { revalidatePath } from "next/cache";
 const deleteContact = async (contactId: string) => {
   try {
     const session = await auth();
-    if (!session) {
-      return {
-        status: 401,
-        json: {
-          success: false,
-          message: "Not authenticated",
-        },
-      };
-    }
-    const userId = session.user?.id;
+    const userId = session?.user?.id;
 
     await prisma.$transaction(async (prisma) => {
       const contact = await prisma.contact.findFirst({
@@ -53,21 +44,12 @@ const deleteContact = async (contactId: string) => {
         },
       });
     })
-
+    return true 
   } catch (error: any) {
     // Handle any potential errors here
     console.error("Error deleting contact", error);
-
-    return {
-      status: 500,
-      json: {
-        success: false,
-        message: "Error deleting contact",
-      },
-    };
+    return false
   }
-
-  revalidatePath("/dashboard/contacts");
 };
 
 export default deleteContact;

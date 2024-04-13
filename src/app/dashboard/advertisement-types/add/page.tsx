@@ -10,7 +10,7 @@ const AddAddressBookPage = ({
 }) => {
   return (
     <section className={styles.container}>
-      <ATForm id={params.id} />
+      <ATForm id={params.id === "add" ? null : params.id} />
     </section>
   );
 };

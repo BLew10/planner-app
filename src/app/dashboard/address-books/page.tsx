@@ -9,19 +9,28 @@ import { getAllAddressBooks } from "@/lib/data/addressBook";
 import deleteAddressBook from "@/actions/address-book/deleteAddressBook";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import DeleteButton from "@/app/(components)/general/DeleteButton";
+import { toast, ToastContainer } from 'react-toastify';
 
 const AddressBooksPage = () => {
   const [addressBooks, setAddressBooks] = useState<
     Partial<AddressBook>[] | null
   >();
   const [tableData, setTableData] = useState<any[]>();
+  const successNotify = () => toast.success("Successfully Deleted");
+  const errorNotify = () => toast.error("Something went wrong. Deletion failed");
 
   const onAddressBookDelete = async (addressBoodId?: string) => {
-    await deleteAddressBook(addressBoodId || "-1");
+   const deleted = await deleteAddressBook(addressBoodId || "-1");
     const newAddressBooks = await getAllAddressBooks();
     const newMappedData = mapToTableData(newAddressBooks || []);
     setAddressBooks(newAddressBooks);
     setTableData(newMappedData);
+    if (deleted) {
+      successNotify();
+    } else {
+      errorNotify();
+    }
+    return deleted
   };
   const mapToTableData = (addressBooks: Partial<AddressBook>[]) => {
     return addressBooks?.map((addressBook) => {
@@ -37,7 +46,7 @@ const AddressBooksPage = () => {
           </Link>
           <DeleteButton
             title="Delete Address Book"
-            onDelete={() => onAddressBookDelete(addressBook.id)}
+            onDelete={() =>  onAddressBookDelete(addressBook.id)}
             text={`Are you sure you want to delete ${addressBook.name}?`}
           />
         </div>,
@@ -73,6 +82,7 @@ const AddressBooksPage = () => {
   return (
     <AnimateWrapper>
       <section className={styles.container}>
+        <ToastContainer />
         <Table
           tableName="Address Books"
           columns={columns}

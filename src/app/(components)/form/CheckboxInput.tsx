@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./CheckboxInput.module.scss";
 
 interface CheckboxInputProps {
@@ -18,15 +18,20 @@ const CheckboxInput = ({
   onChange,
   isReadOnly = false,
 }: CheckboxInputProps) => {
+  const [isChecked, setIsChecked] = useState<boolean>(checked || false);
+
+  useEffect(() => {
+    setIsChecked(checked || false);
+  }, [checked]);
   return (
     <div className={styles.inputContainer}>
       <input
         type="checkbox"
         name={name}
         value={value}
-        defaultChecked={checked}
+        checked={isChecked}
+        onChange={() => setIsChecked(!isChecked)}
         disabled={isReadOnly}
-        onChange={onChange}
       />
       <label className={styles.label}>{label}</label>
     </div>

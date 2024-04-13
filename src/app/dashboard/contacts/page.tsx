@@ -12,6 +12,7 @@ import SimpleModal from "@/app/(components)/general/SimpleModal";
 import { CATEGORIES } from "@/lib/constants";
 import { AddressBook } from "@prisma/client";
 import DeleteButton from "@/app/(components)/general/DeleteButton";
+import { toast, ToastContainer } from 'react-toastify';
 
 const firstOptionAddressBook: Partial<AddressBook> = {
   id: "-1",
@@ -31,6 +32,9 @@ const ContactsPage = () => {
   >([firstOptionAddressBook]);
 
   const [openEmailModal, setOpenEmailModal] = useState(false);
+  const successNotify = () => toast.success("Successfully Deleted");
+  const errorNotify = () => toast.error("Something went wrong. Deletion failed");
+
 
   const fetchContacts = async (addressBookId: string) => {
     const contacts = await getContactsByAddressBook(addressBookId);
@@ -52,9 +56,15 @@ const ContactsPage = () => {
   };
 
   const onContactDelete = async (contactId?: string) => {
-    await deleteConact(contactId || "-1");
+    const deleted = await deleteConact(contactId || "-1");
     const newContacts = await getContactsByAddressBook(addressBookId);
     setContacts(newContacts);
+    if (deleted) {
+      successNotify();
+    } else {
+      errorNotify();
+    }
+    return deleted;
   };
 
   const handleAddressBookChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -186,6 +196,7 @@ const ContactsPage = () => {
       )}
       <AnimateWrapper>
         <section className={styles.container}>
+        <ToastContainer />
           <Table
             tableName="Contacts"
             columns={columns}

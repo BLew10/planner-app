@@ -14,7 +14,8 @@ import {
   UpsertPurchaseData,
 } from "@/actions/purchases/upsertPurchase";
 import PurchaseNavigationModal from "./PurchaseNavigationModal";
-import { YEARS  } from "@/lib/constants";
+import { FUTURE_YEARS } from "@/lib/constants";
+import { toast, ToastContainer } from "react-toastify";
 
 interface PurchaseDetailsProps {
   calendars: Partial<CalendarEdition>[] | null;
@@ -28,6 +29,8 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
   const { purchaseId } = useParams();
   const searchParams = useSearchParams();
   const contactId = searchParams.get("contactId");
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const notifyError = () => toast.error("Something went wrong. Please try again.");
 
   useEffect(() => {
     if (!contactId) {
@@ -35,7 +38,7 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
       return;
     }
   }, [searchParams, contactId]);
-  const [selectedYear, setSelectedYear] = useState<string>(YEARS[0].value);
+  const [selectedYear, setSelectedYear] = useState<string>(FUTURE_YEARS[0].value);
   const [selectedCalendar, setSelectedCalendar] = useState<string>(
     calendars?.[0]?.id || ""
   );
@@ -49,8 +52,13 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsSubmitting(true);
+
     const purchases = purchaseStore.purchaseOverview?.purchases;
-    if (!purchases) return;
+    if (!purchases) {
+      setIsSubmitting(false);
+      return;
+    };
 
     let purchaseData: Record<
       string,
@@ -103,7 +111,11 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
       calendarId: selectedCalendar,
       purchaseData,
     };
-    await upsertPurchase(data);
+    const success = await upsertPurchase(data);
+    if (!success) {
+      notifyError();
+    }
+    setIsSubmitting(false);
     purchaseStore.setPurchaseData(null);
     setShowNavigationModal(true);
   };
@@ -115,6 +127,7 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
         contactId={contactId as string}
       />
       <form className={styles.container} onSubmit={onSubmit}>
+        <ToastContainer />
         <div className={styles.header}>
           <Link
             className={styles.backArrow}
@@ -130,7 +143,7 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
           label="Select a year"
           name="year"
           value={selectedYear}
-          options={YEARS}
+          options={FUTURE_YEARS}
           onChange={handleYearChange}
         />
         <SelectInput
@@ -152,7 +165,9 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
                 <h3 className={styles.text}>{purchase?.advertisement.name}</h3>
                 <h4 className={styles.text}>
                   Charge:{" "}
-                  <span className={styles.charge}>${Number(purchase?.charge)}</span>
+                  <span className={styles.charge}>
+                    ${Number(purchase?.charge)}
+                  </span>
                 </h4>
                 <h4 className={styles.text}>
                   Quantity:{" "}
@@ -176,7 +191,9 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
               <h3 className={styles.text}>{purchase?.advertisement?.name}</h3>
               <h4 className={styles.text}>
                 Charge:{" "}
-                <span className={styles.charge}>${Number(purchase?.charge)}</span>
+                <span className={styles.charge}>
+                  ${Number(purchase?.charge)}
+                </span>
               </h4>
               <h4 className={styles.text}>
                 Quantity:{" "}
@@ -191,8 +208,12 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
             </div>
           );
         })}
-        <button type="submit" className={styles.submitButton}>
-          {purchaseId !== "add" ? "Update" : "Create"}
+        <button
+          type="submit"
+          className={styles.submitButton}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Saving..." : "Save"}
         </button>
       </form>
     </>

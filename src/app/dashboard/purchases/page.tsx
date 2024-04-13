@@ -10,10 +10,38 @@ import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import deletePurchase from "@/actions/purchases/deletePurchase";
 import SimpleModal from "@/app/(components)/general/SimpleModal";
 import DeleteButton from "@/app/(components)/general/DeleteButton";
-
+import { toast, ToastContainer } from 'react-toastify';
+const columns = [
+  {
+    name: "Company Name",
+    size: "default",
+  },
+  {
+    name: "Amount Owed",
+    size: "default",
+  },
+  {
+    name: "Calendar Edition",
+    size: "default",
+  },
+  {
+    name: "Year",
+    size: "default",
+  },
+  {
+    name: "Payment Scheduled",
+    size: "default",
+  },
+  {
+    name: "Actions",
+    size: "default",
+  },
+];
 const PurchasesPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [purchases, setPurchases] = useState<PurchaseTableData[] | null>([]);
+  const successNotify = () => toast.success("Successfully Deleted");
+  const errorNotify = () => toast.error("Something went wrong. Deletion failed");
   useEffect(() => {
     const fetchPurchases = async () => {
       const purhcases = await getAllPurchases();
@@ -22,37 +50,17 @@ const PurchasesPage = () => {
     fetchPurchases();
   }, []);
 
-  const columns = [
-    {
-      name: "Company Name",
-      size: "default",
-    },
-    {
-      name: "Amount Owed",
-      size: "default",
-    },
-    {
-      name: "Calendar Edition",
-      size: "default",
-    },
-    {
-      name: "Year",
-      size: "default",
-    },
-    {
-      name: "Payment Scheduled",
-      size: "default",
-    },
-    {
-      name: "Actions",
-      size: "default",
-    },
-  ];
+  
 
   const onDeletePurchase = async (purchaseId: string) => {
-    await deletePurchase(purchaseId);
+    const deleted = await deletePurchase(purchaseId);
     const newPurchases = purchases?.filter((p) => p.id !== purchaseId);
     setPurchases(newPurchases || null);
+    if (deleted) {
+      successNotify();
+    } else {
+      errorNotify();
+    }
   };
   const data = purchases?.map((p) => {
     return [
@@ -106,6 +114,7 @@ const PurchasesPage = () => {
       />
       <AnimateWrapper>
         <section className={styles.container}>
+        <ToastContainer />
           <Table
             tableName="Purchases"
             columns={columns}

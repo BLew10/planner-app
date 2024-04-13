@@ -3,9 +3,40 @@
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
-import { parseContactFormData } from "@/lib/data/contact";
+import { Prisma} from "@prisma/client";
+import { ContactModel } from "@/lib/models/contact";
 
-const upsertContact = async (formData: FormData) => {
+export interface ContactFormData {
+  customerSince: string;
+  notes: string;
+  category: string;
+  webAddress: string;
+    firstName: string | null;
+    lastName: string | null;
+    altContactFirstName: string | null;
+    altContactLastName: string | null;
+    salutation: string | null;
+    company: string | null;
+    extension: string | null;
+    phone: string | null;
+    altPhone: string | null;
+    fax: string | null;
+    email: string | null;
+    cellPhone: string | null;
+    homePhone: string | null;
+    address: string | null;
+    address2: string | null;
+    city: string | null;
+    state: string | null;
+    zip: string | null;
+    country: string | null;
+  addressBooksIds: {
+    id: string; 
+  }[];
+}
+
+
+const upsertContact = async (formData: ContactFormData, contactId: string | null) => {
   try {
     const session = await auth();
     if (!session || !session.user?.id) {
@@ -18,107 +49,94 @@ const upsertContact = async (formData: FormData) => {
       };
     }
     const userId = session.user.id;
-    const contactData = parseContactFormData(formData, userId);
-
-    if (!contactData) {
-      return {
-        status: 400,
-        json: {
-          success: false,
-          message: "Invalid form data",
-        },
-      };
+    const data = {
+      formData,
+      userId,
     }
 
-    let contact;
-    const result = await prisma.$transaction(async (prisma) => {
-      console.log("Contact Data", contactData);
-      contact = await prisma.contact.findFirst({
-        where: { id: contactData.id },
-      });
+    if (!data || !userId) return false;
+    const contactContactInformation = {
+      company: formData.company as string,
+      altContactFirstName: formData.altContactFirstName as string,
+      altContactLastName: formData.altContactLastName as string,
+      salutation: formData.salutation as string,
+      firstName: formData.firstName as string,
+      lastName: formData.lastName as string,
+    }
+    const telecomInformation = {
+      phone: formData.phone?.trim() as string,
+      altPhone: formData.altPhone as string,
+      email: formData.email as string,
+      extension: formData.extension as string,
+      fax: formData.fax as string,
+      cellPhone: formData.cellPhone as string,
+      homePhone: formData.homePhone as string,
+    }
+    const addressInformation = {
+      address: formData.address as string,
+      address2: formData.address2 as string,
+      city: formData.city as string,
+      state: formData.state as string,
+      zip: formData.zip as string,
+      country: formData.country as string,
+    }
 
-      if (contact) {
-        contact = await prisma.contact.update({
-          where: { id: contact.id },
-          data: {
-            userId,
-            customerSince: contactData.customerSince,
-            notes: contactData.notes,
-            category: contactData.category,
-            webAddress: contactData.webAddress,
-            addressBooks: {
-              connect: contactData.addressBooks,
-            }
-        }});
-      } else {
-        contact = await prisma.contact.create({
-          data: {
-            userId,
-            customerSince: contactData.customerSince,
-            notes: contactData.notes,
-            category: contactData.category,
-            webAddress: contactData.webAddress,
-            addressBooks: {
-              connect: contactData.addressBooks,
-            },
-          },
-        });
-      }
-      const infoData = contactData.contactContactInformation.data;
-      const existingInfo = await prisma.contactContactInformation.findUnique({
-        where: { contactId: contact.id },
-      });
-      if (existingInfo) {
-        await prisma.contactContactInformation.update({
-          where: { contactId: contact.id },
-          data: infoData,
-        });
-      } else {
-        await prisma.contactContactInformation.create({
-          data: { ...infoData, contactId: contact.id },
-        });
-      }
+    const contactDataUpdate : Prisma.ContactUpdateInput = {
+      user: { connect: { id: userId } },
+      customerSince: formData.customerSince,
+      notes: formData.notes,
+      category: formData.category,
+      webAddress: formData.webAddress.trim(),
+      contactContactInformation: {
+          update: contactContactInformation
+      },
+      contactTelecomInformation: {
+          update: telecomInformation,
+      },
+      contactAddress: {
+          update: addressInformation,
+      },
+      addressBooks: {
+        connect: formData.addressBooksIds,
+      },
+    };
 
-      const telecomData = contactData.contactTelecomInformation.data;
-      const existingTelecom = await prisma.contactTelecomInformation.findUnique({
-        where: { contactId: contact.id },
-      });
-      if (existingTelecom) {
-        await prisma.contactTelecomInformation.update({
-          where: { contactId: contact.id },
-          data: telecomData,
-        });
-      } else {
-        await prisma.contactTelecomInformation.create({
-          data: { ...telecomData, contactId: contact.id },
-        });
-      }
+    const contactData : Prisma.ContactCreateInput = {
+      user: { connect: { id: userId } },
+      customerSince: formData.customerSince,
+      notes: formData.notes,
+      category: formData.category,
+      webAddress: formData.webAddress,
+      contactContactInformation: {
+          create: contactContactInformation
+      },
+      contactTelecomInformation: {
+          create: telecomInformation,
+      },
+      contactAddress: {
+          create: addressInformation,
+      },
+      addressBooks: {
+        connect: formData.addressBooksIds,
+      },
+    }
 
-      const addressData = contactData.contactAddress.data;
-      const existingAddress = await prisma.contactAddress.findUnique({
-        where: { contactId: contact.id },
-      });
+  
 
-      if (existingAddress) {
-        await prisma.contactAddress.update({
-          where: { contactId: contact.id },
-          data: addressData,
-        });
-      } else {
-        await prisma.contactAddress.create({
-          data: { ...addressData, contactId: contact.id },
-        });
-      }
-    });
+  
+
+  const result = await prisma.contact.upsert({
+    where: { id: contactId || "-1" },
+    update: contactDataUpdate,
+    create: contactData,
+  });
+
+
+    return true
   } catch (error: any) {
     console.error("Error saving contact", error);
-    return {
-      status: 500,
-      json: { success: false, message: "Error saving contact" },
-    };
+    return false
   }
-
-  redirect("/dashboard/contacts");
 };
 
 export default upsertContact;

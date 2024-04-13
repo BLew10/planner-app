@@ -10,6 +10,7 @@ import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import { MdCheck } from "react-icons/md";
 import DeleteButton from "@/app/(components)/general/DeleteButton";
 import { Advertisement } from "@prisma/client";
+import { toast, ToastContainer } from 'react-toastify';
 
 const AdvertisementsPage = () => {
   const [advertisementTypes, setAdvertisementTypes] = useState<
@@ -19,14 +20,21 @@ const AdvertisementsPage = () => {
     const advertisements = await getAllAdvertisementTypes();
     setAdvertisementTypes(advertisements);
   };
+  const successNotify = () => toast.success("Successfully Deleted");
+  const errorNotify = () => toast.error("Something went wrong. Deletion failed");
 
   useEffect(() => {
     fetchAdvertisementTypes();
   }, []);
 
   const onAdvertisementTypeDelete = async (adTypeId?: string) => {
-    await deleteAdvertisementType(adTypeId || "-1");
+   const deleted = await deleteAdvertisementType(adTypeId || "-1");
     await fetchAdvertisementTypes()
+    if (deleted) {
+      successNotify();
+    } else {
+      errorNotify();
+    }
   }
 
   const columns = [
@@ -35,7 +43,7 @@ const AdvertisementsPage = () => {
       size: "default",
     },
     {
-      name: "Quanity Per Month",
+      name: "Quantity Per Month",
       size: "default",
     },
     {
@@ -72,6 +80,7 @@ const AdvertisementsPage = () => {
   return (
     <AnimateWrapper>
       <section className={styles.container}>
+      <ToastContainer />
         <Table tableName="Advertisement Types" columns={columns} data={data} addPath={'/dashboard/advertisement-types/add'} />
       </section>
     </AnimateWrapper>

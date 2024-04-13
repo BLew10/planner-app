@@ -7,13 +7,13 @@ import { getAllAdvertisementTypes } from "@/lib/data/advertisementType";
 import { getAdvertisementPurchasesByYearAndCalendarId } from "@/lib/data/purchase";
 import SelectInput from "../(components)/form/SelectInput";
 import MonthlyView from "./MonthlyView";
-import { MONTHS, YEARS} from "@/lib/constants";
+import { MONTHS, ALL_YEARS} from "@/lib/constants";
 import LoadingSpinner from "../(components)/general/LoadingSpinner";
 import AnimateWrapper from "../(components)/general/AnimateWrapper";
 
 
 const Dashboard = () => {
-  const [selectedYear, setSelectedYear] = useState(YEARS[0].value);
+  const [selectedYear, setSelectedYear] = useState(ALL_YEARS[0].value);
   const [selectedCalendar, setSelectedCalendar] = useState("");
   const [purchaseData, setPurchaseData] = useState<any>([]);
   const [advertisementTypes, setAdvertisementTypes] = useState<any>([]);
@@ -69,9 +69,9 @@ const Dashboard = () => {
           <SelectInput
             name="year"
             label="Year"
-            value={String(YEARS[0])}
+            value={String(ALL_YEARS[0])}
             onChange={handleYearChange}
-            options={YEARS}
+            options={ALL_YEARS}
           />
           <SelectInput
             name="calendar"

@@ -1,8 +1,8 @@
 "use client";
 
-import { SessionProvider } from 'next-auth/react';
-import MainMenu from '@/app/dashboard/MainMenu';
-import styles from './layout.module.scss';
+import { SessionProvider } from "next-auth/react";
+import MainMenu from "@/app/dashboard/MainMenu";
+import styles from "./layout.module.scss";
 
 export default function DashboardLayout({
   children,
@@ -10,10 +10,10 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <SessionProvider >
+    <SessionProvider>
       <div className={styles.container}>
-      <MainMenu />
-      {children}
+        <MainMenu />
+        {children}
       </div>
     </SessionProvider>
   );

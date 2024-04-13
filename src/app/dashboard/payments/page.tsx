@@ -11,6 +11,7 @@ import deletePayment from "@/actions/payments/deletePayment";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import DeleteButton from "@/app/(components)/general/DeleteButton";
 import InvoicesModal from "./InvoicesModal";
+import { toast, ToastContainer } from 'react-toastify';
 
 const defaultColumns = [
   {
@@ -58,11 +59,18 @@ const PaymentsPage = () => {
     useState<any[]>(defaultColumns);
   const [openInvoiceModal, setOpenInvoiceModal] = useState(false);
   const [paymentId, setPaymentId] = useState("");
+  const successNotify = () => toast.success("Successfully Deleted");
+  const errorNotify = () => toast.error("Something went wrong. Deletion failed");
 
   const onCancelPayment = async (paymentId?: string, scheduleId?: string) => {
-    await deletePayment(paymentId || "-1", scheduleId || "-1");
+    const deleted = await deletePayment(paymentId || "-1", scheduleId || "-1");
     const newPayments = payments?.filter((p) => p.id !== paymentId);
     setPayments(newPayments || []);
+    if (deleted) {
+      successNotify();
+    } else {
+      errorNotify();
+    }
   };
 
   useEffect(() => {
@@ -187,6 +195,7 @@ const PaymentsPage = () => {
       />
       <AnimateWrapper>
         <section className={styles.container}>
+        <ToastContainer />
           <Table
             tableName="Payments"
             columns={columnsToDisplay}

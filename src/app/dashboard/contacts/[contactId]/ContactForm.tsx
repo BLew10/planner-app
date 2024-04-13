@@ -1,72 +1,197 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
 import styles from "./ContactForm.module.scss";
 import TextInput from "@/app/(components)/form/TextInput";
-import upsertContact from "@/actions/contact/upsertContact";
+import upsertContact, {
+  ContactFormData,
+} from "@/actions/contact/upsertContact";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import CheckboxGroup from "@/app/(components)/form/CheckboxGroup";
 import { getAllAddressBooks } from "@/lib/data/addressBook";
 import { getContactById } from "@/lib/data/contact";
 import SelectInput from "@/app/(components)/form/SelectInput";
 import { COUNTRIES, STATES, CATEGORIES } from "@/lib/constants";
+import { useRouter } from "next/navigation";
+import { toast, ToastContainer } from "react-toastify";
 
 interface ContactProps {
   id: string | null;
 }
 
-const ContactForm = async ({ id }: ContactProps) => {
-  const contact = await getContactById(id as string);
-  const contactAddressBooks = contact?.addressBooks?.map((addressBook) => addressBook.id) || [];
+const ContactForm = ({ id }: ContactProps) => {
+  const router = useRouter();
+  const [formData, setFormData] = useState<ContactFormData | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [addressBooks, setAddressBooks] = useState<
+    { value: string; label: string; checked: boolean }[] | null
+  >(null);
+  const notifyError = () =>
+    toast.error("Something went wrong. Please try again.");
 
-  const addressBooks = await getAllAddressBooks();
-  const checkboxData = addressBooks?.filter((addressBook) => addressBook.name && addressBook.id).map((addressBook) => ({
-      value: addressBook.id,
-      label: addressBook.name,
-      checked: contactAddressBooks.includes(addressBook.id || ""),
-    }));
+  useEffect(() => {
+    if (id) {
+      getContactById(id).then((contact) => {
+        console.log(contact);
+        if (contact) {
+          setFormData({
+            customerSince: contact.customerSince || "",
+            notes: contact.notes || "",
+            category: contact.category || "0",
+            webAddress: contact.webAddress || "",
+            firstName: contact.contactContactInformation?.firstName || "",
+            lastName: contact.contactContactInformation?.lastName || "",
+            altContactFirstName:
+              contact.contactContactInformation?.altContactFirstName || "",
+            altContactLastName:
+              contact.contactContactInformation?.altContactLastName || "",
+            salutation: contact.contactContactInformation?.salutation || "",
+            company: contact.contactContactInformation?.company || "",
+            extension: contact.contactTelecomInformation?.extension || "",
+            phone: contact.contactTelecomInformation?.phone || "",
+            altPhone: contact.contactTelecomInformation?.altPhone || "",
+            fax: contact.contactTelecomInformation?.fax || "",
+            email: contact.contactTelecomInformation?.email || "",
+            cellPhone: contact.contactTelecomInformation?.cellPhone || "",
+            homePhone: contact.contactTelecomInformation?.homePhone || "",
+            address: contact.contactAddress?.address || "",
+            address2: contact.contactAddress?.address2 || "",
+            city: contact.contactAddress?.city || "",
+            state: contact.contactAddress?.state || "",
+            country: contact.contactAddress?.country || "",
+            zip: contact.contactAddress?.zip || "",
+            addressBooksIds: contact.addressBooks || [],
+          });
+        }
+      });
+    }
+  }, [id]);
+
+  useEffect(() => {
+    getAllAddressBooks().then((addressBooks) => {
+      const mappedAddressBooks = addressBooks?.map((addressBook) => {
+        return {
+          value: addressBook.id as string,
+          label: addressBook.name as string,
+          checked: formData?.addressBooksIds?.some(
+            (address) => address.id === addressBook.id
+          ) || false,
+        };
+      });
+      if (!mappedAddressBooks || mappedAddressBooks.length === 0) return;
+      setAddressBooks(mappedAddressBooks);
+    });
+  }, [formData]);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+    const addressBooks = document.getElementsByName("addressBookIds") as NodeListOf<HTMLInputElement>;
+    const addressBooksIds = Array.from(addressBooks)
+      .filter((addressBook) => addressBook.checked)
+      .map((addressBook) => {
+        return { id: addressBook.value };
+      });
+
+    const submissionData: ContactFormData = {
+      customerSince: formData?.customerSince || "",
+            notes: formData?.notes || "",
+            category: formData?.category || "",
+            webAddress: formData?.webAddress || "",
+            firstName: formData?.firstName || "",
+            lastName: formData?.lastName || "",
+            altContactFirstName:
+              formData?.altContactFirstName || "",
+            altContactLastName:
+              formData?.altContactLastName || "",
+            salutation: formData?.salutation || "",
+            company: formData?.company || "",
+            extension: formData?.extension || "",
+            phone: formData?.phone || "",
+            altPhone: formData?.altPhone || "",
+            fax: formData?.fax || "",
+            email: formData?.email || "",
+            cellPhone: formData?.cellPhone || "",
+            homePhone: formData?.homePhone || "",
+            address: formData?.address || "",
+            address2: formData?.address2 || "",
+            city: formData?.city || "",
+            state: formData?.state || "",
+            country: formData?.country || "",
+            zip: formData?.zip || "",
+            addressBooksIds
+    };
+
+    if (!submissionData || !id) return false;
+    const success = await upsertContact(submissionData, id);
+    setIsSubmitting(false);
+    if (success) {
+      router.push("/dashboard/contacts");
+    } else {
+      notifyError();
+    }
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }) as ContactFormData);
+  };
+
   return (
     <AnimateWrapper>
+      <ToastContainer />
       <h1 className={styles.heading}>{id ? "Edit" : "Add"} Contact</h1>
-      <form action={upsertContact} className={styles.form}>
-        {contact && <input type="hidden" name="contactId" value={contact.id} />}
+      <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.formGroup}>
           <h2 className={styles.groupHeader}>Telecom Information</h2>
           <div className={styles.inputGroup}>
             <TextInput
-              name="phoneNumber"
+              name="phone"
               label="Phone Number"
-              value={contact?.contactTelecomInformation?.phone || ""}
+              value={formData?.phone}
               pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
               title="Phone number must be in the format XXX-XXX-XXXX"
               subLabel="(XXX-XXX-XXXX)"
               placeholder="123-456-7890"
+              onChange={handleInputChange}
             />
             <TextInput
               name="extension"
               label="Extension"
-              value={contact?.contactTelecomInformation?.extension}
+              value={formData?.extension}
+              onChange={handleInputChange}
             />
             <TextInput
-              name="altPhoneNumber"
+              name="altPhone"
               label="Alt Phone Number"
-              value={contact?.contactTelecomInformation?.altPhone}
+              value={formData?.altPhone}
+              onChange={handleInputChange}
             />
           </div>
           <div className={styles.inputGroup}>
             <TextInput
               name="fax"
               label="Fax"
-              value={contact?.contactTelecomInformation?.fax}
+              value={formData?.fax}
+              onChange={handleInputChange}
             />
             <TextInput
-              name="cell"
+              name="cellPhone"
               label="Cell"
-              value={contact?.contactTelecomInformation?.cellPhone}
+              value={formData?.cellPhone}
               title="Cell must be in the format XXX-XXX-XXXX"
               placeholder="123-456-7890"
+              onChange={handleInputChange}
             />
             <TextInput
               name="homePhone"
               label="Home Phone"
-              value={contact?.contactTelecomInformation?.homePhone}
+              value={formData?.homePhone}
+              onChange={handleInputChange}
             />
           </div>
           <div className={styles.inputGroup}>
@@ -75,8 +200,8 @@ const ContactForm = async ({ id }: ContactProps) => {
               label="Web Address"
               type="url"
               placeholder="https://example.com"
-              pattern="^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$"
-              value={contact?.webAddress}
+              value={formData?.webAddress}
+              onChange={handleInputChange}
             />
             <TextInput
               name="email"
@@ -86,15 +211,19 @@ const ContactForm = async ({ id }: ContactProps) => {
               pattern="^[\w.%+-]+@[\w.-]+\.[a-zA-Z]{2,4}$"
               isRequired={true}
               title="Email is required"
-              value={contact?.contactTelecomInformation?.email}
+              value={formData?.email}
+              onChange={handleInputChange}
             />
           </div>
         </div>
 
         <div className={styles.formGroup}>
           <h2 className={styles.groupHeader}>Address Books</h2>
-          {checkboxData && checkboxData?.length > 0 ? (
-            <CheckboxGroup name="addressBookIds" options={checkboxData} />
+          {addressBooks && addressBooks?.length > 0 ? (
+            <CheckboxGroup
+              name="addressBookIds"
+              options={addressBooks}
+            />
           ) : (
             <p className={styles.noAddressBooks}>No address books found</p>
           )}
@@ -104,40 +233,46 @@ const ContactForm = async ({ id }: ContactProps) => {
           <h2 className={styles.groupHeader}>Contact Information</h2>
           <div className={styles.inputGroup}>
             <TextInput
-              name="contactFirstName"
+              name="firstName"
               label="Contact First Name"
-              value={contact?.contactContactInformation?.firstName}
+              value={formData?.firstName}
               isRequired={true}
               title="Contact First Name is required"
+              onChange={handleInputChange}
             />
             <TextInput
-              name="contactLastName"
+              name="lastName"
               label="Contact Last Name"
-              value={contact?.contactContactInformation?.lastName}
+              value={formData?.lastName}
+              onChange={handleInputChange}
             />
           </div>
           <div className={styles.inputGroup}>
             <TextInput
               name="altContactFirstName"
               label="Alt Contact First Name"
-              value={contact?.contactContactInformation?.altContactFirstName}
+              value={formData?.altContactFirstName}
+              onChange={handleInputChange}
             />
             <TextInput
               name="altContactLastName"
               label="Alt Contact Last Name"
-              value={contact?.contactContactInformation?.altContactLastName}
+              value={formData?.altContactLastName}
+              onChange={handleInputChange}
             />
           </div>
           <div className={styles.inputGroup}>
             <TextInput
               name="salutation"
               label="Salutation"
-              value={contact?.contactContactInformation?.salutation}
+              value={formData?.salutation}
+              onChange={handleInputChange}
             />
             <TextInput
               name="company"
               label="Company"
-              value={contact?.contactContactInformation?.company}
+              value={formData?.company}
+              onChange={handleInputChange}
               isRequired={true}
               title="Company is required"
             />
@@ -147,40 +282,46 @@ const ContactForm = async ({ id }: ContactProps) => {
           <h2 className={styles.groupHeader}>Address Information</h2>
           <div className={styles.inputGroup}>
             <TextInput
-              name="address1"
+              name="address"
               label="Street Address 1"
-              value={contact?.contactAddress?.address}
+              value={formData?.address}
+              onChange={handleInputChange}
             />
             <TextInput
               name="address2"
               label="Address Line 2"
-              value={contact?.contactAddress?.address2}
+              value={formData?.address2}
+              onChange={handleInputChange}
             />
           </div>
           <div className={styles.inputGroup}>
             <TextInput
               name="city"
               label="City"
-              value={contact?.contactAddress?.city}
+              value={formData?.city}
+              onChange={handleInputChange}
             />
             <SelectInput
               name="state"
               label="State"
               options={STATES}
-              value={contact?.contactAddress?.state}
+              onChange={handleInputChange}
+              value={formData?.state}
             />
           </div>
           <div className={styles.inputGroup}>
             <TextInput
-              name="zipCode"
+              name="zip"
               label="Zip Code"
-              value={contact?.contactAddress?.city}
+              value={formData?.zip }
+              onChange={handleInputChange}
             />
             <SelectInput
               name="country"
               label="Country"
               options={COUNTRIES}
-              value={contact?.contactAddress?.country}
+              value={formData?.country}
+              onChange={handleInputChange}
             />
           </div>
         </div>
@@ -191,13 +332,15 @@ const ContactForm = async ({ id }: ContactProps) => {
             <TextInput
               name="customerSince"
               label="Customer Since"
-              value={contact?.customerSince}
+              value={formData?.customerSince}
+              onChange={handleInputChange}
             />
             <SelectInput
               name="category"
               label="Category"
               options={CATEGORIES}
-              value={contact?.category}
+              value={formData?.category}
+              onChange={handleInputChange}
             />
           </div>
           <label htmlFor="notes" className={styles.label}>
@@ -208,11 +351,16 @@ const ContactForm = async ({ id }: ContactProps) => {
             id="notes"
             rows={4}
             cols={50}
-            defaultValue={contact?.notes || ""}
+            defaultValue={formData?.notes || ""}
+            onChange={handleInputChange}
           ></textarea>
         </div>
-        <button type="submit" className={styles.submitButton}>
-          Submit
+        <button
+          type="submit"
+          className={styles.submitButton}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Saving..." : "Save"}
         </button>
       </form>
     </AnimateWrapper>

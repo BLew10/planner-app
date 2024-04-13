@@ -110,6 +110,12 @@
   &:hover {
     background-color: #003c82;
   }
+
+  &:disabled {
+    background-color: var(--primary-yellow-dark);
+    cursor: not-allowed;
+    
+  }
 }
 
 @mixin action-link {

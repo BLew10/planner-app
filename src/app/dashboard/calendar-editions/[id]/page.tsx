@@ -1,24 +1,24 @@
-import ATForm from "../CalendarForm";
+import CalendarForm from "../CalendarForm";
 import styles from "./page.module.scss";
 
-const UpdateAdvertisement = async ({
+const CalendarEditionForm = async ({
   params,
 }: {
-  params: { id: string };
+  params: { id: string | null };
 }) => {
   let { id } = params;
 
   if (id == "add") {
-    id = ''
+    id = null
   }
 
   return (
     <section className={styles.container}>
-      <ATForm
+      <CalendarForm
       id={id}
       />
     </section>
   );
 };
 
-export default UpdateAdvertisement;
+export default CalendarEditionForm;

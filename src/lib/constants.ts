@@ -572,7 +572,7 @@ function generateFutureYears() {
   const currentYear = new Date().getFullYear();
   const years = [];
 
-  for (let i = 0; i <= 25; i++) {
+  for (let i = 0; i <= 5; i++) {
     years.push({
       value: String(currentYear + i),
       label: String(currentYear + i),
@@ -582,7 +582,24 @@ function generateFutureYears() {
   return years;
 }
 
-export const YEARS = generateFutureYears();
+function allYears() {
+  const startYear = 2024;
+  const currentYear = new Date().getFullYear();
+  const difference = currentYear - startYear;
+  const years = [];
+
+  for (let i = 0; i <= (difference + 5); i++) {
+    years.push({
+      value: String(2024 + i),
+      label: String(2024 + i),
+    });
+  }
+  return years;
+}
+
+export const FUTURE_YEARS = generateFutureYears();
+
+export const ALL_YEARS = allYears()
 
 export const MONTHS = [
   "January",

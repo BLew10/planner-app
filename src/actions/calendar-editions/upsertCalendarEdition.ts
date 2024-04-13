@@ -1,64 +1,37 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
-import { parseForm } from "@/lib/data/calendarEdition";
 
-const upsertCalendarEdition = async (formData: FormData) => {
+export interface CalendarEditionFormData {
+  name: string;
+}
+
+const upsertCalendarEdition = async (formData: CalendarEditionFormData, id?: string | null) => {
   try {
     const session = await auth();
-    if (!session) {
-      return {
-        status: 401,
-        json: {
-          success: false,
-          message: "Not authenticated",
-        },
-      };
-    }
-    const userId = session.user?.id;
-    const data = parseForm(formData, userId);
-    if (!data)
-      return {
-        status: 400,
-        json: {
-          success: false,
-          message: "Invalid form data",
-        },
-      };
+    const userId = session?.user?.id;
 
-    if (data.id) {
-      // If the data has an id, update the existing calendar edition
-      await prisma.calendarEdition.update({
-        where: {
-          id: data.id,
-        },
-        data,
-      });
-    } else {
-      const result = prisma.$transaction(async (prisma) => {
-        const calendarEdition = await prisma.calendarEdition.create({
-          data: {
-            userId,
-            name: data.name,
-          },
-        });
-      });
+    const data = {
+      ...formData,
+      userId,
     }
+
+    if (!data || !userId) return false;
+
+    await prisma.calendarEdition.upsert({
+      where: {
+        id: id || "-1",
+      },
+      update: data,
+      create: data,
+    })
+
+    return true
   } catch (error: any) {
     console.error("Error upserting advertisement type", error);
-
-    return {
-      status: 500,
-      json: {
-        success: false,
-        message: "Error upserting address book",
-      },
-    };
+    return false
   }
-
-  redirect("/dashboard/calendar-editions");
 }
 
 

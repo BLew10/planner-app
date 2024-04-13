@@ -7,15 +7,6 @@ import { revalidatePath } from "next/cache";
 const deletePurchase = async (purchaseId: string) => {
   try {
     const session = await auth();
-    if (!session) {
-      return {
-        status: 401,
-        json: {
-          success: false,
-          message: "Not authenticated",
-        },
-      };
-    }
 
     await prisma.$transaction(async (prisma) => {
 
@@ -37,20 +28,11 @@ const deletePurchase = async (purchaseId: string) => {
         },
       });
     });
-
+    return true; 
   } catch (error: any) {
     console.error("Error deleting purchase", error);
-
-    return {
-      status: 500,
-      json: {
-        success: false,
-        message: "Error deleting calendar edition",
-      },
-    };
+    return false;
   }
-
-  revalidatePath("/dashboard/purchases");
 };
 
 export default deletePurchase;

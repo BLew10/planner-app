@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./SelectInput.module.scss";
 
 interface SelectInputProps {
@@ -25,7 +25,6 @@ const SelectInput: React.FC<SelectInputProps> = ({
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [valueState, setValueState] = useState<string | null>(value || options[0]?.value || null);
-
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     if (validate) {
       const validationError = validate(e.target.value);
@@ -36,6 +35,10 @@ const SelectInput: React.FC<SelectInputProps> = ({
       onChange(e);
     }
   };
+
+  useEffect(() => {
+    setValueState(value || options[0]?.value || null);
+  }, [value, options])
 
   return (
     <div className={styles.inputWrapper}>

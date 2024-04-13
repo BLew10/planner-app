@@ -1,53 +1,42 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
-import { parseForm } from "@/lib/data/advertisementType";
 
-const upsertAdvertisementType = async (formData: FormData) => {
+export interface AdvertisementTypeFormData {
+  name: string ;
+  isDayType: boolean;
+  perMonth: number;
+}
+
+const upsertAdvertisementType = async (formData: AdvertisementTypeFormData, id?: string | null) => {
   try {
     const session = await auth();
-    if (!session) {
-      return {
-        status: 401,
-        json: {
-          success: false,
-          message: "Not authenticated",
-        },
-      };
+    const userId = session?.user?.id;
+    if (!userId) return false
+    
+    const data = {
+      ...formData,
+      userId,
     }
-    const userId = session.user?.id;
-    const data = parseForm(formData, userId);
-    if (!data)
-      return {
-        status: 400,
-        json: {
-          success: false,
-          message: "Invalid form data",
-        },
-      };
+
+    if (!data) return false
 
     const advertisement = await prisma.advertisement.upsert({
       where: {
-        id: data.id || "-1",
+        id: id || "-1",
       },
       update: data,
       create: data,
     });
+
+    return true;
   } catch (error: any) {
     console.error("Error upserting advertisement type", error);
 
-    return {
-      status: 500,
-      json: {
-        success: false,
-        message: "Error upserting address book",
-      },
-    };
+    return false;
   }
 
-  redirect("/dashboard/advertisement-types");
 };
 
 export default upsertAdvertisementType;
