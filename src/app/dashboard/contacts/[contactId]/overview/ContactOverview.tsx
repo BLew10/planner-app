@@ -9,6 +9,7 @@ import styles from "./ContactOverview.module.scss";
 import ContactInfoOverview from "./ContactInfoOverview";
 import ContactPurchasesOverview from "./ContactPurchasesOverview";
 import ContactPaymentsOverview from "./ContactPaymentsOverview";
+import LoadingSpinner from "@/app/(components)/general/LoadingSpinner";
 
 interface ContactOverviewProps {
   contactId: string;
@@ -17,25 +18,35 @@ interface ContactOverviewProps {
 type ContactOverviewTabs = "info" | "purchases" | "payments";
 const ContactOverview = ({ contactId }: ContactOverviewProps) => {
   const router = useRouter();
+  const [requesting, setRequesting] = useState(false);
   const [contact, setContact] = useState<Partial<ContactModel>>();
   const [activeTab, setActiveTab] = useState<ContactOverviewTabs>("info");
   useEffect(() => {
-    const fetchContact = async (contactId: string) => {
-      const contactData = await getContactById(contactId);
+    const fetchContact = async (id: string) => {
+      setRequesting(true);
+      const contactData = await getContactById(id);
       if (!contactData) {
         router.push("/dashboard/contacts");
         return;
       }
+      setRequesting(false);
       setContact(contactData);
     };
     fetchContact(contactId);
   }, [contactId, router]);
 
+  if (requesting) return <LoadingSpinner />;
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.contactHeader}>
         <h1 className={styles.heading}>
-          {contact?.contactContactInformation?.company || contact?.contactContactInformation?.firstName + " " + contact?.contactContactInformation?.lastName}
+          {contact
+            ? contact?.contactContactInformation?.company ||
+              contact?.contactContactInformation?.firstName +
+                " " +
+                contact?.contactContactInformation?.lastName
+            : ""}
         </h1>
         <Link
           href={`/dashboard/contacts/${contact?.id}`}
@@ -70,9 +81,15 @@ const ContactOverview = ({ contactId }: ContactOverviewProps) => {
           Payments
         </button>
       </div>
-      {activeTab === "info" && <ContactInfoOverview contact={contact as ContactModel} />}
-      {activeTab === "purchases" && <ContactPurchasesOverview contactId={contactId} />}
-      {activeTab === "payments" && <ContactPaymentsOverview contactId={contactId} />}
+      {activeTab === "info" && (
+        <ContactInfoOverview contact={contact as ContactModel} />
+      )}
+      {activeTab === "purchases" && (
+        <ContactPurchasesOverview contactId={contactId} />
+      )}
+      {activeTab === "payments" && (
+        <ContactPaymentsOverview contactId={contactId} />
+      )}
     </div>
   );
 };

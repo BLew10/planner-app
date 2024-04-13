@@ -21,12 +21,14 @@ const Dashboard = () => {
   const [fetching, setFetching] = useState(true);
   useEffect(() => {
     const fetchData = async () => {
+      setFetching(true);
       const calendars = await getAllCalendars();
       setSelectedCalendar(calendars?.[0]?.id || "");
       setCalendarData(calendars || []);
 
       const advertisementTypes = await getAllAdvertisementTypes();
       setAdvertisementTypes(advertisementTypes || []);
+      setFetching(false);
     };
 
     fetchData();
@@ -53,6 +55,8 @@ const Dashboard = () => {
 
     fetchData();
   }, [selectedYear, selectedCalendar]);
+
+  if (fetching) return <LoadingSpinner />
 
   if (calendarData.length === 0) {
     return (
