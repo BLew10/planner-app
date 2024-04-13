@@ -32,16 +32,7 @@ export interface UpsertPaymentData {
 export async function upsertPayment(data: UpsertPaymentData) {
   try {
     const session = await auth();
-    if (!session) {
-      return {
-        status: 401,
-        json: {
-          success: false,
-          message: "Not authenticated",
-        },
-      };
-    }
-
+    if (!session) return false
     const userId = session.user?.id;
     const { frequency } = data;
     const result = await prisma.$transaction(async (prismaClient) => {
@@ -52,36 +43,16 @@ export async function upsertPayment(data: UpsertPaymentData) {
           contactContactInformation: true,
         },
       });
-      if (!contact) {
-        return {
-          status: 404,
-          json: { success: false, message: "Contact not found" },
-        };
-      }
+      if (!contact) return false
       const stripeCustomer = await findOrCreateStripeCustomer(contact.contactTelecomInformation?.email || "");
-      if (!stripeCustomer) {
-        return {
-          status: 404,
-          json: { success: false, message: "Stripe customer not found" },
-        };
-      }
+      if (!stripeCustomer) return false
 
       const payment = await createPrismaPayment(data, prismaClient, userId);
       const paymentPerPeriodInCents = Math.ceil((data.totalOwed / data.totalPayments) * 100);
       const price = await createStripePrice(paymentPerPeriodInCents, frequency, contact.contactContactInformation?.company || "");
-      if (!price) {
-        return {
-          status: 404,
-          json: { success: false, message: "Price not found" },
-        };
-      }
+      if (!price) return false
       const schedule = await createStripeSubscriptionSchedule(stripeCustomer.id, price.id, data.startDate.toISOString().split("T")[0], data.totalPayments);
-      if (!schedule) {
-        return {
-          status: 404,
-          json: { success: false, message: "Schedule not found" },
-        };
-      }
+      if (!schedule) return false
       await addStripeScheduleIdToPayment(payment.id, schedule.id, prismaClient, userId);
       console.log("Subscription Schedule created:", schedule.id);
       },
@@ -90,18 +61,12 @@ export async function upsertPayment(data: UpsertPaymentData) {
         timeout: 20000, // default: 5000
       }
     );
+    return true
   } catch (error: any) {
     console.error("Error upserting purchase", error);
-    return {
-      status: 500,
-      json: {
-        success: false,
-        message: "Error upserting purchase",
-      },
-    };
+    return false;
   }
 
-  redirect("/dashboard/payments");
 }
 
 async function createPrismaPayment(

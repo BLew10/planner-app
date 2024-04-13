@@ -8,7 +8,6 @@ import {
   upsertPayment,
 } from "@/actions/payments/upsertPayment";
 import { getPurchasesWithoutPayment, PurchaseInfo } from "@/lib/data/purchase";
-import { getPaymentById } from "@/lib/data/payment";
 import { getContactById } from "@/lib/data/contact";
 import { PAYMENT_FREQUENCIES } from "@/lib/constants";
 
@@ -17,6 +16,7 @@ import CheckboxGroup from "@/app/(components)/form/CheckboxGroup";
 import TextInput from "@/app/(components)/form/TextInput";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import PaymentFormModal from "./PaymentFormModal";
+import { toast, ToastContainer } from "react-toastify";
 
 interface Contact {
   id: string;
@@ -42,6 +42,8 @@ const PaymentForm = () => {
     null
   );
   const [endDate, setEndDate] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const notifyError = () => toast.error("Something went wrong. Please try again.");
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -146,12 +148,18 @@ const PaymentForm = () => {
     setOpenPaymentModal(true);
   };
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
     if (!paymentData) {
       return;
     }
-
-    upsertPayment(paymentData);
+    setIsSubmitting(true);
+   const successs = await upsertPayment(paymentData);
+   setIsSubmitting(false);
+   if (successs) {
+    router.push("/dashboard/payments");
+   } else {
+     notifyError();
+   }
   };
 
   return (
@@ -160,6 +168,7 @@ const PaymentForm = () => {
         isOpen={openPaymentModal}
         closeModal={() => setOpenPaymentModal(false)}
         submit={onSubmit}
+        isSubmitting={isSubmitting}
         paymentData={paymentData}
         companyName={contact?.companyName || ""}
       />

@@ -9,6 +9,7 @@ interface PaymentFormModalProps {
   submit: () => void;
   paymentData: UpsertPaymentData | null;
   companyName: string
+  isSubmitting: boolean
 }
 
 export default function PaymentFormModal({
@@ -16,7 +17,8 @@ export default function PaymentFormModal({
   closeModal,
   submit,
   paymentData,
-  companyName
+  companyName, 
+  isSubmitting
 }: PaymentFormModalProps) {
 
   return (
@@ -68,10 +70,11 @@ export default function PaymentFormModal({
                 <div className={`mt-4 ${styles.actions}`}>
                   <button
                     type="button"
-                    className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                    disabled={isSubmitting}
+                    className={`inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                     onClick={submit}
                   >
-                    {paymentData?.paymentId ? "Update Payment" : "Add Payment"}
+                    {isSubmitting ? "Submitting..." : "Submit"}
                   </button>
                   <button
                     type="button"
