@@ -107,7 +107,6 @@ export async function createInvoice(
 ) {
   try {
 
-    await setInvoiceToAutoAdvanced(stripeInvoice.id)
     const payment = await prisma.payment.findFirst({
       where: { stripeScheduleId: stripeScheduleId },
     })

@@ -4,7 +4,7 @@ import Stripe from "stripe";
 import { deletePaymentByScheduleId } from "@/actions/payments/deletePayment";
 import { updatePaymentFromStripeSchedule } from "@/lib/data/payment";
 import { handleInvoicePaid, updateInvoiceStatus, updateInvoice, updateInvoiceSentDate, createInvoice , updateInvoiceUrl } from "@/lib/data/paymentInvoice";
-import { sendInvoiceEmail } from "@/lib/helpers/stripeHelpers";
+import { sendInvoiceEmail, setInvoiceToAutoAdvanced } from "@/lib/helpers/stripeHelpers";
 
 // TODO: add webhook secret to env
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
         const finalizedInvoice = event.data.object as Stripe.Invoice;
         console.log(`Finalized Invoice was successful! Invoice ID: ${finalizedInvoice.id}`);
         await updateInvoiceUrl(finalizedInvoice);
+        await setInvoiceToAutoAdvanced(finalizedInvoice.id)
         await sendInvoiceEmail(finalizedInvoice.id);
         break;
       case "invoice.marked_uncollectible":
