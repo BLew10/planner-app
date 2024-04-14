@@ -107,7 +107,6 @@ export async function POST(request: NextRequest) {
         console.log(`Finalized Invoice was successful! Invoice ID: ${finalizedInvoice.id}`);
         await updateInvoiceUrl(finalizedInvoice);
         await setInvoiceToAutoAdvanced(finalizedInvoice.id)
-        await sendInvoiceEmail(finalizedInvoice.id);
         break;
       case "invoice.marked_uncollectible":
         const markedUncollectibleInvoice = event.data.object as Stripe.Invoice;
