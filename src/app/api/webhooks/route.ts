@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
           break
         }
         await createInvoice(createdInvoice, subscriptionScheduleId as string);
+        await stripe.invoices.sendInvoice(createdInvoice.id);
         break;
       case "invoice.sent":
         const sentInvoice = event.data.object as Stripe.Invoice;
