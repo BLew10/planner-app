@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
         break;
       case "invoice.sent":
         const sentInvoice = event.data.object as Stripe.Invoice;
-        console.log(`Sent Invoice was successful! Invoice ID: ${sentInvoice.id}`);
+        console.log(`Sent Invoice was successful to ${sentInvoice.customer_email}! Invoice ID: ${sentInvoice.id}`);
         await updateInvoiceSentDate(sentInvoice.id);
         break;
       case "invoice.paid":
