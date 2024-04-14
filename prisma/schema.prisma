@@ -171,6 +171,7 @@ model Payment {
   user               User               @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   isDeleted          Boolean            @default(false)
   stripeScheduleId   String?
+  createdAt          DateTime           @default(now())
   PaymentInvoice     PaymentInvoice[]
 }
 

@@ -11,27 +11,26 @@ import { MONTHS, ALL_YEARS} from "@/lib/constants";
 import LoadingSpinner from "../(components)/general/LoadingSpinner";
 import AnimateWrapper from "../(components)/general/AnimateWrapper";
 
-
+const currentYear = new Date().getFullYear();
+const selectFirstYear = ALL_YEARS.find((year) => year.value === String(currentYear)) || ALL_YEARS[0];
 const Dashboard = () => {
-  const [selectedYear, setSelectedYear] = useState(ALL_YEARS[0].value);
+  const [selectedYear, setSelectedYear] = useState(selectFirstYear.value);
   const [selectedCalendar, setSelectedCalendar] = useState("");
   const [purchaseData, setPurchaseData] = useState<any>([]);
   const [advertisementTypes, setAdvertisementTypes] = useState<any>([]);
-  const [calendarData, setCalendarData] = useState<any>([]);
+  const [calendarData, setCalendarData] = useState<any>(null);
   const [fetching, setFetching] = useState(true);
   useEffect(() => {
-    const fetchData = async () => {
-      setFetching(true);
+    const fetchFilterData = async () => {
+
       const calendars = await getAllCalendars();
       setSelectedCalendar(calendars?.[0]?.id || "");
       setCalendarData(calendars || []);
-
       const advertisementTypes = await getAllAdvertisementTypes();
       setAdvertisementTypes(advertisementTypes || []);
-      setFetching(false);
     };
 
-    fetchData();
+    fetchFilterData();
   }, []);
 
   const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -56,9 +55,7 @@ const Dashboard = () => {
     fetchData();
   }, [selectedYear, selectedCalendar]);
 
-  if (fetching) return <LoadingSpinner />
-
-  if (calendarData.length === 0) {
+  if (!calendarData || calendarData.length === 0) {
     return (
       <div className={styles.noCalendars}>
         <p>No Calendars Found. Please create a Calendar Edition</p>
@@ -73,14 +70,14 @@ const Dashboard = () => {
           <SelectInput
             name="year"
             label="Year"
-            value={String(ALL_YEARS[0])}
+            value={selectedYear}
             onChange={handleYearChange}
             options={ALL_YEARS}
           />
           <SelectInput
             name="calendar"
             label="Calendar"
-            value={calendarData?.[0]?.id || ""}
+            value={selectedCalendar}
             onChange={handleCalendarChange}
             options={
               calendarData?.map((calendar: any) => ({

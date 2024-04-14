@@ -111,6 +111,7 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
       calendarId: selectedCalendar,
       purchaseData,
     };
+    console.log(data);
     const success = await upsertPurchase(data);
     if (!success) {
       notifyError();
@@ -166,7 +167,7 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
                 <h4 className={styles.text}>
                   Charge:{" "}
                   <span className={styles.charge}>
-                    ${Number(purchase?.charge)}
+                    ${purchase?.charge?.toFixed(2)}
                   </span>
                 </h4>
                 <h4 className={styles.text}>
@@ -192,7 +193,7 @@ const PurchaseDetails: React.FC<PurchaseDetailsProps> = ({ calendars }) => {
               <h4 className={styles.text}>
                 Charge:{" "}
                 <span className={styles.charge}>
-                  ${Number(purchase?.charge)}
+                  ${purchase?.charge?.toFixed(2)}
                 </span>
               </h4>
               <h4 className={styles.text}>

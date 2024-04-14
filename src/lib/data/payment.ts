@@ -13,6 +13,7 @@ export interface PaymentTableData {
     id: string;
     totalOwed: number;
     status: string;
+    createdAt: Date;
     totalPaid: number;
     totalPayments: number;
     startDate: Date;    
@@ -39,6 +40,7 @@ export const getAllPayments = async (paymentStatus: PaymentStatusType): Promise<
                 id: true,
                 totalOwed: true,
                 status: true,
+                createdAt: true,
                 totalPaid: true,
                 totalPayments: true,
                 startDate: true,
@@ -257,6 +259,7 @@ const formatTableData = (payment: any) => {
         id: payment.id,
         totalOwed: payment.totalOwed.toNumber(),
         status: payment.status,
+        createdAt: payment.createdAt,
         totalPaid: payment.totalPaid.toNumber(),
         totalPayments: payment.totalPayments,
         startDate: payment.startDate,

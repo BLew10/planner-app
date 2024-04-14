@@ -22,3 +22,7 @@
 
 ## Setup
 - Have joyce setup a vercel account
+
+## CHANGES
+- Invoices not sending when finalized
+- light mode?

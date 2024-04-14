@@ -137,7 +137,7 @@ export default function InvoicesModal({
                                     rel="noopener noreferrer"
                                     className={styles.invoiceLink}
                                   >
-                                    Download Invoice
+                                    Download
                                   </a>
                                 )}
                                 {invoice.stripeUrl && (
@@ -147,7 +147,7 @@ export default function InvoicesModal({
                                     rel="noopener noreferrer"
                                     className={styles.stripeUrl}
                                   >
-                                    View on Stripe
+                                    Stripe Link
                                 </a>)}
                               </td>
                             </tr>

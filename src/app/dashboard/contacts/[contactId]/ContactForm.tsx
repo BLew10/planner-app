@@ -122,7 +122,10 @@ const ContactForm = ({ id }: ContactProps) => {
             addressBooksIds
     };
 
-    if (!submissionData || !id) return false;
+    if (!submissionData)  {
+      setIsSubmitting(false);
+      return;
+    };
     const success = await upsertContact(submissionData, id);
     setIsSubmitting(false);
     if (success) {

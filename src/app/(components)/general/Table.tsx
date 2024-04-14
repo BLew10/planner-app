@@ -58,8 +58,8 @@ const Table = ({
   return (
     <div className={styles.container}>
       <div className={styles.headerWrapper}>
-        <h1 className={styles.tableName}>
-          {tableName}{" "}
+        <h1 className={styles.tableHeader}>
+          {<span className={styles.tableName}>{tableName}</span>}
           <span className={styles.resultsTotal}> Results: {data?.length}</span>
         </h1>
       </div>

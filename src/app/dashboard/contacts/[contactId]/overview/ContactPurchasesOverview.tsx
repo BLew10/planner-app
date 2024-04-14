@@ -102,7 +102,7 @@ const ContactPurchasesOverview = ({
                 <div key={purchase.id} className={styles.purchase}>
                   <div className={styles.purchaseHeading}>
                     <p className={styles.adType}>{purchase.advertisement.name}</p>
-                    <p className={styles.adCharge}>Charge: ${purchase.charge.toFixed(2)}</p>
+                    <p className={styles.adCharge}>Total: ${purchase.charge.toFixed(2)}</p>
                   </div>
                   <div key={purchase.id} className={styles.purchaseContent}>
                     {monthSlots && Object.keys(monthSlots).map((month, i) => (

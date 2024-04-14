@@ -12,6 +12,7 @@ import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import DeleteButton from "@/app/(components)/general/DeleteButton";
 import InvoicesModal from "./InvoicesModal";
 import { toast, ToastContainer } from 'react-toastify';
+import { formatDateToString } from "@/lib/helpers/formatDateToString";
 
 const defaultColumns = [
   {
@@ -28,6 +29,10 @@ const defaultColumns = [
   },
   {
     name: "Status",
+    size: "default",
+  },
+  {
+    name: "Created At",
     size: "default",
   },
   {
@@ -55,8 +60,6 @@ const PaymentsPage = () => {
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatusType>(
     PAYMENT_STATUSES[0].value as PaymentStatusType
   );
-  const [columnsToDisplay, setColumnsToDisplay] =
-    useState<any[]>(defaultColumns);
   const [openInvoiceModal, setOpenInvoiceModal] = useState(false);
   const [paymentId, setPaymentId] = useState("");
   const successNotify = () => toast.success("Successfully Deleted");
@@ -80,6 +83,7 @@ const PaymentsPage = () => {
         `$${Number(p.totalOwed).toFixed(2)}`,
         `$${Number(p.totalPaid).toFixed(2)}`,
         p.status,
+        p.createdAt ? formatDateToString(p.createdAt) : "",
         p.startDate,
         p.anticipatedEndDate,
         getNextPaymentDate(
@@ -95,7 +99,7 @@ const PaymentsPage = () => {
             className={styles.invoicesButton}
             onClick={() => handleViewInvoices(p.id as string)}
           >
-            View Invoices
+            Invoices
           </div>
           {paymentStatus === "Pending" && typeof p.id == "string" && (
             <div className={styles.modWrapper} >
@@ -198,7 +202,7 @@ const PaymentsPage = () => {
         <ToastContainer />
           <Table
             tableName="Payments"
-            columns={columnsToDisplay}
+            columns={defaultColumns}
             data={formattedTableData}
             filterOptions={PAYMENT_STATUSES}
             handleFilterChange={handlePaymentStatusChange}
