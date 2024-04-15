@@ -17,8 +17,18 @@ async function seedContactsFromCSV() {
       contacts.push(contact);
     })
     .on("end", async () => {
+      let count = 0;
+      console.log("Starting to process contacts");
+      const length = contacts.length;
+      const user = await prisma.user.findFirst({
+        where: {
+          firstName: "Joyce"
+        }
+      });
       for (const contact of contacts) {
-       await  upserContact(contact, addressBook.id);
+        count++;
+        console.log(`Processing contact ${count} of ${length}`);
+       await  upserContact(contact, addressBook.id, user.id);
       }
 
       console.log("All contacts have been processed");
@@ -83,11 +93,8 @@ const mapKeys = (contact) => {
   }
 };
 
-const upserContact = async (contactData, addressBookID) => {
+const upserContact = async (contactData, addressBookID, userId) => {
   try {
-    const user = await prisma.user.findFirst();
-    const userId = user.id;
-
     if (!contactData) return;
     let contact;
     const result = await prisma.$transaction(async (prisma) => {
@@ -162,13 +169,13 @@ const createAddressBook = async () => {
   const userId = user.id;
   let addressBook = await prisma.addressBook.findFirst({
     where: {
-      name: "Sponsors and Prospects",
+      name: "Sponsors and Prospects", userId
     },
   });
 
-  if (addressBook) {
-    return addressBook;
-  }
+  // if (addressBook) {
+  //   return addressBook;
+  // }
 
   addressBook = await prisma.addressBook.create({
     data: {
@@ -182,16 +189,20 @@ const createAddressBook = async () => {
 };
 
 const createCalendarEditions = async () => {
-  const user = await prisma.user.findFirst();
+  const user = await prisma.user.findFirst({
+    where: {
+      firstName: "Joyce"
+    }
+  });
   const userId = user.id;
   const editionNames = ['Sacramento, Arden', 'Elk Grove', 'West Sacramento']
   for (const name of editionNames) {
-    const edition = await prisma.calendarEdition.findFirst({
-      where: {
-        name
-      }
-    })
-    if (edition) continue
+    // const edition = await prisma.calendarEdition.findFirst({
+    //   where: {
+    //     name, userId
+    //   }
+    // })
+    // if (!edition) continue
     await prisma.calendarEdition.create({
       data: {
         name,
@@ -202,15 +213,18 @@ const createCalendarEditions = async () => {
 }
 
 const createAdvertismentTypes = async () => {
-  const user = await prisma.user.findFirst();
+  const user = await prisma.user.findFirst({
+    where: {
+      firstName: "Joyce"
+    }
+  });
   const userId = user.id;
 for (const type of ADVERTISEMENT_TYPES) {
-  const existingType = await prisma.advertisement.findFirst({
-    where: {
-      name: type.name
-    }
-  })
-  if (existingType) continue
+  // const existingType = await prisma.advertisement.findFirst({
+  //   where: {
+  //     name: type.name, userId
+  //   }
+  // })
   await prisma.advertisement.create({
     data: {
       userId,
@@ -495,7 +509,7 @@ const ADVERTISEMENT_TYPES = [
     isDayType: false
   },
   {
-    name: "Monthly Phto",
+    name: "Monthly Photo",
     quantity: 1,
     isDayType: false
   },
@@ -521,7 +535,7 @@ const ADVERTISEMENT_TYPES = [
   }
 
 ]
-// createCalendarEditions().catch(console.error);
-// createAddressBook().catch(console.error);
-// createAdvertismentTypes().catch(console.error);
+createCalendarEditions().catch(console.error);
+createAddressBook().catch(console.error);
+createAdvertismentTypes().catch(console.error);
 // seedContactsFromCSV().catch(console.error);

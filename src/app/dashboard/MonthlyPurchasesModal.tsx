@@ -109,7 +109,7 @@ export default function MonthlyPurchasesModal({
                 <div className="mt-2">
                   {groupedPurchases && Object.keys(groupedPurchases).length > 0
                     ? renderPurchases()
-                    : "No purchases found"}
+                    : <span className={styles.noPurchases}>No purchases found</span>}
                 </div>
 
                 <div className="mt-4">

@@ -18,6 +18,7 @@ interface TextInputProps {
   title?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   validate?: (value: string) => string | null;
+  children?: React.ReactNode;
 }
 
 const TextInput: React.FC<TextInputProps> = ({
@@ -35,6 +36,7 @@ const TextInput: React.FC<TextInputProps> = ({
   title,
   onChange,
   validate,
+  children,
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState<string>(value || "");
@@ -54,8 +56,12 @@ const TextInput: React.FC<TextInputProps> = ({
   };
 
   return (
-    <div className={styles.inputWrapper}>
-      <label className={styles.label}>{label} {isRequired && <span className={styles.required}>*</span>} {subLabel && <span className={styles.subLabel}>{subLabel}</span>}</label>
+    <div className={styles.wrapper}>
+      <label className={styles.label}>
+        {label} {isRequired && <span className={styles.required}>*</span>}{" "}
+        {subLabel && <span className={styles.subLabel}>{subLabel}</span>}
+      </label>
+      <div className={styles.inputWrapper}>
       <input
         type={type}
         placeholder={placeholder}
@@ -70,13 +76,19 @@ const TextInput: React.FC<TextInputProps> = ({
         value={inputValue}
         required={isRequired}
         title={title}
-        onChange={onChange || validate ? handleChange : (e) => {
-          e.preventDefault();
-          setInputValue(e.target.value);
-        }}
+        onChange={
+          onChange || validate
+            ? handleChange
+            : (e) => {
+                e.preventDefault();
+                setInputValue(e.target.value);
+              }
+        }
       />
-
+      {children}
+      </div>
       {error && <p className={styles.error}>{error}</p>}
+
     </div>
   );
 };
