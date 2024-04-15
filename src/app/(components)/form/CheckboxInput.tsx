@@ -30,7 +30,12 @@ const CheckboxInput = ({
         name={name}
         value={value}
         checked={isChecked}
-        onChange={() => setIsChecked(!isChecked)}
+        onChange={(e) =>{
+          setIsChecked(!isChecked);
+          if (onChange) {
+            onChange(e);
+          }
+        }}
         disabled={isReadOnly}
       />
       <label className={styles.label}>{label}</label>

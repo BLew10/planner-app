@@ -64,7 +64,7 @@ const ATForm = ({ id }: ATProps) => {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
-
+console.log(formData)
     if (name === "isDayType" && checked) {
       setFormData((prev) => ({ ...prev, perMonth: 35 }));
     }

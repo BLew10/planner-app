@@ -1,20 +1,18 @@
 import ATForm from "../ATForm";
 import styles from "./page.module.scss";
 
-const UpdateAdvertisement = async ({
+const AddAddressBookPage = ({
   params,
 }: {
-  params: { id: string };
+  params: {
+    id: string;
+  };
 }) => {
-  const { id } = params;
-
   return (
     <section className={styles.container}>
-      <ATForm
-      id={id}
-      />
+      <ATForm id={params.id === "add" ? null : params.id} />
     </section>
   );
 };
 
-export default UpdateAdvertisement;
+export default AddAddressBookPage;
