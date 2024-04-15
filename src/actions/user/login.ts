@@ -22,6 +22,7 @@ const login = async (formData: FormData) => {
     await signIn("credentials", {
       username,
       password,
+      redirect: true,
     });
   } catch (error) {
     if (error instanceof AuthError) {
