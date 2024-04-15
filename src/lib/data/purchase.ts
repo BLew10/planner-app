@@ -155,6 +155,7 @@ export const getAdvertisementPurchasesByYearAndCalendarId = async (
   calendarId: string,
   year: string
 ): Promise<PurchaseByMonth | null> => {
+
   const session = await auth();
   if (!session || !session.user || !calendarId || !year) {
     return null;
@@ -185,11 +186,7 @@ export const getAdvertisementPurchasesByYearAndCalendarId = async (
         },
       },
     },
-    orderBy: {
-      month: "asc",
-    },
   });
-
   const purchasesByMonth = purchases.reduce((acc, curr) => {
     const month = curr.month;
     if (!acc[month]) {

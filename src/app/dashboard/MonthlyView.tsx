@@ -6,7 +6,7 @@ import { Advertisement } from "@prisma/client";
 import { PurchaseSlotDetails } from "@/lib/data/purchase";
 import styles from "./MonthlyView.module.scss";
 import { MdDoneAll } from "react-icons/md";
-import MonthlyPurchasesModal from "./MonthlyPurchasesModal"
+import MonthlyPurchasesModal from "./MonthlyPurchasesModal";
 
 interface MonthlyViewProps {
   monthIndex: number;
@@ -77,14 +77,16 @@ const MonthlyView: React.FC<MonthlyViewProps> = ({
 
   return (
     <>
-      <MonthlyPurchasesModal
-        isOpen={openModal}
-        closeModal={() => setOpenModal(false)}
-        monthIndex={monthIndex}
-        calendarId={calendarId}
-        year={year}
-        advertisements={advertisements}
-      />
+      {openModal && (
+        <MonthlyPurchasesModal
+          isOpen={openModal}
+          closeModal={() => setOpenModal(false)}
+          monthIndex={monthIndex}
+          calendarId={calendarId}
+          year={year}
+          advertisements={advertisements}
+        />
+      )}
 
       <div className={styles.card} onClick={() => setOpenModal(true)}>
         <h3 className={styles.cardTitle}>{MONTHS[monthIndex]}</h3>
@@ -99,8 +101,7 @@ const MonthlyView: React.FC<MonthlyViewProps> = ({
                   </p>
                 ) : (
                   <p className={styles.availableSlots}>
-                    Available: {availableSlots[ad.id || ""]} of{" "}
-                    {ad.perMonth}
+                    Available: {availableSlots[ad.id || ""]} of {ad.perMonth}
                   </p>
                 )}
               </div>

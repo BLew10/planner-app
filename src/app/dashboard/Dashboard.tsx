@@ -51,7 +51,6 @@ const Dashboard = () => {
       setFetching(false);
       setPurchaseData(purchases || []);
     };
-
     fetchData();
   }, [selectedYear, selectedCalendar]);
 
