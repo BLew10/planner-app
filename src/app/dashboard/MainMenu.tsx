@@ -34,7 +34,6 @@ const MainMenu = () => {
       return false;
     };
   });
-
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
   };
@@ -46,7 +45,7 @@ const MainMenu = () => {
     } else {
       document.documentElement.classList.remove("light");
     } 
-  }, [isDarkMode]);
+  }, [isDarkMode, localStorage]);
   return (
     <nav
       className={`${styles.mainNav} ${isOpen ? styles.open : styles.closed}`}
