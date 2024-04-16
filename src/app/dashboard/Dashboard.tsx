@@ -7,12 +7,13 @@ import { getAllAdvertisementTypes } from "@/lib/data/advertisementType";
 import { getAdvertisementPurchasesByYearAndCalendarId } from "@/lib/data/purchase";
 import SelectInput from "../(components)/form/SelectInput";
 import MonthlyView from "./MonthlyView";
-import { MONTHS, ALL_YEARS} from "@/lib/constants";
+import { MONTHS, ALL_YEARS } from "@/lib/constants";
 import LoadingSpinner from "../(components)/general/LoadingSpinner";
 import AnimateWrapper from "../(components)/general/AnimateWrapper";
 
 const currentYear = new Date().getFullYear();
-const selectFirstYear = ALL_YEARS.find((year) => year.value === String(currentYear)) || ALL_YEARS[0];
+const selectFirstYear =
+  ALL_YEARS.find((year) => year.value === String(currentYear)) || ALL_YEARS[0];
 const Dashboard = () => {
   const [selectedYear, setSelectedYear] = useState(selectFirstYear.value);
   const [selectedCalendar, setSelectedCalendar] = useState("");
@@ -22,7 +23,6 @@ const Dashboard = () => {
   const [fetching, setFetching] = useState(true);
   useEffect(() => {
     const fetchFilterData = async () => {
-
       const calendars = await getAllCalendars();
       setSelectedCalendar(calendars?.[0]?.id || "");
       setCalendarData(calendars || []);
@@ -59,7 +59,7 @@ const Dashboard = () => {
       <div className={styles.noCalendars}>
         <p>No Calendars Found. Please create a Calendar Edition</p>
       </div>
-    )
+    );
   }
 
   return (
