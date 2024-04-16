@@ -26,13 +26,21 @@ import { MdDarkMode, MdLightMode } from "react-icons/md";
 
 const MainMenu = () => {
   const [isOpen, setIsOpen] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof localStorage !== "undefined") {
+      const darkModeValue = localStorage.getItem("darkMode");
+      return darkModeValue ? JSON.parse(darkModeValue) : false;
+    } else {
+      return false;
+    };
+  });
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
   };
 
   useEffect(() => {
+    localStorage.setItem("darkMode", JSON.stringify(isDarkMode));
     if (!isDarkMode) {
       document.documentElement.classList.add("light");
     } else {

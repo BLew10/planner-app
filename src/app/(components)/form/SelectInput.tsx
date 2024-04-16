@@ -25,6 +25,7 @@ const SelectInput: React.FC<SelectInputProps> = ({
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [valueState, setValueState] = useState<string | null>(value || options[0]?.value || null);
+
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     if (validate) {
       const validationError = validate(e.target.value);
@@ -38,7 +39,7 @@ const SelectInput: React.FC<SelectInputProps> = ({
 
   useEffect(() => {
     setValueState(value || options[0]?.value || null);
-  }, [value, options])
+  }, [value]);
 
   return (
     <div className={styles.inputWrapper}>

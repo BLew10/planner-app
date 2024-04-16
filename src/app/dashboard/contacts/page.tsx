@@ -46,6 +46,7 @@ const ContactsPage = () => {
   }, []);
 
   useEffect(() => {
+    console.log(addressBookId);
     fetchContacts(addressBookId);
   }, [addressBookId]);
 
