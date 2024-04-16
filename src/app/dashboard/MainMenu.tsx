@@ -23,29 +23,15 @@ import { logout } from "@/actions/user/logout";
 import { MenuItem } from "./MenuItem";
 import { MenuGroup } from "./MenuGroup";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
+import useDarkMode from "@/hooks/useDarkMode";
 
 const MainMenu = () => {
   const [isOpen, setIsOpen] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    if (typeof localStorage !== "undefined") {
-      const darkModeValue = localStorage.getItem("darkMode");
-      return darkModeValue ? JSON.parse(darkModeValue) : false;
-    } else {
-      return false;
-    };
-  });
+  const [isDarkMode, setIsDarkMode] = useDarkMode();
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
   };
 
-  useEffect(() => {
-    localStorage.setItem("darkMode", JSON.stringify(isDarkMode));
-    if (!isDarkMode) {
-      document.documentElement.classList.add("light");
-    } else {
-      document.documentElement.classList.remove("light");
-    } 
-  }, [isDarkMode, localStorage]);
   return (
     <nav
       className={`${styles.mainNav} ${isOpen ? styles.open : styles.closed}`}
