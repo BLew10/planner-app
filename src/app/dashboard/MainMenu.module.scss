@@ -12,6 +12,9 @@
   &.closed {
     width: 50px;
     transition: width 0.3s ease;
+    .darkModeButton {
+      display: none;
+    }
   }
 
   &.open {
@@ -74,16 +77,6 @@
     width: 20px; // Width of the sliding element
     border-radius: 50%; // Make it circular
     transition: transform 0.3s ease-in-out; // Smooth transition for sliding effect
-
-    &:before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 20px;
-      height: 20px;
-      background-size: cover;
-    }
   }
 
   &.dark {
