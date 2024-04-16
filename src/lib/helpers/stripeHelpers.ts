@@ -11,16 +11,32 @@ export async function findOrCreateStripeCustomer(
   email: string
 ): Promise<Stripe.Customer | null> {
   try {
-    const customer = await stripe.customers.retrieve(id);
-    if (!customer.deleted) {
-      return customer;
+    if (id) {
+      try {
+        const customer = await stripe.customers.retrieve(id);
+        if (!customer.deleted) {
+          return customer;
+        } else {
+          return await stripe.customers.create({ email: email });
+        }
+      } catch (error: any) {
+        if (
+          error.type === "StripeInvalidRequestError" &&
+          error.code === "resource_missing"
+        ) {
+          return await stripe.customers.create({ email: email });
+        } else {
+          throw error;
+        }
+      }
     } else {
       return await stripe.customers.create({ email: email });
     }
   } catch (error) {
-    console.log("Error finding or creating customer", error);
+    console.log("Error upserting customer", error);
     return null;
   }
+  
 }
 
 export async function upsertStripeCustomer(
