@@ -3,7 +3,7 @@
  * @type {string[]}
  */
 
-export const publicRoutes = ["/", "/signup", "/api/webhooks"];
+export const publicRoutes = ["/", "/signup", "/api/webhooks", "/api/test-webhooks"];
 
 export const apiAuthPrefix = "/api/auth";
 
