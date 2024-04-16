@@ -10,7 +10,7 @@
       text-align: center;
       font-weight: bold;
       font-size: 0.85em;
-      color: var(--text-white);
+      color: var(--text-secondary);
       text-decoration: none !important;
     }
 
@@ -43,7 +43,7 @@
       font-size: 0.85em;
       font-family: inherit;
       border: 1px solid #ddd;
-      color: var(--text-white);
+      color: var(--text-secondary);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -62,7 +62,7 @@
 
 .monthName {
   text-align: center;
-  color: var(--text-white);
+  color: var(--text-secondary);
   padding: 10px 0;
 }
 

@@ -7,7 +7,6 @@ import { handleInvoicePaid, updateInvoiceStatus, updateInvoice, updateInvoiceSen
 import { setInvoiceToAutoAdvanced } from "@/lib/helpers/stripeHelpers";
 import { removeContactStripeCustomerId } from "@/lib/data/contact";
 
-// TODO: add webhook secret to env
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET_TEST as string;
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY_TEST as string);

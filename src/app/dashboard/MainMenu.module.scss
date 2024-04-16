@@ -34,7 +34,7 @@
   align-items: center;
   gap: 10px;
   font-size: 1.2rem;
-  color: var(--text-white);
+  color: var(--text-secondary);
 }
 
 .logoutButton {
@@ -50,5 +50,51 @@
   &:hover {
     cursor: pointer;
     color: var(--primary-blue-dark);
+  }
+}
+
+.darkModeButton {
+  position: relative;
+  width: 50px; // Set the width of the button
+  height: 30px; // Set the height of the button
+  background-color: #ccc; // Background of the toggle button
+  align-self: flex-start;
+  margin-top: 20px;
+  border: none;
+  border-radius: 15px; // Rounded borders for the toggle shape
+  cursor: pointer;
+  overflow: hidden;
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 7px; // Small padding from top
+    bottom: 5px; // Small padding from bottom
+    left: 5px; // Start from left edge
+    width: 20px; // Width of the sliding element
+    border-radius: 50%; // Make it circular
+    transition: transform 0.3s ease-in-out; // Smooth transition for sliding effect
+
+    &:before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      background-size: cover;
+    }
+  }
+
+  &.dark {
+    .slider {
+      transform: translateX(20px); // Move right when in dark mode
+    }
+  }
+
+  &.light {
+    .slider {
+      transform: translateX(0); // Stay in place for light mode
+    }
   }
 }

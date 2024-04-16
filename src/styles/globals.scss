@@ -2,33 +2,50 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
-
 :root {
---primary-yellow:rgb(253, 178, 8);
---primary-yellow-opacity: rgba(253, 178, 8, 0.5);
---primary-yellow-dark:rgb(240, 134, 13);
---primary-yellow-dark-opacity: rgba(240, 134, 13, 0.5);
---primary-blue:rgb(16, 198, 248);
---primary-blue-opacity: rgba(16, 198, 248, 0.5);
---primary-blue-dark:rgb(9, 164, 228);
---primary-blue-dark-opacity: rgba(9, 164, 228, 0.5);
---primary-red:rgb(254, 51, 92);
---primary-red-dark:rgb(222, 14, 66);
---primary-red-dark-opacity: rgba(222, 14, 66, 0.5);
---primary-red-opacity: rgba(254, 51, 92, 0.5);
---primary-green:rgb(28, 221, 157);
---primary-green-dark:rgb(26, 171, 151);
---primary-green-opacity: rgba(28, 221, 157, 0.5);
---primary-green-dark-opacity: rgba(26, 171, 151, 0.5);
---primary-color: rgb(23, 34, 53);
---primary-color-opacity: rgba(23, 34, 53, 0 5);
---bg-color: rgb(20, 29, 41);
---bg-color-opacity: rgba(20, 29, 41, 0.5);
---stripe-color: #533afd;
---text-color: #b7bac1;
---text-white: #ffffff;
---row-odd-color: var(--primary-color); /* Light grey color, for example */
---row-even-color: var(--bg-color); /* Slightly different grey color, for example */
+  --primary-yellow: rgb(253, 178, 8);
+  --primary-yellow-opacity: rgba(253, 178, 8, 0.5);
+  --primary-yellow-dark: rgb(240, 134, 13);
+  --primary-yellow-dark-opacity: rgba(240, 134, 13, 0.5);
+  --primary-blue: rgb(16, 198, 248);
+  --primary-blue-opacity: rgba(16, 198, 248, 0.5);
+  --primary-blue-dark: rgb(9, 164, 228);
+  --primary-blue-dark-opacity: rgba(9, 164, 228, 0.5);
+  --primary-red: rgb(254, 51, 92);
+  --primary-red-dark: rgb(222, 14, 66);
+  --primary-red-dark-opacity: rgba(222, 14, 66, 0.5);
+  --primary-red-opacity: rgba(254, 51, 92, 0.5);
+  --primary-green: rgb(28, 221, 157);
+  --primary-green-dark: rgb(26, 171, 151);
+  --primary-green-opacity: rgba(28, 221, 157, 0.5);
+  --primary-green-dark-opacity: rgba(26, 171, 151, 0.5);
+  --primary-color: rgb(23, 34, 53);
+  --primary-color-opacity: rgba(23, 34, 53, 0 5);
+  --bg-color: rgb(20, 29, 41);
+  --bg-color-opacity: rgba(20, 29, 41, 0.5);
+  --stripe-color: #533afd;
+  --text-color: #b7bac1;
+  --text-secondary: #ffffff;
+  --row-odd-color: var(--primary-color); /* Light grey color, for example */
+  --row-even-color: var(
+    --bg-color
+  ); /* Slightly different grey color, for example */
+
+  &.light {
+    --primary-color: white;
+    --bg-color: rgb(243, 243, 247);
+    --bg-color-opacity: rgba(243, 243, 247, 0.5);
+    --text-color: rgb(23, 34, 53);
+    --text-secondary: rgb(23, 34, 53);
+    --primary-green: rgb(37, 175, 126);
+    --primary-green-dark: rgb(26, 171, 151);
+    --primary-red: rgb(243, 115, 112);
+    --primary-red-dark: rgb(222, 14, 66);
+    --primary-yellow: rgb(253, 178, 8);
+    --primary-yellow-dark: rgb(240, 134, 13);
+    --primary-blue: rgb(99, 174, 177);
+    --primary-blue-dark: rgb(9, 164, 228);
+  }
 }
 
 * {
@@ -67,7 +84,6 @@ a {
     color-scheme: dark;
   }
 }
-
 
 button {
   background: transparent;

@@ -72,7 +72,7 @@
 
 @mixin form-heading {
   font-size: 1.5rem;
-  color: var(--text-white);
+  color: var(--text-secondary);
   margin-bottom: 1rem;
 }
 
@@ -167,7 +167,7 @@
   cursor: pointer;
   font-size: 0.8rem;
   background-color: var(--primary-green);
-  color: var(--text-white);
+  color: var(--text-secondary);
   transition: background-color 0.3s;
 
   &:hover {

@@ -4,7 +4,7 @@
 }
 
 .heading {
-    color: var(--text-white);
+    color: var(--text-secondary);
     font-size: 1.5rem;
 }
 
@@ -13,7 +13,7 @@
     padding: 5px 10px;
     border-radius: 5px;
     font-size: 0.7rem;
-    color: var(--text-white);
+    color: var(--text-secondary);
     cursor: pointer;
     &:hover {
         background-color: var(--primary-yellow-dark);
@@ -35,7 +35,7 @@
     margin-bottom: 50px;
     border-radius: 8px;
     background-color: var(--primary-color);
-    border: 1px solid var(--text-white);
+    border: 1px solid var(--text-secondary);
 }
 
 .tab {
@@ -43,11 +43,11 @@
     background-color: var(--primary-color);
     padding: 10px;
     font-weight: bold;
-    color: var(--text-white);
+    color: var(--text-secondary);
     border-radius: 8px;
     &.active {
         background-color: var(--primary-blue-dark);
-        border: 1px solid var(--text-white);
+        border: 1px solid var(--text-secondary);
         transform: scale(1.1);
     }
     &:hover {
@@ -65,7 +65,7 @@
 .stripeLink {
     background-color: var(--stripe-color);
     font-weight: bold;
-    color: var(--text-white);
+    color: var(--text-secondary);
     padding: 10px 10px;
     border-radius: 10px;
 }

@@ -85,10 +85,6 @@ const ContactsPage = () => {
       size: "default",
     },
     {
-      name: "Ext",
-      size: "small",
-    },
-    {
       name: "Cell",
       size: "default",
     },
@@ -127,7 +123,6 @@ const ContactsPage = () => {
       >{`${c.contactContactInformation?.firstName} ${c.contactContactInformation?.lastName}`}</Link>,
       c.contactContactInformation?.company,
       c.contactTelecomInformation?.phone,
-      c.contactTelecomInformation?.extension,
       c.contactTelecomInformation?.cellPhone,
       <Link
         href={`mailto:${c.contactTelecomInformation?.email}`}
