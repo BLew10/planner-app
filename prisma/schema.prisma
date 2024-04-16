@@ -51,7 +51,7 @@ model Contact {
   user                      User?                      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   addressBooks              AddressBook[]              @relation("ContactAddressBooks")
   category                  String?
-  stripeCustomerId          String?
+  stripeCustomerId          String?                    @unique
   contactContactInformation ContactContactInformation?
   contactTelecomInformation ContactTelecomInformation?
   contactAddress            ContactAddress?

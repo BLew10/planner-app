@@ -77,6 +77,11 @@ export async function POST(request: NextRequest) {
         const createdSubscriptionSchedule = event.data.object as Stripe.SubscriptionSchedule;
         console.log(`Created Subscription Schedule was successful! PaymentIntent ID: ${createdSubscriptionSchedule.id}`);
         break;
+      case "customer.deleted":
+        const deletedCustomer = event.data.object as Stripe.Customer;
+        console.log(`Deleted Customer was successful! Customer ID: ${deletedCustomer.id}`);
+        
+        break;
       case "invoice.created":
         const createdInvoice = event.data.object as Stripe.Invoice;
         console.log(`Created Invoice was successful! Invoice ID: ${createdInvoice.id}`);

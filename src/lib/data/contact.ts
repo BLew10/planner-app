@@ -143,3 +143,16 @@ export const getContactById = async (id: string) => {
     return null;
   }
 }
+
+export const removeContactStripeCustomerId = async (stripeCustomerId: string) => {
+  try {
+    const contact = await prisma.contact.update({
+      where: { stripeCustomerId },
+      data: { stripeCustomerId: null },
+    });
+    return contact;
+  } catch (e) {
+    console.log("Error removing contact stripe customer id", e);
+    return null;
+  }
+}
