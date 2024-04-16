@@ -16,6 +16,7 @@ import CheckboxGroup from "@/app/(components)/form/CheckboxGroup";
 import TextInput from "@/app/(components)/form/TextInput";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import PaymentFormModal from "./PaymentFormModal";
+import { formatDateToString } from "@/lib/helpers/formatDateToString";
 import { toast, ToastContainer } from "react-toastify";
 
 interface Contact {
@@ -174,6 +175,7 @@ const PaymentForm = () => {
       />
       <AnimateWrapper>
         <form onSubmit={onContinue} className={styles.form}>
+        <ToastContainer />
           <h1 className={styles.title}>Payment Form</h1>
           <p className={styles.contact}>
             Contact: <span>{contact?.companyName}</span>
@@ -223,6 +225,7 @@ const PaymentForm = () => {
             type="date"
             name="startDate"
             label="Payment Start Date"
+            min={formatDateToString(new Date(), false)}
             onChange={(e) => setStartDate(e.target.value)}
             value={startDate}
           />
@@ -230,6 +233,7 @@ const PaymentForm = () => {
             type="number"
             name="totalPayments"
             label="Total Payments"
+            min="1"
             subLabel="number of payments"
             onChange={(e) => setTotalPayments(Number(e.target.value))}
             value={String(totalPayments)}

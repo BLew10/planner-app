@@ -215,6 +215,7 @@ const Purchase: React.FC<PurchaseProps> = ({
                   type="number"
                   pattern="[0-9]*"                  
                   placeholder="Quantity"
+                  min="0"
                   value={at.id && formData && formData[at.id]?.quantity}
                   onChange={(e) =>
                     at.id &&
@@ -226,6 +227,7 @@ const Purchase: React.FC<PurchaseProps> = ({
                   name={`charge-${at.id}`}
                   type="text"
                   pattern="[0-9.]*"
+                  min="0"
                   placeholder="Charge"
                   value={at.id && formData && formData[at.id]?.charge}
                   onChange={(e) =>

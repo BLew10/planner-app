@@ -16,6 +16,7 @@ interface TextInputProps {
   isReadOnly?: boolean;
   isRequired?: boolean;
   title?: string;
+  min?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   validate?: (value: string) => string | null;
   children?: React.ReactNode;
@@ -37,6 +38,7 @@ const TextInput: React.FC<TextInputProps> = ({
   onChange,
   validate,
   children,
+  min,
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState<string>(value || "");
@@ -76,6 +78,7 @@ const TextInput: React.FC<TextInputProps> = ({
         value={inputValue}
         required={isRequired}
         title={title}
+        min={min}
         onChange={
           onChange || validate
             ? handleChange
