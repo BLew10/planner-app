@@ -4,17 +4,32 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY_TEST as string || proces
 
 // Helper to find or create a Stripe customer
 export async function findOrCreateStripeCustomer(
-  email: string
+  id: string,
+  email: string,
 ): Promise<Stripe.Customer | null> {
     try {
-        const customers = await stripe.customers.list({ email: email, limit: 1 });
-        if (customers.data.length > 0) {
-            return customers.data[0];
+        const customer = await stripe.customers.retrieve(id);
+        if (!customer.deleted) {
+            return customer;
         } else {
             return await stripe.customers.create({ email: email });
         }
     } catch (error) {
         console.log('Error finding or creating customer', error)
+        return null
+    }
+}
+
+export async function upsertStripeCustomer(id: string, email: string): Promise<Stripe.Customer | null> {
+    try {
+        const customer = await stripe.customers.retrieve(id);
+        if (id && customer) {
+          return await stripe.customers.update(id, { email: email });
+        } else {
+          return await stripe.customers.create({ email: email });
+        }
+    } catch (error) {
+        console.log('Error upserting customer', error)
         return null
     }
 }

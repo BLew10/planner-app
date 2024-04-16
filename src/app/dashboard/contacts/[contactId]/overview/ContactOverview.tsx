@@ -15,6 +15,8 @@ interface ContactOverviewProps {
   contactId: string;
 }
 
+const isTesting = process.env.NEXT_PUBLIC_STRIPE_TEST_ENV;
+
 type ContactOverviewTabs = "info" | "purchases" | "payments";
 const ContactOverview = ({ contactId }: ContactOverviewProps) => {
   const router = useRouter();
@@ -34,26 +36,40 @@ const ContactOverview = ({ contactId }: ContactOverviewProps) => {
     };
     fetchContact(contactId);
   }, [contactId, router]);
-
+  console.log(isTesting);
   if (requesting) return <LoadingSpinner />;
 
   return (
     <div className={styles.wrapper}>
-      <div className={styles.contactHeader}>
-        <h1 className={styles.heading}>
-          {contact
-            ? contact?.contactContactInformation?.company ||
-              contact?.contactContactInformation?.firstName +
-                " " +
-                contact?.contactContactInformation?.lastName
-            : ""}
-        </h1>
-        <Link
-          href={`/dashboard/contacts/${contact?.id}`}
-          className={styles.edit}
-        >
-          Edit
-        </Link>
+      <div className={styles.header}>
+        <div className={styles.contactHeader}>
+          <h1 className={styles.heading}>
+            {contact
+              ? contact?.contactContactInformation?.company ||
+                contact?.contactContactInformation?.firstName +
+                  " " +
+                  contact?.contactContactInformation?.lastName
+              : ""}
+          </h1>
+          <Link
+            href={`/dashboard/contacts/${contact?.id}`}
+            className={styles.edit}
+          >
+            Edit
+          </Link>
+        </div>
+        {contact?.stripeCustomerId && (
+          <a
+            href={`https://dashboard.stripe.com/${
+              isTesting ? "test/" : ""
+            }customers/${contact?.stripeCustomerId}`}
+            className={styles.stripeLink}
+            rel="noreferrer noopener"
+            target="_blank"
+          >
+            Stripe Profile
+          </a>
+        )}
       </div>
       <div className={styles.contactTabs}>
         <button

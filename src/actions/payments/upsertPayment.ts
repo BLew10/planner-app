@@ -40,12 +40,17 @@ export async function upsertPayment(data: UpsertPaymentData) {
         where: { id: data.contactId },
         include: {
           contactTelecomInformation: true,
-          contactContactInformation: true,
+          contactContactInformation: true, 
         },
       });
-      if (!contact) return false
-      const stripeCustomer = await findOrCreateStripeCustomer(contact.contactTelecomInformation?.email || "");
+      if (!contact || !contact.contactTelecomInformation?.email) return false
+      const stripeCustomer = await findOrCreateStripeCustomer(contact.stripeCustomerId || "", contact.contactTelecomInformation?.email || "");
       if (!stripeCustomer) return false
+      if (contact?.stripeCustomerId != stripeCustomer.id)
+      await prismaClient.contact.update({
+        where: { id: contact.id },
+        data: { stripeCustomerId: stripeCustomer.id },
+      });
 
       const payment = await createPrismaPayment(data, prismaClient, userId);
       const paymentPerPeriodInCents = Math.ceil((data.totalOwed / data.totalPayments) * 100);

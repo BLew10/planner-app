@@ -54,3 +54,18 @@
         cursor: pointer;
     }
 }
+
+.header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.stripeLink {
+    background-color: var(--stripe-color);
+    font-weight: bold;
+    color: var(--text-white);
+    padding: 10px 10px;
+    border-radius: 10px;
+}

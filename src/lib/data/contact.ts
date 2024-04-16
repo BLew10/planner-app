@@ -103,77 +103,6 @@ interface AddressData {
   data: Partial<ContactAddress>;
 }
 
-export const parseContactFormData = (
-  formData: FormData,
-  userId: string
-): ContactSaveData | null => {
-  // Add further validation as necessary
-  if (!userId) {
-    console.error("Missing required fields or relations");
-    return null;
-  }
-
-  // Initialize the structure for ContactSaveData with default values
-  const contactContactInformation: ContactInfoData = {
-    data: {
-      firstName: formData.get("contactFirstName")?.toString() || "",
-      lastName: formData.get("contactLastName")?.toString() || "",
-      altContactFirstName:
-        formData.get("altContactFirstName")?.toString() || "",
-      altContactLastName: formData.get("altContactLastName")?.toString() || "",
-      salutation: formData.get("salutation")?.toString() || "",
-      company: formData.get("company")?.toString() || "",
-    },
-  };
-
-  const contactTelecomInformation: TelecomInfoData = {
-    data: {
-      phone: formData.get("phoneNumber")?.toString() || "",
-      email: formData.get("email")?.toString() || "",
-      extension: formData.get("extension")?.toString() || "",
-      altPhone: formData.get("altPhoneNumber")?.toString() || "",
-      fax: formData.get("fax")?.toString() || "",
-      cellPhone: formData.get("cell")?.toString() || "",
-      homePhone: formData.get("homePhone")?.toString() || "",
-    },
-  };
-
-  const contactAddress: AddressData = {
-    data: {
-      address: formData.get("address1")?.toString() || "",
-      address2: formData.get("address2")?.toString() || "",
-      city: formData.get("city")?.toString() || "",
-      state: formData.get("state")?.toString() || "",
-      zip: formData.get("zipCode")?.toString() || "",
-      country: formData.get("country")?.toString() || "",
-    },
-  };
-
-  const addressBooks: {id: string }[] = [];
-  // Handling multiple addressBookIds for many-to-many relation
-  formData.getAll("addressBookIds").forEach((id) => {
-    const addressBookId = id.toString();
-    addressBooks.push({ id: addressBookId });
-  });
-
-  // Directly assigning other fields with simple validation or transformation as needed
-  const contactData: ContactSaveData = {
-    isDeleted: false,
-    userId,
-    id: formData.get("contactId")?.toString() || "",
-    customerSince: formData.get("customerSince")?.toString() || "",
-    notes: formData.get("notes")?.toString() || "",
-    category: formData.get("category")?.toString() || "",
-    webAddress: formData.get("webAddress")?.toString() || "",
-    contactContactInformation,
-    contactTelecomInformation,
-    contactAddress,
-    addressBooks,
-  };
-
-  return contactData;
-};
-
 export const getContactById = async (id: string) => {
 
   if (!id) {
@@ -196,6 +125,7 @@ export const getContactById = async (id: string) => {
         contactTelecomInformation: true,
         contactAddress: true,
         addressBooks: true,
+        stripeCustomerId: true,
         purchases: {
           include: {
             adPurchases: {

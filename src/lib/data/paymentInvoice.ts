@@ -79,7 +79,8 @@ export async function updateInvoice(
     let invoiceData: Partial<PaymentInvoice> = {
         amountOwed: new Prisma.Decimal(convertToDollars(stripeInvoice.total)),
         isPaid: stripeInvoice.paid as boolean,
-        invoiceLink: stripeInvoice.hosted_invoice_url,
+        invoiceLink: stripeInvoice.invoice_pdf,
+        stripeUrl: stripeInvoice.hosted_invoice_url,
     };
 
     if (stripeInvoice.due_date) {

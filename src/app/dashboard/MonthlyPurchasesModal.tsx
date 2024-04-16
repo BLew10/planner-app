@@ -5,6 +5,7 @@ import { Advertisement } from "@prisma/client";
 import { PurchaseSlot } from "@/lib/data/purchase";
 import { MONTHS } from "@/lib/constants";
 import styles from "./MonthlyPurchasesModal.module.scss";
+import LoadingSpinner from "../(components)/general/LoadingSpinner";
 
 interface MonthlyPurchasesModalProps {
   isOpen: boolean;
@@ -26,9 +27,11 @@ export default function MonthlyPurchasesModal({
   const [groupedPurchases, setGroupedPurchases] = useState<
     Record<string, PurchaseSlot[]>
   >({});
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       const purchases = await getPurchasesByMonthCalendarIdAndYear(
         monthIndex+1,
         calendarId,
@@ -46,6 +49,7 @@ export default function MonthlyPurchasesModal({
 
         setGroupedPurchases(grouped);
       }
+      setIsLoading(false);
     };
 
     fetchData();
@@ -71,9 +75,12 @@ export default function MonthlyPurchasesModal({
     });
   };
 
+
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-10" onClose={closeModal}>
+        {isLoading ? <LoadingSpinner /> :
+        <>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -125,6 +132,8 @@ export default function MonthlyPurchasesModal({
             </Transition.Child>
           </div>
         </div>
+        </>
+}
       </Dialog>
     </Transition>
   );
