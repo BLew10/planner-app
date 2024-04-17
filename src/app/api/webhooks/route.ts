@@ -8,9 +8,9 @@ import { setInvoiceToAutoAdvanced } from "@/lib/helpers/stripeHelpers";
 import { removeContactStripeCustomerId } from "@/lib/data/contact";
 import { addSubscriptionIdToPayment } from "@/lib/data/payment";
 
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET_LIVE as string;
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY_LIVE as string);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 export async function POST(request: NextRequest) {
   try {
     // Ensure method is POST
@@ -178,9 +178,4 @@ export async function POST(request: NextRequest) {
       }
     );
   }
-}
-
-export async function GET() {
-  console.log("Hello, Stripe!");
-  return NextResponse.json({ message: "Hello, Stripe!" });
 }

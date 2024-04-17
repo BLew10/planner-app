@@ -1,9 +1,6 @@
 import Stripe from "stripe";
 
-const stripe = new Stripe(
-  (process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY_TEST as string) ||
-    (process.env.STRIPE_SECRET_KEY_LIVE as string)
-);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
 // Helper to find or create a Stripe customer
 export async function findOrCreateStripeCustomer(
