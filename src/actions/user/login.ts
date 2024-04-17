@@ -6,9 +6,13 @@ import { DEFAULT_REDIRECT_URL } from "@/routes";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 
-const login = async (formData: FormData) => {
-  const username = formData.get("username")?.toString().toLowerCase();
-  const password = formData.get("password")?.toString();
+export interface LoginData {
+  username: string;
+  password: string;
+}
+
+const login = async (data: LoginData) => {
+  const { username, password } = data;
 
   if (!username || !password) {
     return { error: "Missing required fields" };
@@ -24,6 +28,7 @@ const login = async (formData: FormData) => {
       password,
       redirect: true,
     });
+    return { success: true };
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
