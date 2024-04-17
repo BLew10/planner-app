@@ -17,6 +17,13 @@
     cursor: pointer;
   }
 
+  .stripeSubscription {
+    color: var(--stripe-color);
+    padding: 0.25rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
   .modWrapper {
     display: flex;
     flex-direction: column;

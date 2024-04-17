@@ -1,7 +1,7 @@
 import Stripe from "stripe";
 
 const stripe = new Stripe(
-  (process.env.STRIPE_SECRET_KEY_TEST as string) ||
+  (process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY_TEST as string) ||
     (process.env.STRIPE_SECRET_KEY_LIVE as string)
 );
 
@@ -272,6 +272,16 @@ export async function sendInvoiceEmail(stripeInvoiceId: string) {
     const invoice = await stripe.invoices.sendInvoice(stripeInvoiceId);
   } catch (e) {
     console.log("Error sending invoice email", e);
+    return null;
+  }
+}
+
+export async function deleteStripeCustomer(stripeCustomerId: string) {
+  try {
+    const customer = await stripe.customers.del(stripeCustomerId);
+    return customer
+  } catch (e) {
+    console.log("Error deleting customer", e);
     return null;
   }
 }

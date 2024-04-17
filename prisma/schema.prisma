@@ -156,24 +156,25 @@ model PurchaseOverview {
 }
 
 model Payment {
-  id                 String             @id @default(uuid())
-  purchases          PurchaseOverview[]
-  totalOwed          Decimal
-  totalPaid          Decimal
-  frequency          String
-  totalPayments      Int
-  startDate          String
-  anticipatedEndDate String
-  status             String
-  paymentsMade       Int                @default(0)
-  contactId          String
-  contact            Contact            @relation(fields: [contactId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId             String
-  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  isDeleted          Boolean            @default(false)
-  stripeScheduleId   String?
-  createdAt          DateTime           @default(now())
-  PaymentInvoice     PaymentInvoice[]
+  id                   String             @id @default(uuid())
+  purchases            PurchaseOverview[]
+  totalOwed            Decimal
+  totalPaid            Decimal
+  frequency            String
+  totalPayments        Int
+  startDate            String
+  anticipatedEndDate   String
+  status               String
+  paymentsMade         Int                @default(0)
+  contactId            String
+  contact              Contact            @relation(fields: [contactId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId               String
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  isDeleted            Boolean            @default(false)
+  stripeScheduleId     String?
+  stripeSubscriptionId String?
+  createdAt            DateTime           @default(now())
+  PaymentInvoice       PaymentInvoice[]
 }
 
 model PaymentInvoice {

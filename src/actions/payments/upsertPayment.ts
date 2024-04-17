@@ -58,7 +58,7 @@ export async function upsertPayment(data: UpsertPaymentData) {
       if (!price) return false
       const schedule = await createStripeSubscriptionSchedule(stripeCustomer.id, price.id, data.startDate.toISOString().split("T")[0], data.totalPayments);
       if (!schedule) return false
-      await addStripeScheduleIdToPayment(payment.id, schedule.id, prismaClient, userId);
+      await addStripeScheduleIdToPayment(payment.id, schedule.id, prismaClient, userId, schedule.subscription as string);
       console.log("Subscription Schedule created:", schedule.id);
       },
       {
@@ -138,12 +138,14 @@ async function addStripeScheduleIdToPayment(
     PrismaClient<PrismaClientOptions, never, DefaultArgs>,
     "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
   >,
-  userId: string
+  userId: string, 
+  stripeSubscriptionId: string | null
 ) {
   const payment: Payment = await prisma.payment.update({
     where: { id: paymentId, userId },
     data: {
       stripeScheduleId,
+      stripeSubscriptionId
     },
   });
   return payment;

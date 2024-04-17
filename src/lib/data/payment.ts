@@ -19,6 +19,7 @@ export interface PaymentTableData {
     startDate: Date;    
     anticipatedEndDate: Date;
     stripeScheduleId?: string;
+    stripeSubscriptionId?: string;
     frequency: string;
     companyName: string;
     purchases?: Partial<PurchaseOverviewModel>[];
@@ -47,6 +48,7 @@ export const getAllPayments = async (paymentStatus: PaymentStatusType): Promise<
                 anticipatedEndDate: true,
                 frequency: true,
                 stripeScheduleId: true,
+                stripeSubscriptionId: true,
                 contact: {
                     select: {
                         contactContactInformation: {
@@ -267,6 +269,7 @@ const formatTableData = (payment: any) => {
         frequency: payment.frequency,
         companyName: payment.contact?.contactContactInformation?.company || "",
         stripeScheduleId: payment.stripeScheduleId || "",
+        stripeSubscriptionId: payment.stripeSubscriptionId || "",
         purchases: payment.purchases || []
     }
 }

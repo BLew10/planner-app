@@ -538,4 +538,4 @@ const ADVERTISEMENT_TYPES = [
 createCalendarEditions().catch(console.error);
 createAddressBook().catch(console.error);
 createAdvertismentTypes().catch(console.error);
-// seedContactsFromCSV().catch(console.error);
+seedContactsFromCSV().catch(console.error);

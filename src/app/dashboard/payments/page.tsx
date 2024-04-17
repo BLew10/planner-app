@@ -14,6 +14,8 @@ import InvoicesModal from "./InvoicesModal";
 import { toast, ToastContainer } from 'react-toastify';
 import { formatDateToString } from "@/lib/helpers/formatDateToString";
 
+const isTesting = process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY_TEST;
+
 const defaultColumns = [
   {
     name: "Contact",
@@ -95,6 +97,17 @@ const PaymentsPage = () => {
 
       const actionsData = (
         <div key={p.id} className={styles.modWrapper}>
+          {p.stripeSubscriptionId && 
+            
+          <div className={styles.stripeSubscription}>
+            <a
+              href={`https://dashboard.stripe.com/${isTesting ? "test/" : ""}subscriptions/${p.stripeSubscriptionId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Stripe Subscription
+            </a>
+          </div>}
           <div
             className={styles.invoicesButton}
             onClick={() => handleViewInvoices(p.id as string)}

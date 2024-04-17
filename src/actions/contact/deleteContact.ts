@@ -2,7 +2,6 @@
 
 import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
-import { revalidatePath } from "next/cache";
 
 const deleteContact = async (contactId: string) => {
   try {

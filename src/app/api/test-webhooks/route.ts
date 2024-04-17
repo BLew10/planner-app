@@ -9,7 +9,7 @@ import { removeContactStripeCustomerId } from "@/lib/data/contact";
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET_TEST as string;
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY_TEST as string);
+const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY_TEST as string);
 export async function POST(request: NextRequest) {
   try {
     // Ensure method is POST

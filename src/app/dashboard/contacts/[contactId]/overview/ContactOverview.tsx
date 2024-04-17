@@ -15,7 +15,7 @@ interface ContactOverviewProps {
   contactId: string;
 }
 
-const isTesting = process.env.NEXT_PUBLIC_STRIPE_TEST_ENV;
+const isTesting = process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY_TEST;
 
 type ContactOverviewTabs = "info" | "purchases" | "payments";
 const ContactOverview = ({ contactId }: ContactOverviewProps) => {
