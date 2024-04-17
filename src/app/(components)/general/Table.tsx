@@ -15,6 +15,8 @@ interface TableProps {
   addPath?: string;
   filterOptions?: { value: string; label: string }[];
   handleFilterChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  filterOptionsTwo?: { value: string; label: string }[];
+  handleFilterChangeTwo?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 }
 
 const Table = ({
@@ -24,6 +26,8 @@ const Table = ({
   addPath,
   filterOptions,
   handleFilterChange,
+  filterOptionsTwo,
+  handleFilterChangeTwo,
 }: TableProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState(data);
@@ -86,6 +90,14 @@ const Table = ({
                 label="Filter"
                 options={filterOptions}
                 onChange={handleFilterChange}
+              />
+            )}
+            {filterOptionsTwo && filterOptionsTwo.length > 0 && (
+              <SelectInput
+                name="filter-two"
+                label=""
+                options={filterOptionsTwo}
+                onChange={handleFilterChangeTwo}
               />
             )}
           </div>

@@ -76,7 +76,7 @@ export interface PurchaseTableData {
   year: number;
   calendarEdition: string;
 }
-export const getAllPurchases = async (): Promise<
+export const getPurchaseTableData = async (calendarId: string, year: string): Promise<
   PurchaseTableData[] | null
 > => {
   const session = await auth();
@@ -89,6 +89,8 @@ export const getAllPurchases = async (): Promise<
   const purchases = await prisma.purchaseOverview.findMany({
     where: {
       userId,
+      editionId: calendarId,
+      year: Number(year),
       isDeleted: false,
     },
     select: {

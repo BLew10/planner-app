@@ -95,7 +95,7 @@
 
 .searchWrapper {
   display: flex;
-  width: 500px;
+  width: 800px;
   gap: 20px;
   flex-direction: column;
   margin: 20px 0;
@@ -124,6 +124,7 @@
 
 .filterWrapper {
   display: flex;
+  align-items: end;
   gap: 20px;
 }
 
