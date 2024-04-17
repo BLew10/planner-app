@@ -2,9 +2,7 @@
 
 import { getUserByCredential } from "@/lib/data/user";
 import { signIn } from "@/auth";
-import { DEFAULT_REDIRECT_URL } from "@/routes";
 import { AuthError } from "next-auth";
-import { redirect } from "next/navigation";
 
 export interface LoginData {
   username: string;
@@ -40,7 +38,6 @@ const login = async (data: LoginData) => {
     }
     throw error;
   }
-  if (user) redirect(DEFAULT_REDIRECT_URL);
 };
 
 export default login;

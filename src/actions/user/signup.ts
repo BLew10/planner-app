@@ -2,9 +2,7 @@
 
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma/prisma";
-import login from "./login";
-import { redirect } from "next/navigation";
-
+import login, { LoginData } from "./login";
 const signUp = async (formData: FormData) => {
   const username = formData.get("username")?.toString();
   const email = formData.get("email")?.toString();
@@ -51,7 +49,11 @@ const signUp = async (formData: FormData) => {
       },
     });
     console.log("User created", user);
-    await login(formData);
+    const data: LoginData = {
+      username,
+      password
+    }
+    await login(data);
   } catch (error: any) {
     console.error("Error signing up", error);
     return {
