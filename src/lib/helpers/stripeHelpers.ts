@@ -36,7 +36,6 @@ export async function findOrCreateStripeCustomer(
     console.log("Error upserting customer", error);
     return null;
   }
-  
 }
 
 export async function upsertStripeCustomer(
@@ -279,9 +278,25 @@ export async function sendInvoiceEmail(stripeInvoiceId: string) {
 export async function deleteStripeCustomer(stripeCustomerId: string) {
   try {
     const customer = await stripe.customers.del(stripeCustomerId);
-    return customer
+    return customer;
   } catch (e) {
     console.log("Error deleting customer", e);
+    return null;
+  }
+}
+
+export async function addSubscriptionIdToPayment(
+  stripeScheduleId: string,
+  subscriptionId: string
+) {
+  try {
+    const contact = await prisma?.payment.update({
+      where: { stripeScheduleId: stripeScheduleId },
+      data: { stripeSubscriptionId: subscriptionId },
+    });
+    return contact;
+  } catch (e) {
+    console.log("Error adding subscription to contact", e);
     return null;
   }
 }

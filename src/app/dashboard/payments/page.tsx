@@ -105,7 +105,7 @@ const PaymentsPage = () => {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Stripe Subscription
+              Stripe Schedule
             </a>
           </div>}
           <div

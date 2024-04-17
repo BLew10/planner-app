@@ -190,6 +190,7 @@ const PaymentForm = () => {
                 label="Amount Owed"
                 name="amountOwed"
                 type="number"
+                min="0.01"
                 value={String(paymentTotal)}
                 onChange={(e) => setPaymentTotal(Number(e.target.value))}
               />
