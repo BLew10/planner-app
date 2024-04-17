@@ -32,9 +32,11 @@
 - Create Stripe Account with all relevant information
 - Grab the test and live API key
     - Let me know when you wanna do real payments with real customers
-- setup webhooks
-- `https://planner-app-ashy.vercel.app/api/webhooks`
-- Send to brandonlewis.10@gmail.com
+- setup webhooks and events
+    - Grab signing secrets with test env and live env
+    - test: https://planner-app-git-dev-personal-8f38e0d6.vercel.app/api/webhooks
+    - live: https://planner-app-joyce.vercel.app/api/webhooks
+- Send emails to brandonlewis.10@gmail.com on live version or yourself
 
 ## Vercel (After testing for a few weeks and deciding on whether she likes it or not)
 - Have joyce setup a vercel account

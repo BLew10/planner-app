@@ -14,7 +14,7 @@ import InvoicesModal from "./InvoicesModal";
 import { toast, ToastContainer } from 'react-toastify';
 import { formatDateToString } from "@/lib/helpers/formatDateToString";
 
-const isTesting = process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY_TEST;
+const isTesting = process.env.VERCEL_ENV === 'preview' || process.env.NEXT_PUBLIC_IS_TESTING === 'true';
 
 const defaultColumns = [
   {
