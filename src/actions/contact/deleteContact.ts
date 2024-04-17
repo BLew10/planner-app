@@ -28,7 +28,16 @@ const deleteContact = async (contactId: string) => {
             isDeleted: true,
           },
         });
+        await prisma.contactTelecomInformation.update({
+          where: {
+            contactId,
+          },
+          data: {
+            email: null
+          }
+        })
       } else {
+
         await prisma.contact.delete({
           where: {
             id: contactId,

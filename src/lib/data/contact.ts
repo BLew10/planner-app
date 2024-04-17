@@ -84,25 +84,6 @@ export const getContactsByAddressBook = async (
  * @returns {Contact | null} A structured object for contact creation if successful, otherwise null.
  */
 
-interface ContactSaveData extends Contact {
-  contactContactInformation: ContactInfoData;
-  contactTelecomInformation: TelecomInfoData;
-  contactAddress: AddressData;
-  addressBooks: { id: string }[];
-}
-
-interface ContactInfoData {
-  data: Partial<ContactContactInformation>;
-}
-
-interface TelecomInfoData {
-  data: Partial<ContactTelecomInformation>;
-}
-
-interface AddressData {
-  data: Partial<ContactAddress>;
-}
-
 export const getContactById = async (id: string) => {
 
   if (!id) {
@@ -111,7 +92,7 @@ export const getContactById = async (id: string) => {
   const session = await auth();
   const contactId = id;
   const userId = session?.user?.id;
-
+console.log("contactId", contactId, userId);
   try {
     const contact: Partial<ContactModel> | null = await prisma.contact.findFirst({
       where: { id: contactId, userId: userId,  isDeleted: false},
@@ -138,8 +119,10 @@ export const getContactById = async (id: string) => {
         payments: true,
       },
     });
+    console.log(contact);
     return contact;
-  } catch {
+  } catch (e) {
+    console.log("Error getting contact", e);
     return null;
   }
 }

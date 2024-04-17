@@ -255,6 +255,23 @@ export const getInvoicesForPayment = async (paymentId: string) => {
         return null
     }
 }
+
+export const addSubscriptionIdToPayment = async (scheduleId: string, subscriptionId: string) => {
+    try {
+        const payment = await prisma.payment.update({
+            where: {
+                stripeScheduleId: scheduleId
+            },
+            data: {
+                stripeSubscriptionId: subscriptionId
+            }
+        });
+        return payment
+    } catch (e) {
+        console.log('Error adding subscription id to payment', e)
+        return null
+    }
+}
 const formatTableData = (payment: any) => {
 
     return {

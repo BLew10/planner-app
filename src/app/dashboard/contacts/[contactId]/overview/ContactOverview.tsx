@@ -36,7 +36,6 @@ const ContactOverview = ({ contactId }: ContactOverviewProps) => {
     };
     fetchContact(contactId);
   }, [contactId, router]);
-  console.log(isTesting);
   if (requesting) return <LoadingSpinner />;
 
   return (

@@ -6,6 +6,7 @@ import { updatePaymentFromStripeSchedule } from "@/lib/data/payment";
 import { handleInvoicePaid, updateInvoiceStatus, updateInvoice, updateInvoiceSentDate, createInvoice , updateInvoiceUrl } from "@/lib/data/paymentInvoice";
 import { setInvoiceToAutoAdvanced } from "@/lib/helpers/stripeHelpers";
 import { removeContactStripeCustomerId } from "@/lib/data/contact";
+import { addSubscriptionIdToPayment } from "@/lib/data/payment";
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET_TEST as string;
 
@@ -44,7 +45,11 @@ export async function POST(request: NextRequest) {
   
     }
     switch (event.type) {
-      
+      case "customer.subscription.created":
+          const createdSubscription = event.data.object as Stripe.Subscription;
+          console.log(`Created Subscription was successful! Subscription ID: ${createdSubscription.id}`);
+          await addSubscriptionIdToPayment(createdSubscription.schedule as string, createdSubscription.id);
+          break;        
       case "subscription_schedule.canceled":
         // Example event type handling
         const canceledSubscriptionSchedule = event.data.object as Stripe.SubscriptionSchedule;
