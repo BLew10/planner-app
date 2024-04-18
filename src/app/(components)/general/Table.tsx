@@ -19,6 +19,7 @@ interface TableProps {
   handleFilterChangeTwo?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   deleteSelected?: () => void;
   selectedCount?: number;
+  selectAll?: () => void;
 }
 
 const Table = ({
@@ -32,6 +33,7 @@ const Table = ({
   handleFilterChangeTwo,
   deleteSelected,
   selectedCount,
+  selectAll,
 }: TableProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState(data);
@@ -44,8 +46,14 @@ const Table = ({
       filteredColumn != null
         ? row[filteredColumn].toString().toLowerCase().includes(lowercasedQuery)
         : row.some((cell) => {
-            if (typeof cell == "object" && cell.props && cell.props['dataset-search']) {
-              return cell.props['dataset-search'].toLowerCase().includes(lowercasedQuery);
+            if (
+              typeof cell == "object" &&
+              cell.props &&
+              cell.props["dataset-search"]
+            ) {
+              return cell.props["dataset-search"]
+                .toLowerCase()
+                .includes(lowercasedQuery);
             }
             return cell.toString().toLowerCase().includes(lowercasedQuery);
           })
@@ -123,21 +131,23 @@ const Table = ({
               Search the entire table or click a column to filter by it.
             </p>
           )}
+          {selectAll && (
+            <button className={styles.selectAllButton} onClick={selectAll}>
+              Select All
+            </button>
+          )}
         </div>
         <div className={styles.addDeleteWrapper}>
-        {addPath && (
-          <Link href={addPath} className={styles.addButton}>
-            Add
-          </Link>
-        )}
-        {deleteSelected && (
-          <button
-            className={styles.deleteButton}
-            onClick={deleteSelected}
-          >
-            Delete Selected ({selectedCount})
-          </button>
-        )}
+          {addPath && (
+            <Link href={addPath} className={styles.addButton}>
+              Add
+            </Link>
+          )}
+          {deleteSelected && (
+            <button className={styles.deleteButton} onClick={deleteSelected}>
+              Delete Selected ({selectedCount})
+            </button>
+          )}
         </div>
       </div>
       {fetchingData ? (

@@ -4,7 +4,11 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "./page.module.scss";
 import Table from "@/app/(components)/general/Table";
-import { getContactsByAddressBook, ContactTableData, deleteManyContacts } from "@/lib/data/contact";
+import {
+  getContactsByAddressBook,
+  ContactTableData,
+  deleteManyContacts,
+} from "@/lib/data/contact";
 import { getAllAddressBooks } from "@/lib/data/addressBook";
 import deleteConact from "@/actions/contact/deleteContact";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
@@ -32,6 +36,7 @@ const ContactsPage = () => {
   const [addressBookId, setAddressBookId] = useState<string>(
     firstOptionAddressBook.id || "-1"
   );
+  const [selectAll, setSelectAll] = useState(false);
   const [addressBooks, setAddressBooks] = useState<
     Partial<AddressBook>[] | null
   >([firstOptionAddressBook]);
@@ -44,8 +49,14 @@ const ContactsPage = () => {
   const fetchContacts = async (addressBookId: string) => {
     const contacts = await getContactsByAddressBook(addressBookId);
     setContacts(contacts);
+    const newCheckedContacts: CheckedContacts = {};
+    contacts?.forEach((contact) => {
+      if (contact.id) {
+        newCheckedContacts[contact.id] = false;
+      } // Initialize all as unchecked
+    });
+    setCheckedContacts(newCheckedContacts);
   };
-
   useEffect(() => {
     fetchAddressBooks();
   }, []);
@@ -75,12 +86,23 @@ const ContactsPage = () => {
     setAddressBookId(e.target.value);
   };
   const handleCheckboxChange = (contactId: string) => {
-    setCheckedContacts(prev => ({
+    setCheckedContacts((prev) => ({
       ...prev,
-      [contactId]: !prev[contactId]
+      [contactId]: !prev[contactId],
     }));
   };
 
+  const toggleAllCheckboxes = () => {
+    const toggledSelectAll = !selectAll;
+    setSelectAll(toggledSelectAll);
+    const newChecked: CheckedContacts = {};
+    contacts?.forEach(contact => {
+      if (contact.id) {
+        newChecked[contact.id] = toggledSelectAll;
+      }
+    });
+    setCheckedContacts(newChecked);
+  };
   const columns = [
     {
       name: "Name",
@@ -117,21 +139,23 @@ const ContactsPage = () => {
   ];
 
   const deleteSelectedContacts = async () => {
-    const contactIds = Object.keys(checkedContacts).filter(id => checkedContacts[id]);
+    const contactIds = Object.keys(checkedContacts).filter(
+      (id) => checkedContacts[id]
+    );
     const deleted = await deleteManyContacts(contactIds);
     fetchContacts(addressBookId);
     if (deleted) {
       successNotify();
       // Clean up checked state
-      setCheckedContacts(prev => {
+      setCheckedContacts((prev) => {
         const newChecked = { ...prev };
-        contactIds.forEach(id => delete newChecked[id]);
+        contactIds.forEach((id) => delete newChecked[id]);
         return newChecked;
       });
     } else {
       errorNotify();
     }
-  }
+  };
   const addressBooksOptions = addressBooks?.map((ab) => {
     return {
       value: ab.id || "",
@@ -141,7 +165,10 @@ const ContactsPage = () => {
   const selectedCount = Object.values(checkedContacts).filter(Boolean).length;
   const data = contacts?.map((c) => {
     return [
-      <div key={c.id} dataset-search={`${c.contactContactInformation?.firstName} ${c.contactContactInformation?.lastName}`}>
+      <div
+        key={c.id}
+        dataset-search={`${c.contactContactInformation?.firstName} ${c.contactContactInformation?.lastName}`}
+      >
         <CheckboxInput
           name="contacts"
           value={c.id}
@@ -236,6 +263,7 @@ const ContactsPage = () => {
             handleFilterChange={handleAddressBookChange}
             deleteSelected={deleteSelectedContacts}
             selectedCount={selectedCount}
+            selectAll={toggleAllCheckboxes}
           />
         </section>
       </AnimateWrapper>
