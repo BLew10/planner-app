@@ -4,7 +4,7 @@ import styles from "./CheckboxInput.module.scss";
 interface CheckboxInputProps {
   name: string;
   value?: string | number;
-  label: string;
+  label: string | React.ReactNode;
   checked?: boolean;
   isReadOnly?: boolean;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;

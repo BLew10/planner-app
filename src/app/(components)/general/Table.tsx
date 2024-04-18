@@ -17,6 +17,8 @@ interface TableProps {
   handleFilterChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   filterOptionsTwo?: { value: string; label: string }[];
   handleFilterChangeTwo?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  deleteSelected?: () => void;
+  selectedCount?: number;
 }
 
 const Table = ({
@@ -28,6 +30,8 @@ const Table = ({
   handleFilterChange,
   filterOptionsTwo,
   handleFilterChangeTwo,
+  deleteSelected,
+  selectedCount,
 }: TableProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState(data);
@@ -120,11 +124,21 @@ const Table = ({
             </p>
           )}
         </div>
+        <div className={styles.addDeleteWrapper}>
         {addPath && (
           <Link href={addPath} className={styles.addButton}>
             Add
           </Link>
         )}
+        {deleteSelected && (
+          <button
+            className={styles.deleteButton}
+            onClick={deleteSelected}
+          >
+            Delete Selected ({selectedCount})
+          </button>
+        )}
+        </div>
       </div>
       {fetchingData ? (
         <LoadingSpinner />

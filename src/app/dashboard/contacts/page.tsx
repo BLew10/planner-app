@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "./page.module.scss";
 import Table from "@/app/(components)/general/Table";
-import { getContactsByAddressBook, ContactTableData } from "@/lib/data/contact";
+import { getContactsByAddressBook, ContactTableData, deleteManyContacts } from "@/lib/data/contact";
 import { getAllAddressBooks } from "@/lib/data/addressBook";
 import deleteConact from "@/actions/contact/deleteContact";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
@@ -12,7 +12,8 @@ import SimpleModal from "@/app/(components)/general/SimpleModal";
 import { CATEGORIES } from "@/lib/constants";
 import { AddressBook } from "@prisma/client";
 import DeleteButton from "@/app/(components)/general/DeleteButton";
-import { toast, ToastContainer } from 'react-toastify';
+import { toast, ToastContainer } from "react-toastify";
+import CheckboxInput from "@/app/(components)/form/CheckboxInput";
 
 const firstOptionAddressBook: Partial<AddressBook> = {
   id: "-1",
@@ -20,10 +21,14 @@ const firstOptionAddressBook: Partial<AddressBook> = {
   displayLevel: "",
 };
 
+interface CheckedContacts {
+  [key: string]: boolean;
+}
 const ContactsPage = () => {
   const [contacts, setContacts] = useState<
     Partial<ContactTableData>[] | null
   >();
+  const [checkedContacts, setCheckedContacts] = useState<CheckedContacts>({});
   const [addressBookId, setAddressBookId] = useState<string>(
     firstOptionAddressBook.id || "-1"
   );
@@ -33,8 +38,8 @@ const ContactsPage = () => {
 
   const [openEmailModal, setOpenEmailModal] = useState(false);
   const successNotify = () => toast.success("Successfully Deleted");
-  const errorNotify = () => toast.error("Something went wrong. Deletion failed");
-
+  const errorNotify = () =>
+    toast.error("Something went wrong. Deletion failed");
 
   const fetchContacts = async (addressBookId: string) => {
     const contacts = await getContactsByAddressBook(addressBookId);
@@ -57,8 +62,7 @@ const ContactsPage = () => {
 
   const onContactDelete = async (contactId?: string) => {
     const deleted = await deleteConact(contactId || "-1");
-    const newContacts = await getContactsByAddressBook(addressBookId);
-    setContacts(newContacts);
+    fetchContacts(addressBookId);
     if (deleted) {
       successNotify();
     } else {
@@ -69,6 +73,12 @@ const ContactsPage = () => {
 
   const handleAddressBookChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setAddressBookId(e.target.value);
+  };
+  const handleCheckboxChange = (contactId: string) => {
+    setCheckedContacts(prev => ({
+      ...prev,
+      [contactId]: !prev[contactId]
+    }));
   };
 
   const columns = [
@@ -106,21 +116,46 @@ const ContactsPage = () => {
     },
   ];
 
+  const deleteSelectedContacts = async () => {
+    const contactIds = Object.keys(checkedContacts).filter(id => checkedContacts[id]);
+    const deleted = await deleteManyContacts(contactIds);
+    fetchContacts(addressBookId);
+    if (deleted) {
+      successNotify();
+      // Clean up checked state
+      setCheckedContacts(prev => {
+        const newChecked = { ...prev };
+        contactIds.forEach(id => delete newChecked[id]);
+        return newChecked;
+      });
+    } else {
+      errorNotify();
+    }
+  }
   const addressBooksOptions = addressBooks?.map((ab) => {
     return {
       value: ab.id || "",
       label: ab.name || "",
     };
   });
-
+  const selectedCount = Object.values(checkedContacts).filter(Boolean).length;
   const data = contacts?.map((c) => {
     return [
-      <Link
-        href={`/dashboard/contacts/${c.id}/overview`}
-        className={styles.contactLink}
-        key={c.id}
-        dataset-search={`${c.contactContactInformation?.firstName} ${c.contactContactInformation?.lastName}`}
-      >{`${c.contactContactInformation?.firstName} ${c.contactContactInformation?.lastName}`}</Link>,
+      <div key={c.id} dataset-search={`${c.contactContactInformation?.firstName} ${c.contactContactInformation?.lastName}`}>
+        <CheckboxInput
+          name="contacts"
+          value={c.id}
+          checked={!!checkedContacts[c.id as string]}
+          onChange={() => handleCheckboxChange(c.id as string)}
+          label={
+            <Link
+              href={`/dashboard/contacts/${c.id}/overview`}
+              className={styles.contactLink}
+              key={c.id}
+            >{`${c.contactContactInformation?.firstName} ${c.contactContactInformation?.lastName}`}</Link>
+          }
+        />
+      </div>,
       c.contactContactInformation?.company,
       c.contactTelecomInformation?.phone,
       c.contactTelecomInformation?.cellPhone,
@@ -191,7 +226,7 @@ const ContactsPage = () => {
       )}
       <AnimateWrapper>
         <section className={styles.container}>
-        <ToastContainer />
+          <ToastContainer />
           <Table
             tableName="Contacts"
             columns={columns}
@@ -199,6 +234,8 @@ const ContactsPage = () => {
             addPath="/dashboard/contacts/add"
             filterOptions={addressBooksOptions}
             handleFilterChange={handleAddressBookChange}
+            deleteSelected={deleteSelectedContacts}
+            selectedCount={selectedCount}
           />
         </section>
       </AnimateWrapper>

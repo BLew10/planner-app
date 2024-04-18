@@ -36,10 +36,17 @@
   overflow-x: auto;
   padding: 10px;
   &::-webkit-scrollbar {
-    width: 10px;
+    width: 10px; 
+    background-color: var(--primary-color);
+  }
+
+  &::-webkit-scrollbar-thumb {
     border-radius: 10px;
-    background-color: var(--text-color);
-    color: var(--primary-color);
+    background-color: var(--text-secondary);
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: var(---text-secondary);
   }
 }
 
@@ -66,8 +73,18 @@
   white-space: break-spaces;
 }
 
+.addDeleteWrapper {
+  display: flex;
+  gap: 10px;
+}
 .addButton {
   @include addButton;
+}
+
+
+.deleteButton {
+  @include addButton;
+  background-color: var(--primary-red);
 }
 
 .subHeading {
