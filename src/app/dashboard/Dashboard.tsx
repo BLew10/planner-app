@@ -54,6 +54,15 @@ const Dashboard = () => {
     fetchData();
   }, [selectedYear, selectedCalendar]);
 
+  if (!calendarData) {
+
+    return (
+      <div className={styles.noCalendars}>
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
   if (!calendarData || calendarData.length === 0) {
     return (
       <div className={styles.noCalendars}>
