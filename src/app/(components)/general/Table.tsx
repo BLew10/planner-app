@@ -19,7 +19,8 @@ interface TableProps {
   handleFilterChangeTwo?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   deleteSelected?: () => void;
   selectedCount?: number;
-  selectAll?: () => void;
+  toggleSelectAll?: () => void;
+  allSelected?: boolean;
 }
 
 const Table = ({
@@ -33,7 +34,8 @@ const Table = ({
   handleFilterChangeTwo,
   deleteSelected,
   selectedCount,
-  selectAll,
+  toggleSelectAll,
+  allSelected
 }: TableProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState(data);
@@ -131,9 +133,9 @@ const Table = ({
               Search the entire table or click a column to filter by it.
             </p>
           )}
-          {selectAll && (
-            <button className={styles.selectAllButton} onClick={selectAll}>
-              Select All
+          {toggleSelectAll && (
+            <button className={styles.selectAllButton} onClick={toggleSelectAll}>
+             {allSelected ? `Deselect all` : `Select all`}
             </button>
           )}
         </div>

@@ -14,17 +14,23 @@ import SelectInput from "@/app/(components)/form/SelectInput";
 import { COUNTRIES, STATES, CATEGORIES } from "@/lib/constants";
 import { useRouter } from "next/navigation";
 import { toast, ToastContainer } from "react-toastify";
+import LoadingSpinner from "@/app/(components)/general/LoadingSpinner";
 
 interface ContactProps {
   id: string | null;
+}
+
+interface FormAddressBook {
+  value: string;
+  label: string;
+  checked: boolean;
 }
 
 const ContactForm = ({ id }: ContactProps) => {
   const router = useRouter();
   const [formData, setFormData] = useState<ContactFormData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [addressBooks, setAddressBooks] = useState<
-    { value: string; label: string; checked: boolean }[] | null
+  const [addressBooks, setAddressBooks] = useState<FormAddressBook[] | null
   >(null);
   const notifyError = () =>
     toast.error("Something went wrong. Please try again.");
@@ -32,7 +38,6 @@ const ContactForm = ({ id }: ContactProps) => {
   useEffect(() => {
     if (id) {
       getContactById(id).then((contact) => {
-        console.log(contact);
         if (contact) {
           setFormData({
             customerSince: contact.customerSince || "",
@@ -62,8 +67,12 @@ const ContactForm = ({ id }: ContactProps) => {
             zip: contact.contactAddress?.zip || "",
             addressBooksIds: contact.addressBooks || [],
           });
+        } else {
+          router.push("/dashboard/contacts");
         }
       });
+    } else {
+      router.push("/dashboard/contacts");
     }
   }, [id]);
 
@@ -143,6 +152,10 @@ const ContactForm = ({ id }: ContactProps) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }) as ContactFormData);
   };
+
+  if (!formData) {  
+    return <LoadingSpinner/>
+  }
 
   return (
     <AnimateWrapper>

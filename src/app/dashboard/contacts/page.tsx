@@ -25,6 +25,41 @@ const firstOptionAddressBook: Partial<AddressBook> = {
   displayLevel: "",
 };
 
+const columns = [
+  {
+    name: "Name",
+    size: "default",
+  },
+  {
+    name: "Company",
+    size: "default",
+  },
+  {
+    name: "Phone",
+    size: "default",
+  },
+  {
+    name: "Cell",
+    size: "default",
+  },
+  {
+    name: "Email",
+    size: "default",
+  },
+  {
+    name: "Web Address",
+    size: "default",
+  },
+  {
+    name: "Category",
+    size: "default",
+  },
+  {
+    name: "Actions",
+    size: "default",
+  },
+];
+
 interface CheckedContacts {
   [key: string]: boolean;
 }
@@ -40,6 +75,8 @@ const ContactsPage = () => {
   const [addressBooks, setAddressBooks] = useState<
     Partial<AddressBook>[] | null
   >([firstOptionAddressBook]);
+  const [selectedCount, setSelectedCount] = useState(0);
+  const [tableData, setTableData] = useState<any[]>();
 
   const [openEmailModal, setOpenEmailModal] = useState(false);
   const successNotify = () => toast.success("Successfully Deleted");
@@ -53,7 +90,7 @@ const ContactsPage = () => {
     contacts?.forEach((contact) => {
       if (contact.id) {
         newCheckedContacts[contact.id] = false;
-      } // Initialize all as unchecked
+      }
     });
     setCheckedContacts(newCheckedContacts);
   };
@@ -64,6 +101,92 @@ const ContactsPage = () => {
   useEffect(() => {
     fetchContacts(addressBookId);
   }, [addressBookId]);
+
+  useEffect(() => {
+    const newSelectedCount = Object.values(checkedContacts).filter(Boolean).length;
+    setSelectedCount(newSelectedCount);
+  }, [checkedContacts]);
+
+  useEffect(() => {
+    const newTableData = contacts?.map((c) => {
+      return [
+        <div
+          key={c.id}
+          dataset-search={`${c.contactContactInformation?.firstName} ${c.contactContactInformation?.lastName}`}
+        >
+          <CheckboxInput
+            name="contacts"
+            value={c.id}
+            checked={!!checkedContacts[c.id as string]}
+            onChange={() => handleCheckboxChange(c.id as string)}
+            label={
+              <Link
+                href={`/dashboard/contacts/${c.id}/overview`}
+                className={styles.contactLink}
+                key={c.id}
+              >{`${c.contactContactInformation?.firstName} ${c.contactContactInformation?.lastName}`}</Link>
+            }
+          />
+        </div>,
+        c.contactContactInformation?.company,
+        c.contactTelecomInformation?.phone,
+        c.contactTelecomInformation?.cellPhone,
+        <Link
+          href={`mailto:${c.contactTelecomInformation?.email}`}
+          key={c.id}
+          dataset-search={`${c.contactTelecomInformation?.email}`}
+        >
+          {c.contactTelecomInformation?.email}
+        </Link>,
+        <a
+          rel="noopener noreferrer"
+          href={`${c.webAddress}`}
+          key={c.id}
+          dataset-search={`${c.webAddress}`}
+        >
+          {c.webAddress}
+        </a>,
+        c.category != "0" && c.category
+          ? CATEGORIES[parseInt(c.category || "0")].label
+          : "",
+        <div className={styles.modWrapper} key={c.id}>
+          <Link
+            href={`/dashboard/purchases/add?contactId=${c.id}`}
+            className={styles.purchaseAction}
+          >
+            Add Purchase
+          </Link>
+          <Link
+            href={`/dashboard/payments/add?contactId=${c.id}`}
+            className={styles.paymentAction}
+            onClick={(e) => {
+              if (!c.contactTelecomInformation?.email) {
+                e.preventDefault();
+                e.stopPropagation();
+                setOpenEmailModal(true);
+              } else {
+                setOpenEmailModal(false);
+              }
+            }}
+          >
+            Add Payment
+          </Link>
+          <Link
+            href={`/dashboard/contacts/${c.id}`}
+            className={styles.editAction}
+          >
+            Edit
+          </Link>
+          <DeleteButton
+            title="Delete Contact"
+            onDelete={() => onContactDelete(c.id)}
+            text={`Are you sure you want to delete ${c.contactContactInformation?.company}?`}
+          />
+        </div>,
+      ];
+    });
+    setTableData(newTableData);
+  }, [contacts, checkedContacts]);
 
   const fetchAddressBooks = async () => {
     let userAddressBooks = await getAllAddressBooks();
@@ -96,47 +219,13 @@ const ContactsPage = () => {
     const toggledSelectAll = !selectAll;
     setSelectAll(toggledSelectAll);
     const newChecked: CheckedContacts = {};
-    contacts?.forEach(contact => {
+    contacts?.forEach((contact) => {
       if (contact.id) {
         newChecked[contact.id] = toggledSelectAll;
       }
     });
     setCheckedContacts(newChecked);
   };
-  const columns = [
-    {
-      name: "Name",
-      size: "default",
-    },
-    {
-      name: "Company",
-      size: "default",
-    },
-    {
-      name: "Phone",
-      size: "default",
-    },
-    {
-      name: "Cell",
-      size: "default",
-    },
-    {
-      name: "Email",
-      size: "default",
-    },
-    {
-      name: "Web Address",
-      size: "default",
-    },
-    {
-      name: "Category",
-      size: "default",
-    },
-    {
-      name: "Actions",
-      size: "default",
-    },
-  ];
 
   const deleteSelectedContacts = async () => {
     const contactIds = Object.keys(checkedContacts).filter(
@@ -146,7 +235,6 @@ const ContactsPage = () => {
     fetchContacts(addressBookId);
     if (deleted) {
       successNotify();
-      // Clean up checked state
       setCheckedContacts((prev) => {
         const newChecked = { ...prev };
         contactIds.forEach((id) => delete newChecked[id]);
@@ -162,84 +250,7 @@ const ContactsPage = () => {
       label: ab.name || "",
     };
   });
-  const selectedCount = Object.values(checkedContacts).filter(Boolean).length;
-  const data = contacts?.map((c) => {
-    return [
-      <div
-        key={c.id}
-        dataset-search={`${c.contactContactInformation?.firstName} ${c.contactContactInformation?.lastName}`}
-      >
-        <CheckboxInput
-          name="contacts"
-          value={c.id}
-          checked={!!checkedContacts[c.id as string]}
-          onChange={() => handleCheckboxChange(c.id as string)}
-          label={
-            <Link
-              href={`/dashboard/contacts/${c.id}/overview`}
-              className={styles.contactLink}
-              key={c.id}
-            >{`${c.contactContactInformation?.firstName} ${c.contactContactInformation?.lastName}`}</Link>
-          }
-        />
-      </div>,
-      c.contactContactInformation?.company,
-      c.contactTelecomInformation?.phone,
-      c.contactTelecomInformation?.cellPhone,
-      <Link
-        href={`mailto:${c.contactTelecomInformation?.email}`}
-        key={c.id}
-        dataset-search={`${c.contactTelecomInformation?.email}`}
-      >
-        {c.contactTelecomInformation?.email}
-      </Link>,
-      <a
-        rel="noopener noreferrer"
-        href={`${c.webAddress}`}
-        key={c.id}
-        dataset-search={`${c.webAddress}`}
-      >
-        {c.webAddress}
-      </a>,
-      c.category != "0" && c.category
-        ? CATEGORIES[parseInt(c.category || "0")].label
-        : "",
-      <div className={styles.modWrapper} key={c.id}>
-        <Link
-          href={`/dashboard/purchases/add?contactId=${c.id}`}
-          className={styles.purchaseAction}
-        >
-          Add Purchase
-        </Link>
-        <Link
-          href={`/dashboard/payments/add?contactId=${c.id}`}
-          className={styles.paymentAction}
-          onClick={(e) => {
-            if (!c.contactTelecomInformation?.email) {
-              e.preventDefault();
-              e.stopPropagation();
-              setOpenEmailModal(true);
-            } else {
-              setOpenEmailModal(false);
-            }
-          }}
-        >
-          Add Payment
-        </Link>
-        <Link
-          href={`/dashboard/contacts/${c.id}`}
-          className={styles.editAction}
-        >
-          Edit
-        </Link>
-        <DeleteButton
-          title="Delete Contact"
-          onDelete={() => onContactDelete(c.id)}
-          text={`Are you sure you want to delete ${c.contactContactInformation?.company}?`}
-        />
-      </div>,
-    ];
-  });
+  
 
   return (
     <>
@@ -257,13 +268,14 @@ const ContactsPage = () => {
           <Table
             tableName="Contacts"
             columns={columns}
-            data={data}
+            data={tableData}
             addPath="/dashboard/contacts/add"
             filterOptions={addressBooksOptions}
             handleFilterChange={handleAddressBookChange}
             deleteSelected={deleteSelectedContacts}
             selectedCount={selectedCount}
-            selectAll={toggleAllCheckboxes}
+            toggleSelectAll={toggleAllCheckboxes}
+            allSelected={selectAll}
           />
         </section>
       </AnimateWrapper>
