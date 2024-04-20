@@ -169,9 +169,6 @@ const ContactForm = ({ id }: ContactProps) => {
               name="phone"
               label="Phone Number"
               value={formData?.phone}
-              pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
-              title="Phone number must be in the format XXX-XXX-XXXX"
-              subLabel="(XXX-XXX-XXXX)"
               placeholder="123-456-7890"
               onChange={handleInputChange}
             />
@@ -199,7 +196,6 @@ const ContactForm = ({ id }: ContactProps) => {
               name="cellPhone"
               label="Cell"
               value={formData?.cellPhone}
-              title="Cell must be in the format XXX-XXX-XXXX"
               placeholder="123-456-7890"
               onChange={handleInputChange}
             />
