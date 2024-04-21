@@ -109,7 +109,7 @@ const ContactPurchasesOverview = ({
                       <div key={month} className={styles.slot}>
                         <p className={styles.slotMonth}>{MONTHS[i]}:
                         {monthSlots[month].map((slot, i) => (
-                          <span key={slot.id} className={styles.slotText}> {slot.date ? slot.date?.toLocaleDateString() : `Slot - ${slot.slot}`}{ i < monthSlots[month].length - 1 && ', '}</span>
+                          <span key={slot.id} className={styles.slotText}> {slot.date ? slot.date.toString() : `Slot - ${slot.slot}`}{ i < monthSlots[month].length - 1 && ', '}</span>
                         ))}
                         </p>
                       </div>
