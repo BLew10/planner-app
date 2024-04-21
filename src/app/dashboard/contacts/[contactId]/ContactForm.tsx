@@ -71,8 +71,6 @@ const ContactForm = ({ id }: ContactProps) => {
           router.push("/dashboard/contacts");
         }
       });
-    } else {
-      router.push("/dashboard/contacts");
     }
   }, [id]);
 
