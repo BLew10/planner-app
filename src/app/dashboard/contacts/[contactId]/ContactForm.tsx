@@ -71,6 +71,33 @@ const ContactForm = ({ id }: ContactProps) => {
           router.push("/dashboard/contacts");
         }
       });
+    } else {
+      setFormData({
+        customerSince: "",
+        notes: "",
+        category: "0",
+        webAddress: "",
+        firstName: "",
+        lastName: "",
+        altContactFirstName: "",
+        altContactLastName: "",
+        salutation: "",
+        company: "",
+        extension: "",
+        phone: "",
+        altPhone: "",
+        fax: "",
+        email: "",
+        cellPhone: "",
+        homePhone: "",
+        address: "",
+        address2: "",
+        city: "",
+        state: "",
+        country: "",
+        zip: "",
+        addressBooksIds: [],
+    });
     }
   }, [id]);
 
