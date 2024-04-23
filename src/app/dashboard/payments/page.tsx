@@ -67,8 +67,8 @@ const PaymentsPage = () => {
   const successNotify = () => toast.success("Successfully Deleted");
   const errorNotify = () => toast.error("Something went wrong. Deletion failed");
 
-  const onCancelPayment = async (paymentId?: string, scheduleId?: string) => {
-    const deleted = await deletePayment(paymentId || "-1", scheduleId || "-1");
+  const onCancelPayment = async (paymentId?: string) => {
+    const deleted = await deletePayment(paymentId || "-1");
     const newPayments = payments?.filter((p) => p.id !== paymentId);
     setPayments(newPayments || []);
     if (deleted) {
@@ -97,17 +97,6 @@ const PaymentsPage = () => {
 
       const actionsData = (
         <div key={p.id} className={styles.modWrapper}>
-          {p.stripeSubscriptionId && 
-            
-          <div className={styles.stripeSubscription}>
-            <a
-              href={`https://dashboard.stripe.com/${isTesting ? "test/" : ""}subscriptions/${p.stripeSubscriptionId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Stripe Schedule
-            </a>
-          </div>}
           <div
             className={styles.invoicesButton}
             onClick={() => handleViewInvoices(p.id as string)}
@@ -117,7 +106,7 @@ const PaymentsPage = () => {
           {paymentStatus === "Pending" && typeof p.id == "string" && (
             <div className={styles.modWrapper} >
               <DeleteButton
-                onDelete={() => onCancelPayment(p.id, p.stripeScheduleId)}
+                onDelete={() => onCancelPayment(p.id)}
                 deleteText="Cancel"
                 text={`Are you sure you want to cancel the pending payment for ${
                   p.companyName

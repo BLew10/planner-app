@@ -3,148 +3,149 @@
 import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
 import { formatDateToString } from "@/lib/helpers/formatDateToString";
-
-export interface UpsertPurchaseData {
-  year: string;
-  calendarId: string;
-  contactId: string;
-  purchaseId: string;
-  purchaseData: Record<
-    string,
-    {
-      selectedDates: {
-        month: number;
-        slot: number;
-        checked?: boolean;
-        date: Date | null;
-      }[];
-      charge?: number;
-      quantity?: number;
-    }
-  >;
-}
-
-export async function upsertPurchase(data: UpsertPurchaseData) {
+import { PurchaseOverviewState } from "@/store/purchaseStore";
+import { Prisma } from "@prisma/client";
+// model PurchaseOverview {
+//   adPurchases      AdvertisementPurchase[]
+//   adPurchaseSlots  AdvertisementPurchaseSlot[]
+//   @@unique([year, contactId])
+// }
+export async function upsertPurchase(
+  data: PurchaseOverviewState | null,
+  contactId: string,
+  year: string,
+  purchaseId: string
+) {
   const session = await auth();
-  if (!session) return false;
-  const userId = session.user?.id;
+  if (!session || !data) return false;
 
-  const { year, calendarId, contactId, purchaseData, purchaseId } = data;
+  const userId = session.user.id;
+  const calendarIds = Object.keys(data);
+  const total = calculateTotalCharges(data);
+
   try {
+    const total = calculateTotalCharges(data);
+
     const result = await prisma.$transaction(async (prisma) => {
-
-      const amountOwed = Object.values(purchaseData).reduce(
-        (acc, { charge = 0 }) => acc + charge,
-        0
-      );
-
-      let purchaseOverview = await prisma.purchaseOverview.findFirst({
+      // Upsert the PurchaseOverview
+      let purchaseOverview = await prisma.purchaseOverview.upsert({
         where: {
-          year: parseInt(year),
-          contactId,
-          editionId: calendarId,
           id: purchaseId,
+          userId: userId,
+          year: parseInt(year),
+        },
+        update: {
+          amountOwed: total,
+          year: parseInt(year),
+          calendarEditions: {
+            connect: calendarIds.map((calendarId) => ({ id: calendarId })),
+          },
+        },
+        create: {
+          userId,
+          contactId,
+          year: parseInt(year),
+          amountOwed: total,
+          calendarEditions: {
+            connect: calendarIds.map((calendarId) => ({ id: calendarId })),
+          },
         },
       });
+      const d = await prisma.advertisementPurchase.deleteMany({
+        where: {
+          purchaseId: purchaseOverview.id,
+        },
+      });
+      const d2 = await prisma.advertisementPurchaseSlot.deleteMany({
+        where: {
+          purchaseId: purchaseOverview.id,
+        },
+      });
+      // Upsert each AdvertisementPurchase and its related slots
+      for (const [calendarId, ads] of Object.entries(data)) {
+        for (const [adId, { quantity, charge, slots }] of Object.entries(ads)) {
+          const adPurchase = await prisma.advertisementPurchase.create({
+            data: {
+              purchaseId: purchaseOverview.id,
+              advertisementId: adId,
+              charge: parseFloat(charge),
+              quantity: parseInt(quantity),
+            },
+          });
 
-      if (purchaseOverview) {
-        console.log("updating purchase overview");
-        await prisma.purchaseOverview.update({
-          where: { id: purchaseOverview.id },
-          data: {
-            year: parseInt(year),
-            contactId,
-            editionId: calendarId,
-            amountOwed: amountOwed,
-          },
-        });
-      } else {
-        purchaseOverview = await prisma.purchaseOverview.create({
-          data: {
-            userId,
-            year: parseInt(year),
-            contactId,
-            editionId: calendarId,
-            amountOwed: amountOwed,
-          },
-        });
-      }
-
-      for (const [
-        advertisementId,
-        { selectedDates, charge, quantity },
-      ] of Object.entries(purchaseData)) {
-        let adPurchase = await prisma.advertisementPurchase.findFirst({
-          where: {
-            advertisementId,
+          const slotRecords = slots?.map((slot) => ({
+            advertisementPurchaseId: adPurchase.id,
             purchaseId: purchaseOverview.id,
-          },
-        });
+            month: slot.month,
+            slot: slot.slot,
+            date: slot.date ? slot.date : null,
+          }));
 
-        if (adPurchase) {
-          
-          await prisma.advertisementPurchase.update({
-            where: { id: adPurchase.id },
-            data: {
-              charge: charge || 0,
-              quantity: quantity || 0,
-            },
+          if (slotRecords)
+          await prisma.advertisementPurchaseSlot.createMany({
+            data: slotRecords,
           });
-        } else {
-          adPurchase = await prisma.advertisementPurchase.create({
-            data: {
-              advertisementId,
-              purchaseId: purchaseOverview.id,
-              charge: charge || 0,
-              quantity: quantity || 0,
-            },
-          });
-        }
-
-        // Delete all slots for this purchase and re-add the selected ones
-        await prisma.advertisementPurchaseSlot.deleteMany({
-          where: { advertisementPurchaseId: adPurchase.id },
-        });
-
-        for (const { month, slot, checked, date } of selectedDates) {
-          const slotExists = await prisma.advertisementPurchaseSlot.findFirst({
-            where: {
-              advertisementPurchaseId: adPurchase.id,
-              purchaseId: purchaseOverview.id,
-              month,
-              slot,
-            },
-          });
-          if (checked) {
-            if (!slotExists) {
-              await prisma.advertisementPurchaseSlot.create({
-                data: {
-                  purchaseId: purchaseOverview.id,
-                  advertisementPurchaseId: adPurchase.id,
-                  month,
-                  slot,
-                  date: date ? formatDateToString(date) : null,
-                },
-              });
-            }
-          } else {
-            if (slotExists) {
-              await prisma.advertisementPurchaseSlot.delete({
-                where: { id: slotExists.id },
-              });
-            }
-          }
         }
       }
-    },
-    {
-      maxWait: 5000, // default: 2000
-      timeout: 10000, // default: 5000
     });
 
-   return true
-  } catch (error: any) {
+    return true;
+  } catch (error) {
     console.error("Error upserting purchase", error);
     return false;
   }
+
+  // try {
+  //   const result = await prisma.$transaction(async (prisma) => {
+  //     const adPurchasesData
+  //     const purchaseDataUpdate: Prisma.PurchaseOverviewUpdateInput = {
+  //       user: { connect: { id: userId } },
+  //       contact: { connect: { id: contactId } },
+  //       calendarEditions: {
+  //         connect: calendarIds.map((id) => ({ id })),
+  //       },
+  //       year: Number(year),
+  //       amountOwed: total,
+  //       adPurchases: {
+  //         createMany: {
+  //           data: [],
+  //         }
+  //       },
+  //       adPurchaseSlots: {
+  //         createMany: {
+  //           data: [],
+  //         }
+  //       }
+  //     };
+
+  //   },
+  //   {
+  //     maxWait: 5000, // default: 2000
+  //     timeout: 10000, // default: 5000
+  //   });
+
+  //  return true
+  // } catch (error: any) {
+  //   console.error("Error upserting purchase", error);
+  //   return false;
+  // }
+}
+
+function calculateTotalCharges(
+  purchaseOverview: PurchaseOverviewState
+): number {
+  let totalCharges = 0;
+
+  for (const calendarData of Object.values(purchaseOverview)) {
+    for (const adData of Object.values(calendarData)) {
+      // Assuming charge is a string that represents a decimal number,
+      // it should be converted to a number before summing up.
+      const charge = parseFloat(adData.charge);
+      if (!isNaN(charge)) {
+        totalCharges += charge;
+      }
+    }
+  }
+
+  return totalCharges;
 }

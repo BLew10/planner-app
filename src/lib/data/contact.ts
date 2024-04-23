@@ -91,7 +91,6 @@ export const getContactById = async (id: string) => {
   const session = await auth();
   const contactId = id;
   const userId = session?.user?.id;
-  console.log("contactId", contactId, userId);
   try {
     const contact: Partial<ContactModel> | null =
       await prisma.contact.findFirst({
@@ -106,7 +105,6 @@ export const getContactById = async (id: string) => {
           contactTelecomInformation: true,
           contactAddress: true,
           addressBooks: true,
-          stripeCustomerId: true,
           purchases: {
             include: {
               adPurchases: {
@@ -119,29 +117,12 @@ export const getContactById = async (id: string) => {
           payments: true,
         },
       });
-    console.log(contact);
     return contact;
   } catch (e) {
     console.log("Error getting contact", e);
     return null;
   }
 };
-
-export const removeContactStripeCustomerId = async (
-  stripeCustomerId: string
-) => {
-  try {
-    const contact = await prisma.contact.update({
-      where: { stripeCustomerId },
-      data: { stripeCustomerId: null },
-    });
-    return contact;
-  } catch (e) {
-    console.log("Error removing contact stripe customer id", e);
-    return null;
-  }
-};
-
 export const deleteManyContacts = async (contactIds: string[]) => {
   try {
     const result = await prisma.$transaction(async (prisma) => {

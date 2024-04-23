@@ -4,7 +4,7 @@ import { AdvertisementPurchaseSlotModel } from "./advertisementPurchaseSlots";
 
 export interface PurchaseOverviewModel extends PurchaseOverview {
     contact: Contact
-    calendarEdition: CalendarEdition
+    calendarEditions: CalendarEdition[]
     payment: Payment | null
     amountOwed: number | Prisma.Decimal
     adPurchases: Partial<AdvertisementPurchaseModel>[] | null

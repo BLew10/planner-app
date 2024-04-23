@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import styles from "./page.module.scss";
 import { MdCheck, MdOutlineCancel } from "react-icons/md";
@@ -24,7 +25,7 @@ const columns = [
     size: "default",
   },
   {
-    name: "Calendar Edition",
+    name: "Calendar Editions",
     size: "default",
   },
   {
@@ -53,6 +54,7 @@ const PurchasesPage = () => {
     []
   );
   const [year, setYear] = useState(defaultYear);
+  const searchParams = useSearchParams();
   const successNotify = () => toast.success("Successfully Deleted");
   const errorNotify = () =>
     toast.error("Something went wrong. Deletion failed");
@@ -66,19 +68,20 @@ const PurchasesPage = () => {
       }
     };
     fetchCalendars();
+    const yearParam = searchParams.get("year");
+    if (yearParam) {
+      setYear(yearParam);
+    }
   }, []);
 
   useEffect(() => {
     const fetchPurchases = async () => {
-      const purhcases = await getPurchaseTableData(calendarId, year);
+      const purhcases = await getPurchaseTableData(year);
       setPurchases(purhcases);
     };
     fetchPurchases();
   }, [calendarId, year]);
 
-  const handleCalendarChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setCalendarId(e.target.value);
-  };
 
   const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setYear(e.target.value);
@@ -98,7 +101,7 @@ const PurchasesPage = () => {
     return [
       p.companyName,
       `$${p.amountOwed?.toFixed(2)}`,
-      p.calendarEdition,
+      p.calendarEditions,
       p.year,
       <div className={styles.paymentWrapper} key={p.id}>
         {p.paymentScheduled ? (
@@ -117,14 +120,14 @@ const PurchasesPage = () => {
           </Link>
         )}
         <Link
-          href={`/dashboard/purchases/${p.id}?contactId=${p.contactId}`}
+          href={`/dashboard/purchases/${p.id}?contactId=${p.contactId}&year=${p.year}`}
           className={styles.editAction}
         >
           Edit
         </Link>
         <DeleteButton
           title="Delete Purchase"
-          text={`Are you sure you want to delete ${p.companyName}'s purchase for ${p.year} ${p.calendarEdition}?`}
+          text={`Are you sure you want to delete ${p.companyName}'s purchase for ${p.year}`}
           onDelete={() => {
             if (p.paymentScheduled) {
               setShowModal(true);
@@ -153,14 +156,10 @@ const PurchasesPage = () => {
             data={data}
             addPath={"/dashboard/contacts"}
             filterOptions={
-              calendars?.map((calendar) => ({
-                label: calendar.name || "",
-                value: calendar.id || "",
-              })) || []
+              ALL_YEARS
             }
-            handleFilterChange={handleCalendarChange}
-            filterOptionsTwo={ALL_YEARS}
-            handleFilterChangeTwo={handleYearChange}
+            filterValue={year}
+            handleFilterChange={handleYearChange}
           />
         </section>
       </AnimateWrapper>

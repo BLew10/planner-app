@@ -3,7 +3,6 @@
 import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
 import { Prisma } from "@prisma/client";
-import { upsertStripeCustomer } from "@/lib/helpers/stripeHelpers";
 
 export interface ContactFormData {
   customerSince: string;
@@ -129,19 +128,6 @@ const upsertContact = async (
     });
 
     if (!result) return false
-
-    const stripeCustomer = await upsertStripeCustomer(
-      result.stripeCustomerId || "",
-      formData.email || "",
-    )
-    
-    if (stripeCustomer)
-      await prisma.contact.update({
-        where: { id: result.id },
-        data: {
-          stripeCustomerId: stripeCustomer.id
-        }
-      })
 
     return true;
   } catch (error: any) {

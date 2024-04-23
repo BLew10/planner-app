@@ -1,0 +1,285 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { Advertisement } from "@prisma/client";
+import TextInput from "@/app/(components)/form/TextInput";
+import PurchaseNonDayType from "./PurchaseNonDayType";
+import PurchaseDayType from "./PurchaseDayType";
+import styles from "./PurchaseDetails.module.scss";
+import { usePurchasesStore } from "@/store/purchaseStore";
+import { PurchaseOverviewModel } from "@/lib/models/purchaseOverview";
+import { CalendarEdition } from "@prisma/client";
+import { toast } from "react-toastify";
+import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
+
+interface PurchaseProps {
+  advertisementTypes: Partial<Advertisement>[];
+  calendars: Partial<CalendarEdition>[];
+  purchase?: Partial<PurchaseOverviewModel> | null;
+  onNext: () => void;
+  year: string;
+}
+
+export interface AdvertisementPurchaseData {
+  name?: string;
+  quantity: string;
+  adId?: string;
+  perMonth?: number;
+  calendarId?: string;
+  charge: string;
+  slots?: { slot: number; month: number | null; date: string | null }[];
+}
+
+const Purchase: React.FC<PurchaseProps> = ({
+  advertisementTypes,
+  purchase = null,
+  calendars,
+  onNext,
+  year
+}) => {
+  const purchaseStore = usePurchasesStore();
+  const [selectedCalendars, setSelectedCalendars] = useState<
+    Partial<CalendarEdition>[]
+  >([]);
+  const [activeModalData, setActiveModalData] = useState<{
+    data?: AdvertisementPurchaseData;
+    isOpenDayType: boolean;
+    isOpenNonDayType: boolean;
+  }>({ isOpenDayType: false, isOpenNonDayType: false });
+
+  useEffect(() => {
+    const filteredCalendars = calendars?.filter(
+      (calendar) => calendar.id && purchaseStore.purchaseOverview?.[calendar.id]
+    );
+    setSelectedCalendars(filteredCalendars || []);
+
+    if (purchase){
+      purchaseStore.setPurchaseOverview(purchase);
+    }
+  }, [purchaseStore.purchaseOverview, calendars]);
+
+  const handleInputChange = (
+    calendarId: string,
+    adId: string,
+    field: "quantity" | "charge",
+    value: string
+  ) => {
+    if (field === "quantity") {
+      purchaseStore.setQuantity(calendarId, adId, value);
+    } else if (field === "charge") {
+      purchaseStore.setCharge(calendarId, adId, value);
+    }
+  };
+
+  // Handle form submission
+  const onContinue = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const purchaseData = purchaseStore.purchaseOverview;
+    for (const calendarId in purchaseData) {
+      const calendarData = purchaseData[calendarId];
+      for (const adId in calendarData) {
+        const adData = calendarData[adId];
+        const { slots, quantity, charge } = adData;
+        if (quantity !== "" && charge !== "") {
+          if (!slots || slots.length === 0) {
+            const ad = advertisementTypes.find((ad) => ad.id === adId);
+            const calendar = calendars.find(
+              (calendar) => calendar.id === calendarId
+            );
+            const errorAd = document.getElementById(`${adId}-${calendarId}`);
+            const placeErrorButton = document.getElementById(
+              `button-${adId}-${calendarId}`
+            )
+            errorAd?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            placeErrorButton?.classList.add(styles.pulse)
+            toast.error(
+              `Please select at least one slot in the calendar ${calendar?.name} for the advertisement ${ad?.name}.`,
+              {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+              }
+            );
+            return;
+          }
+        }
+      }
+    }
+    onNext()
+  };
+
+  const openDayTypeModal = (
+    adType: Partial<Advertisement>,
+    calendarId: string
+  ) => {
+    const data = purchaseStore.getByCalendarIdAdId(calendarId, adType.id!);
+    setActiveModalData({
+      isOpenDayType: true,
+      isOpenNonDayType: false,
+      data: {
+        ...data,
+        perMonth: adType?.perMonth,
+        name: adType?.name,
+        adId: adType.id,
+        calendarId: calendarId,
+      },
+    });
+  };
+
+  const openNonDayTypeModal = (
+    adType: Partial<Advertisement>,
+    calendarId: string
+  ) => {
+    const data = purchaseStore.getByCalendarIdAdId(calendarId, adType.id!);
+    setActiveModalData({
+      isOpenDayType: false,
+      isOpenNonDayType: true,
+      data: {
+        ...data,
+        perMonth: adType?.perMonth,
+        name: adType?.name,
+        adId: adType.id,
+        calendarId: calendarId,
+      },
+    });
+  };
+
+  return (
+    <AnimateWrapper>
+      <form onSubmit={onContinue} className={styles.form}>
+        <div className={styles.formWrapper}>
+          <div className={styles.header}>
+            <div className={styles.empty}></div>
+            {selectedCalendars?.map((calendar) => (
+              <div key={calendar.id}>
+                <h3 className={styles.calendarName}>{calendar.name}</h3>
+                {selectedCalendars.length > 1 && (
+                  <button
+                    className={styles.deleteCalendar}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (calendar.id) {
+                        purchaseStore.removeCalendarId(calendar.id);
+                      }
+                    }}
+                  >
+                    Delete Calendar
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className={styles.body}>
+            {advertisementTypes
+              ?.filter((at) => at.id != undefined)
+              .map((ad) => {
+                return (
+                  <>
+                    <div key={ad.id} className={styles.advertisementType}>
+                      <h3 className={styles.advertisementName}>{ad.name}</h3>
+                      {selectedCalendars?.map((calendar) => {
+                        const data = purchaseStore.getByCalendarIdAdId(
+                          calendar.id!,
+                          ad.id!
+                        );
+                        return (
+                          <div key={calendar.id} className={styles.inputGroup} id={`${ad.id}-${calendar.id}`}>
+                            <TextInput
+                              label="Quantity"
+                              name={`quantity-${ad.id}`}
+                              type="number"
+                              pattern="[0-9]*"
+                              placeholder="Quantity"
+                              min="0"
+                              isRequired={data.slots && data.slots.length > 0}
+                              value={data.quantity}
+                              onChange={(e) =>
+                                handleInputChange(
+                                  calendar.id as string,
+                                  ad.id as string,
+                                  "quantity",
+                                  e.target.value
+                                )
+                              }
+                            />
+                            <TextInput
+                              label="Charge"
+                              name={`charge-${ad.id}`}
+                              type="text"
+                              pattern="[0-9.]*"
+                              min="0"
+                              isRequired={data.slots && data.slots.length > 0}
+                              placeholder="Charge"
+                              value={data.charge}
+                              onChange={(e) =>
+                                handleInputChange(
+                                  calendar.id as string,
+                                  ad.id as string,
+                                  "charge",
+                                  e.target.value
+                                )
+                              }
+                            />
+                            <button
+                              type="button"
+                              className={styles.placeButton}
+                              id={`button-${ad.id}-${calendar.id}`}
+                              onClick={(e) => {
+                                e.currentTarget.classList.remove(styles.pulse)
+                                if (ad.isDayType) {
+                                  openDayTypeModal(ad, calendar.id as string);
+                                } else {
+                                  openNonDayTypeModal(
+                                    ad,
+                                    calendar.id as string
+                                  );
+                                }
+                              }}
+                            >
+                              Place
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className={styles.divider}></div>
+                  </>
+                );
+              })}
+          </div>
+        </div>
+        {activeModalData.isOpenNonDayType && (
+          <PurchaseNonDayType
+            data={activeModalData.data}
+            closeModal={() =>
+              setActiveModalData({
+                isOpenDayType: false,
+                isOpenNonDayType: false,
+              })
+            }
+            isOpen={activeModalData.isOpenNonDayType}
+          />
+        )}
+
+        {activeModalData.isOpenDayType && (
+          <PurchaseDayType
+            data={activeModalData.data}
+            year={year}
+            closeModal={() =>
+              setActiveModalData({
+                isOpenDayType: false,
+                isOpenNonDayType: false,
+              })
+            }
+            isOpen={activeModalData.isOpenDayType}
+          />
+        )}
+        <button type="submit" className={styles.submitButton}>
+          {purchase?.id ? "Update" : "Create"}
+        </button>
+      </form>
+    </AnimateWrapper>
+  );
+};
+
+export default Purchase;

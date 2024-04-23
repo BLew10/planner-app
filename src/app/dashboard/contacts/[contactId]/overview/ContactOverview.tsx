@@ -57,18 +57,6 @@ const ContactOverview = ({ contactId }: ContactOverviewProps) => {
             Edit
           </Link>
         </div>
-        {contact?.stripeCustomerId && (
-          <a
-            href={`https://dashboard.stripe.com/${
-              isTesting ? "test/" : ""
-            }customers/${contact?.stripeCustomerId}`}
-            className={styles.stripeLink}
-            rel="noreferrer noopener"
-            target="_blank"
-          >
-            Stripe Profile
-          </a>
-        )}
       </div>
       <div className={styles.contactTabs}>
         <button

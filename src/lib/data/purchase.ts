@@ -33,8 +33,8 @@ export interface Purchase {
   }[];
 }
 
-export const getPurchaseById = async (
-  purchaseId: string | undefined = "-1"
+export const getPurchaseByContactIdAndYear = async (
+  contactId: string | undefined = "-1", year: string
 ): Promise<Partial<PurchaseOverviewModel> | null> => {
   const session = await auth();
   if (!session) {
@@ -45,12 +45,14 @@ export const getPurchaseById = async (
 
   const purchase = await prisma.purchaseOverview.findFirst({
     where: {
-      id: purchaseId,
+      contactId: contactId,
       userId,
+      year: Number(year),
       isDeleted: false,
     },
     select: {
       id: true,
+      calendarEditions: true,
       adPurchases: {
         include: {
           advertisement: true,
@@ -74,9 +76,9 @@ export interface PurchaseTableData {
   contactId: string;
   companyName: string;
   year: number;
-  calendarEdition: string;
+  calendarEditions: string;
 }
-export const getPurchaseTableData = async (calendarId: string, year: string): Promise<
+export const getPurchaseTableData = async (year: string): Promise<
   PurchaseTableData[] | null
 > => {
   const session = await auth();
@@ -89,7 +91,6 @@ export const getPurchaseTableData = async (calendarId: string, year: string): Pr
   const purchases = await prisma.purchaseOverview.findMany({
     where: {
       userId,
-      editionId: calendarId,
       year: Number(year),
       isDeleted: false,
     },
@@ -98,9 +99,9 @@ export const getPurchaseTableData = async (calendarId: string, year: string): Pr
       amountOwed: true,
       year: true,
       paymentId: true,
-      calendarEdition: {
+      calendarEditions: {
         select: {
-          name: true,
+          code: true,
         },
       },
       contact: {
@@ -117,6 +118,7 @@ export const getPurchaseTableData = async (calendarId: string, year: string): Pr
   });
 
   const allPurchases: PurchaseTableData[] = purchases.map((purchase) => {
+    const calendarsEditions = purchase.calendarEditions.map((e) => e.code).join(", ");
     return {
       id: purchase.id,
       paymentScheduled: purchase.paymentId ? true : false,
@@ -124,7 +126,7 @@ export const getPurchaseTableData = async (calendarId: string, year: string): Pr
       contactId: purchase.contact.id,
       companyName: purchase.contact?.contactContactInformation?.company || "",
       year: purchase.year,
-      calendarEdition: purchase.calendarEdition?.name || "",
+      calendarEditions: calendarsEditions,
     };
   });
 
@@ -169,7 +171,6 @@ export const getAdvertisementPurchasesByYearAndCalendarId = async (
       isDeleted: false,
       purchaseOverview: {
         year: Number(year),
-        editionId: calendarId,
         userId,
       },
     },
@@ -248,7 +249,6 @@ export const getPurchasesByMonthCalendarIdAndYear = async (
       purchaseOverview: {
         select: {
           year: true,
-          editionId: true,
           contact: {
             select: {
               id: true,
@@ -286,7 +286,7 @@ export interface ContactInfo extends Contact {
 }
 
 export interface PurchaseInfo extends PurchaseOverview {
-  calendarEdition: CalendarEdition;
+  calendarEditions: CalendarEdition[] | null;
 }
 
 export const getPurchasesWithoutPayment = async (
@@ -307,7 +307,7 @@ export const getPurchasesWithoutPayment = async (
         isDeleted: false,
       },
       include: {
-        calendarEdition: true,
+        calendarEditions: true,
       },
     });
 
@@ -335,7 +335,7 @@ export const getPurchasesByContactId = async (
     },
     select: {
       id: true,
-      calendarEdition: true,
+      calendarEditions: true,
       year: true,
       adPurchases: {
         select: {
@@ -366,10 +366,11 @@ export const getPurchasesByContactId = async (
   }
   const purchasesData: Partial<Purchase>[][] | null = purchases.map(
     (p) => {
+      const calendarEditions = p.calendarEditions.map(e=> e.code).join(", ");
       return p.adPurchases.map((purchase) => ({
         id: purchase.id,
         year: p.year,
-        calendarEdition: p.calendarEdition.name,
+        calendarEditions: calendarEditions,
         charge: parseFloat(purchase.charge.toString()),
         quantity: purchase.quantity,
         advertisement: {

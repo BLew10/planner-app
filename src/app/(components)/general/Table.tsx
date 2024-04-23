@@ -13,6 +13,7 @@ interface TableProps {
   columns: { name: string; size: string; wrap?: boolean }[];
   data?: any[][];
   addPath?: string;
+  filterValue?: string;
   filterOptions?: { value: string; label: string }[];
   handleFilterChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   filterOptionsTwo?: { value: string; label: string }[];
@@ -28,6 +29,7 @@ const Table = ({
   columns,
   data,
   addPath,
+  filterValue,
   filterOptions,
   handleFilterChange,
   filterOptionsTwo,
@@ -102,6 +104,7 @@ const Table = ({
               <SelectInput
                 name="filter"
                 label="Filter"
+                value={filterValue}
                 options={filterOptions}
                 onChange={handleFilterChange}
               />

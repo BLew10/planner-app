@@ -19,19 +19,12 @@
       &:enabled:focus {
         background-color: transparent;
       }
-      &:hover {
-        background-color: var(--primary-green-dark);
-      }
     }
-
-    .react-calendar__tile--active:enabled:focus.selectedDay {
-      /* This targets tiles that are both active, selected, and focused */
-      background-color: var(--primary-green) !important;
-    }
-
+    
     .react-calendar__tile--active {
+      background-color: transparent !important;
       &:enabled:focus {
-        background-color: transparent; /* This will only be applied when the tile is active but not selected */
+        background-color: transparent !important; 
       }
     }
 
@@ -48,15 +41,7 @@
       justify-content: center;
       align-items: center;
       flex-direction: column;
-      &:hover {
-        background-color: var(--primary-green-dark);
-      }
     }
-  }
-
-  .selectedDay {
-    background-color: var(--primary-green) !important;
-    border: 1px solid #ddd;
   }
 }
 
@@ -71,4 +56,21 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+}
+
+.months {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding: 20px;
+}
+
+.modal {
+  background-color: var(--primary-color);
+  min-width: 1000px;
+}
+
+.text, .title {
+  color: var(--text-secondary);
+  margin-bottom: 10px;
 }

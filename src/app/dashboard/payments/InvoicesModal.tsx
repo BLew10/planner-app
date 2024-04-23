@@ -140,15 +140,6 @@ export default function InvoicesModal({
                                     Download
                                   </a>
                                 )}
-                                {invoice.stripeUrl && (
-                                  <a
-                                    href={invoice.stripeUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={styles.stripeUrl}
-                                  >
-                                    Stripe Link
-                                </a>)}
                               </td>
                             </tr>
                           ))}

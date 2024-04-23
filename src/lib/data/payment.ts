@@ -2,12 +2,8 @@
 
 import prisma from "@/lib/prisma/prisma";
 import { PaymentStatusType, PaymentFrequencyType } from "../constants";
-import { formatDateToString } from "../helpers/formatDateToString";
 import { auth } from "@/auth";
 import { PurchaseOverviewModel } from "../models/purchaseOverview";
-import Stripe from "stripe";
-import { Payment } from "@prisma/client";
-import { getStripePriceById, getStripeCustomerById } from "../helpers/stripeHelpers";
 
 export interface PaymentTableData {
     id: string;
@@ -18,8 +14,6 @@ export interface PaymentTableData {
     totalPayments: number;
     startDate: Date;    
     anticipatedEndDate: Date;
-    stripeScheduleId?: string;
-    stripeSubscriptionId?: string;
     frequency: string;
     companyName: string;
     purchases?: Partial<PurchaseOverviewModel>[];
@@ -47,8 +41,6 @@ export const getAllPayments = async (paymentStatus: PaymentStatusType): Promise<
                 startDate: true,
                 anticipatedEndDate: true,
                 frequency: true,
-                stripeScheduleId: true,
-                stripeSubscriptionId: true,
                 contact: {
                     select: {
                         contactContactInformation: {
@@ -115,7 +107,6 @@ export const getPaymentsByContactId = async (contactId: string): Promise<Payment
                 startDate: true,
                 anticipatedEndDate: true,
                 frequency: true,
-                stripeScheduleId: true,
                 purchases: {
                     select: {
                         id: true,
@@ -219,29 +210,6 @@ const stripeIntervalMap = (frequency: string): PaymentFrequencyType => {
     }
   }
 
-export const updatePaymentFromStripeSchedule = async (stripeSchedule: Stripe.SubscriptionSchedule) => {
-    let paymentData: Partial<Payment> | null = {};
-    const startDate = formatDateToString(new Date(stripeSchedule.phases[0].start_date * 1000))
-    const anticipatedEndDate = formatDateToString(new Date(stripeSchedule.phases[0].end_date * 1000))
-    const priceId = stripeSchedule.phases[0].items[0].price as string || "";
-    const price = await getStripePriceById(priceId);
-    const frequency = stripeIntervalMap(price?.recurring?.interval || "");
-    paymentData.frequency = frequency;
-    paymentData.anticipatedEndDate = anticipatedEndDate;
-    paymentData.startDate = startDate;
-    
-    // updateMany due to non-unique constraint cause stripeScheduleId is added after payment is created
-    const payment = await prisma.payment.updateMany({
-        where: {
-            stripeScheduleId: stripeSchedule.id
-        },
-        data: {
-            ...paymentData
-        }
-    });
-    return payment
-}
-
 export const getInvoicesForPayment = async (paymentId: string) => {
     try {
         const invoices = await prisma.paymentInvoice.findMany({
@@ -256,23 +224,7 @@ export const getInvoicesForPayment = async (paymentId: string) => {
     }
 }
 
-export const addSubscriptionIdToPayment = async (scheduleId: string, subscriptionId: string) => {
-    try {
-        const payment = await prisma.payment.update({
-            where: {
-                stripeScheduleId: scheduleId
-            },
-            data: {
-                stripeSubscriptionId: subscriptionId
-            }
-        });
-        return payment
-    } catch (e) {
-        console.log('Error adding subscription id to payment', e)
-        return null
-    }
-}
-const formatTableData = (payment: any) => {
+const formatTableData = (payment: any): PaymentTableData => {
 
     return {
         id: payment.id,
@@ -285,8 +237,6 @@ const formatTableData = (payment: any) => {
         anticipatedEndDate: payment.anticipatedEndDate,
         frequency: payment.frequency,
         companyName: payment.contact?.contactContactInformation?.company || "",
-        stripeScheduleId: payment.stripeScheduleId || "",
-        stripeSubscriptionId: payment.stripeSubscriptionId || "",
         purchases: payment.purchases || []
     }
 }

@@ -3,6 +3,9 @@
 @import "tailwindcss/utilities";
 
 :root {
+  * {
+    scroll-behavior: smooth;
+  }
   --primary-yellow: rgb(253, 178, 8);
   --primary-yellow-opacity: rgba(253, 178, 8, 0.5);
   --primary-yellow-dark: rgb(240, 134, 13);

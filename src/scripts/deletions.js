@@ -6,7 +6,6 @@ async function deletePurchases() {
     await prisma.purchaseSlot.deleteMany();
     await prisma.advertisementPurchase.deleteMany();
     await prisma.purchaseOverview.deleteMany();
-    await prisma.stripeInvoice.deleteMany();
     await prisma.payment.deleteMany();
     
   } catch (error) {

@@ -6,9 +6,10 @@ interface CheckboxGroupProps {
   name: string;
   options: { label: any; value: any; checked: boolean }[];
   useGrid?: boolean;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-const CheckboxGroup = ({ name, options, useGrid = true }: CheckboxGroupProps) => {
+const CheckboxGroup = ({ name, options, useGrid = true, onChange }: CheckboxGroupProps) => {
   return (
     <div className={`${useGrid ? styles.checkboxGrid : ''}`}>
       {options.map((option, index) => (
@@ -18,6 +19,7 @@ const CheckboxGroup = ({ name, options, useGrid = true }: CheckboxGroupProps) =>
           value={option.value}
           label={option.label}
           checked={option.checked}
+          onChange={onChange}
         />
       ))}
     </div>
