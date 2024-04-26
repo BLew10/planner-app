@@ -106,3 +106,29 @@ export const parseForm = (
     return null;
   }
 };
+
+
+export const getManyCalendars = async (
+  ids: string[]
+): Promise<Partial<CalendarEdition>[] | null> => {
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  try {
+    const calendars = await prisma.calendarEdition.findMany({
+      where: {
+        userId,
+        id: { in: ids },
+        isDeleted: false
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    return calendars;
+  } catch {
+    return null;
+  }
+}

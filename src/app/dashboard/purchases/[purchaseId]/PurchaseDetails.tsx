@@ -6,7 +6,10 @@ import TextInput from "@/app/(components)/form/TextInput";
 import PurchaseNonDayType from "./PurchaseNonDayType";
 import PurchaseDayType from "./PurchaseDayType";
 import styles from "./PurchaseDetails.module.scss";
-import { usePurchasesStore } from "@/store/purchaseStore";
+import {
+  PurchaseOverviewState,
+  usePurchasesStore,
+} from "@/store/purchaseStore";
 import { PurchaseOverviewModel } from "@/lib/models/purchaseOverview";
 import { CalendarEdition } from "@prisma/client";
 import { toast } from "react-toastify";
@@ -35,7 +38,7 @@ const Purchase: React.FC<PurchaseProps> = ({
   purchase = null,
   calendars,
   onNext,
-  year
+  year,
 }) => {
   const purchaseStore = usePurchasesStore();
   const [selectedCalendars, setSelectedCalendars] = useState<
@@ -48,14 +51,43 @@ const Purchase: React.FC<PurchaseProps> = ({
   }>({ isOpenDayType: false, isOpenNonDayType: false });
 
   useEffect(() => {
+    if (purchase) {
+      const sessionCalendars = Object.keys(purchaseStore?.purchaseOverview || {});
+      const calendarIds = purchase.calendarEditions?.filter((calendar) =>sessionCalendars.includes(calendar.id)).map(
+        (calendar) => calendar.id
+      );
+      for (const calendarId of calendarIds || []) {
+        let data: { [key: string]: any } = {};
+        const advertisementIds = purchase.adPurchases?.filter((ad) => ad.calendarId === calendarId).map((ad) => ad.advertisementId);
+        for (const adId of advertisementIds || []) {
+          if (typeof adId !== "string") continue;
+          const slots = purchase?.adPurchaseSlots?.filter((slot) => slot.calendarId === calendarId && slot.advertisementPurchase?.advertisementId === adId)
+            .map((slot) => ({
+              slot: slot.slot ?? 0, // Using 0 as a default, adjust as necessary
+              month: slot.month ?? 0,
+              date: slot.date || null,
+            }));
+
+          const quantity = purchase?.adPurchases?.find((ad) => ad.advertisementId === adId && ad.calendarId === calendarId)?.quantity;
+          const charge = purchase?.adPurchases?.find((ad) => ad.advertisementId === adId && ad.calendarId === calendarId)?.charge;
+
+          data[adId] = {
+            quantity: quantity?.toString() || "",
+            charge: charge?.toString() || "",
+            slots,
+          };
+        }
+
+        purchaseStore.setPurchaseData(data, calendarId);
+      }
+    }
+  }, [purchase]);
+
+  useEffect(() => {
     const filteredCalendars = calendars?.filter(
       (calendar) => calendar.id && purchaseStore.purchaseOverview?.[calendar.id]
     );
     setSelectedCalendars(filteredCalendars || []);
-
-    if (purchase){
-      purchaseStore.setPurchaseOverview(purchase);
-    }
   }, [purchaseStore.purchaseOverview, calendars]);
 
   const handleInputChange = (
@@ -80,7 +112,7 @@ const Purchase: React.FC<PurchaseProps> = ({
       for (const adId in calendarData) {
         const adData = calendarData[adId];
         const { slots, quantity, charge } = adData;
-        if (quantity !== "" && charge !== "") {
+        if (quantity !== "" || charge !== "") {
           if (!slots || slots.length === 0) {
             const ad = advertisementTypes.find((ad) => ad.id === adId);
             const calendar = calendars.find(
@@ -89,9 +121,9 @@ const Purchase: React.FC<PurchaseProps> = ({
             const errorAd = document.getElementById(`${adId}-${calendarId}`);
             const placeErrorButton = document.getElementById(
               `button-${adId}-${calendarId}`
-            )
-            errorAd?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-            placeErrorButton?.classList.add(styles.pulse)
+            );
+            errorAd?.scrollIntoView({ behavior: "smooth", block: "center" });
+            placeErrorButton?.classList.add(styles.pulse);
             toast.error(
               `Please select at least one slot in the calendar ${calendar?.name} for the advertisement ${ad?.name}.`,
               {
@@ -105,7 +137,7 @@ const Purchase: React.FC<PurchaseProps> = ({
         }
       }
     }
-    onNext()
+    onNext();
   };
 
   const openDayTypeModal = (
@@ -169,13 +201,13 @@ const Purchase: React.FC<PurchaseProps> = ({
               </div>
             ))}
           </div>
-          <div className={styles.body}>
+          <div className={styles.body} key={purchase?.id} >
             {advertisementTypes
               ?.filter((at) => at.id != undefined)
               .map((ad) => {
                 return (
-                  <>
-                    <div key={ad.id} className={styles.advertisementType}>
+                  <div key={ad.id}>
+                    <div key={`${ad.id}`} className={styles.advertisementType}>
                       <h3 className={styles.advertisementName}>{ad.name}</h3>
                       {selectedCalendars?.map((calendar) => {
                         const data = purchaseStore.getByCalendarIdAdId(
@@ -183,7 +215,11 @@ const Purchase: React.FC<PurchaseProps> = ({
                           ad.id!
                         );
                         return (
-                          <div key={calendar.id} className={styles.inputGroup} id={`${ad.id}-${calendar.id}`}>
+                          <div
+                            key={`${ad.id}-${calendar.id}`}
+                            className={styles.inputGroup}
+                            id={`${ad.id}-${calendar.id}`}
+                          >
                             <TextInput
                               label="Quantity"
                               name={`quantity-${ad.id}`}
@@ -225,7 +261,7 @@ const Purchase: React.FC<PurchaseProps> = ({
                               className={styles.placeButton}
                               id={`button-${ad.id}-${calendar.id}`}
                               onClick={(e) => {
-                                e.currentTarget.classList.remove(styles.pulse)
+                                e.currentTarget.classList.remove(styles.pulse);
                                 if (ad.isDayType) {
                                   openDayTypeModal(ad, calendar.id as string);
                                 } else {
@@ -243,7 +279,7 @@ const Purchase: React.FC<PurchaseProps> = ({
                       })}
                     </div>
                     <div className={styles.divider}></div>
-                  </>
+                  </div>
                 );
               })}
           </div>

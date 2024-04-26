@@ -12,6 +12,7 @@ import { CalendarEdition } from "@prisma/client";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import deletePurchase from "@/actions/purchases/deletePurchase";
 import SimpleModal from "@/app/(components)/general/SimpleModal";
+import PurchaseDetailsModal from "./PurchaseDetailsModal";
 import DeleteButton from "@/app/(components)/general/DeleteButton";
 import { ALL_YEARS } from "@/lib/constants";
 import { toast, ToastContainer } from "react-toastify";
@@ -48,7 +49,10 @@ const defaultYear =
   ALL_YEARS[0].value;
 const PurchasesPage = () => {
   const [showModal, setShowModal] = useState(false);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [purchases, setPurchases] = useState<PurchaseTableData[] | null>([]);
+  const [purchaseId, setPurchaseId] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [calendarId, setCalendarId] = useState("");
   const [calendars, setCalendars] = useState<Partial<CalendarEdition>[] | null>(
     []
@@ -87,6 +91,12 @@ const PurchasesPage = () => {
     setYear(e.target.value);
   };
 
+  const onPurchaseClick = (purchaseId: string, companyName: string) => {
+    setPurchaseId(purchaseId);
+    setCompanyName(companyName);
+    setShowPurchaseModal(true);
+  }
+
   const onDeletePurchase = async (purchaseId: string) => {
     const deleted = await deletePurchase(purchaseId);
     const newPurchases = purchases?.filter((p) => p.id !== purchaseId);
@@ -99,7 +109,10 @@ const PurchasesPage = () => {
   };
   const data = purchases?.map((p) => {
     return [
-      p.companyName,
+      <button className={styles.companyName} key={p.id} onClick={() => onPurchaseClick(p.id, p.companyName)}
+      dataset-search={`${p.companyName}`}>
+        {p.companyName}
+      </button>,
       `$${p.amountOwed?.toFixed(2)}`,
       p.calendarEditions,
       p.year,
@@ -113,7 +126,7 @@ const PurchasesPage = () => {
       <div className={styles.modWrapper} key={p.id}>
         {!p.paymentScheduled && (
           <Link
-            href={`/dashboard/payments/add?contactId=${p.contactId}`}
+            href={`/dashboard/payments/add?purchaseId=${p.id}`}
             className={styles.paymentAction}
           >
             Add Payment
@@ -147,6 +160,13 @@ const PurchasesPage = () => {
         closeModal={() => setShowModal(false)}
         text="Purchase cannot be deleted. This purchase has payments scheduled."
       />
+      <PurchaseDetailsModal
+      title={`${companyName} - ${year}`}
+        isOpen={showPurchaseModal}
+        closeModal={() => setShowPurchaseModal(false)}
+        purchaseId={purchaseId}
+      />
+
       <AnimateWrapper>
         <section className={styles.container}>
           <ToastContainer />

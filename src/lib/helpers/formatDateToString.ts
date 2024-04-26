@@ -17,6 +17,7 @@
  * Ensures the date is the same date when used with new Date().toDateString()
  */
 export const formatDateToString = (date: Date, monthFirst = true): string => {
+  if (!date) return "";
   const timezoneOffset = date.getTimezoneOffset() * 60000;
   const localDate = new Date(date.getTime() - timezoneOffset);
   const [year, month, day] = localDate.toISOString().split("T")[0].split("-");

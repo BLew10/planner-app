@@ -1,0 +1,16 @@
+@use "../../../../styles/mixins.scss" as *;
+
+.heading {
+  @include form-heading;
+  padding: 50px 20px 0 20px; 
+  span {
+    color: var(--primary-blue);
+    font-weight: 600;
+  }
+}
+
+.backButton {
+  @include back-button;
+  font-size: 0.8rem;
+  margin-right: 20px;
+}

@@ -1,0 +1,58 @@
+@use "/src/styles/mixins" as *;
+ 
+.tableWrapper {
+    margin-bottom: 2rem;
+
+    table {
+        width: 100%; // Ensures the table takes up the full width of its container
+        table-layout: fixed; // Enables more predictable rendering of column widths
+        border-collapse: collapse; // Optional: for cleaner table borders
+    }
+
+    th, td {
+        text-align: left; // Align text to the left
+        padding: 0.8rem; // Adds padding inside each table cell
+        border-bottom: 1px solid #ccc; // Adds a bottom border to each cell for better separation
+    }
+
+    th {
+        background-color: #f4f4f4; // Gives a background color to header cells
+        font-weight: bold; // Makes header text bold
+    }
+
+    .year {
+        color: var(--text-color);
+        font-weight: bold;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        margin-top: 2rem;
+    }
+}
+
+
+.infoContainer {
+    display: flex;
+    margin-top: 10px;
+    flex-direction: column;
+    gap: 1rem;
+}
+.info {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.infoName {
+    color: var(--text-color);
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.infoValue {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.submitButton {
+    @include submit-button;
+}

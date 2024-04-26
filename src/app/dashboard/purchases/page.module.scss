@@ -22,7 +22,7 @@
 .paymentAction {
   color: var(--primary-blue);
   padding: 0.25rem;
-  font-weight: 700
+  font-weight: 700;
 }
 
 .deleteAction {
@@ -43,10 +43,15 @@
   color: var(--primary-blue-dark);
 }
 
-
 .paymentWrapper {
   font-size: 1.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.companyName {
+  font-weight: bold;
+  color: var(--primary-blue-dark);
+  text-decoration: underline;
 }

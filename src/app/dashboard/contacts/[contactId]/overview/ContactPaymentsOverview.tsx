@@ -47,7 +47,7 @@ const ContactPaymentsOverview = ({
   useEffect(() => {
     const mappedPayments = payments?.map((p) => {
       // Start with the common data for all rows
-      const purchases = p.purchases?.map((p) => p.calendarEdition ? `${p.calendarEdition.name} ${p.year}` : "Custom Payment").join(", ");
+      const purchases = p.purchases?.map((p) => p.calendarEditions ? p.calendarEditions.map((c) => c.name).join(", ") : "").join(", ");
       let rowData: any[] = [
         `$${Number(p.totalOwed).toFixed(2)}`,
         `$${Number(p.totalPaid).toFixed(2)}`,

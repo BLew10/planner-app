@@ -1,6 +1,14 @@
+import { AdvertisementPurchaseSlot } from "@prisma/client"
+import { ContactModel } from "./contact"
+import { PurchaseOverviewModel } from "./purchaseOverview"
+import { AdvertisementPurchaseModel } from "./advertisementPurchase"
+import { CalendarEditionModel } from "./calendarEdition"
+import { AdvertisementModel } from "./advertisment"
 
-import { AdvertisementPurchaseSlot, AdvertisementPurchase, PurchaseOverview} from "@prisma/client"
 export interface AdvertisementPurchaseSlotModel extends AdvertisementPurchaseSlot {
-    advertisementPurchase: AdvertisementPurchase | null
-    purchaseOverview: PurchaseOverview | null
+    advertisementPurchase: Partial<AdvertisementPurchaseModel> | null
+    purchaseOverview: Partial<PurchaseOverviewModel> | null
+    contact: Partial<ContactModel> | null
+    calendar: Partial<CalendarEditionModel> | null
+    advertisement: Partial<AdvertisementModel> | null
 }

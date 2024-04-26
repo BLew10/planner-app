@@ -1,0 +1,80 @@
+@use "/src/styles/mixins" as *;
+
+.title {
+  color: var(--text-color);
+  font-weight: 600;
+  margin: 10px;
+  font-size: 1.5rem;
+}
+
+.description {
+  color: var(--text-color);
+  font-weight: 500;
+  font-style: italic;
+  margin: 10px;
+  font-size: 0.9rem;
+}
+
+.net {
+  color: var(--primary-green);
+}
+
+.splitPayments {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  justify-content: center;
+  margin: 20px;
+  color : var(--text-color)
+}
+
+.radioGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.months {
+  display: flex;
+  gap: 10px;
+}
+
+.month {
+  width: 100px;
+}
+
+.yearText {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.year {
+  padding: 30px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  &:nth-of-type(1) {
+    border: 1px solid var(--primary-green);
+    .yearText {
+      color: var(--primary-green);
+    }
+  }
+
+  &:nth-of-type(2) {
+    border: 1px solid var(--primary-red);
+    .yearText {
+      color: var(--primary-red);
+    }
+  }
+
+  &:nth-of-type(3) {
+    border: 1px solid var(--primary-yellow);
+    .yearText {
+      color: var(--primary-yellow);
+    }
+  }
+}
+
+.next {
+  @include submit-button;
+}

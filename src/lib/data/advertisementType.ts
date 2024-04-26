@@ -65,6 +65,35 @@ export const getAllAdvertisementTypes = async (): Promise<
   }
 };
 
+export const getManyAdvertisementTypes = async (
+  ids: string[]
+): Promise<
+  Partial<Advertisement>[] | null
+> => {
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  try {
+    const advertisementTypes = await prisma.advertisement.findMany({
+      where: {
+        userId,
+        id: { in: ids },
+        isDeleted: false
+      },
+      select: {
+        id: true,
+        name: true,
+        isDayType: true,
+        perMonth: true,
+      },
+    });
+
+    return advertisementTypes;
+  } catch {
+    return null;
+  }
+};
+
 /**
  * Parses the given FormData object to construct an AdvertisementType object. This function
  * iterates through the FormData entries, assigning the values to the corresponding

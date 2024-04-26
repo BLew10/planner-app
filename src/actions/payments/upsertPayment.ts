@@ -1,112 +1,155 @@
 "use server";
 
 import { auth } from "@/auth";
-import { PrismaClient } from "@prisma/client";
-import {
-  PrismaClientOptions,
-  DefaultArgs,
-} from "@prisma/client/runtime/library";
 import prisma from "@/lib/prisma/prisma";
-import { Payment } from "@prisma/client";
 import { formatDateToString } from "@/lib/helpers/formatDateToString";
+import { ScheduledPayment, PaymentOverview } from "@/store/paymentStore";
 
 export interface UpsertPaymentData {
-  paymentId?: string | null;
-  startDate: Date;
-  anticipatedEndDate: Date;
-  frequency: string;
-  purchasesIds: string[];
-  totalOwed: number;
-  totalPaid: number;
-  status: string;
-  contactId: string;
-  totalPayments: number;
-  paymentsMade: number;
+  id?: string; // Optional, if provided, it will try to update an existing payment
+  userId?: string;
+  contactId?: string;
+  totalSale: number;
+  additionalDiscount1?: number;
+  additionalDiscount2?: number;
+  additionalSales1?: number;
+  additionalSales2?: number;
+  trade?: number;
+  earlyPaymentDiscount?: number;
+  earlyPaymentDiscountPercent?: number;
+  amountPrepaid?: number;
+  paymentMethod?: string;
+  checkNumber?: string;
+  paymentDueOn?: number;
+  paymentOnLastDay: boolean;
+  lateFee?: number;
+  lateFeePercent?: number;
+  deliveryMethod?: string;
+  cardType?: string;
+  cardNumber?: string;
+  cardExpirationDate?: Date;
+  invoiceMessage?: string;
+  statementMessage?: string;
+  scheduledPayments: ScheduledPayment[];
 }
-export async function upsertPayment(data: UpsertPaymentData) {
+
+export async function upsertPayment(data: PaymentOverview) {
   try {
     const session = await auth();
-    if (!session) return false
-    const userId = session.user?.id;
-    const { frequency } = data;
-    const result = await prisma.$transaction(async (prismaClient) => {
-      const contact = await prismaClient.contact.findFirst({
-        where: { id: data.contactId },
-        include: {
-          contactTelecomInformation: true,
-          contactContactInformation: true, 
+    if (!session || !session.user?.id) return false;
+
+    const {
+      id,
+      contactId,
+      totalSale,
+      additionalDiscount1,
+      additionalDiscount2,
+      additionalSales1,
+      additionalSales2,
+      trade,
+      earlyPaymentDiscount,
+      earlyPaymentDiscountPercent,
+      amountPrepaid,
+      paymentMethod,
+      checkNumber,
+      paymentDueOn,
+      paymentOnLastDay,
+      lateFee,
+      lateFeePercent,
+      deliveryMethod,
+      cardType,
+      cardNumber,
+      cardExpirationDate,
+      invoiceMessage,
+      statementMessage,
+      scheduledPayments,
+    } = data;
+    let payment;
+    const result = await prisma.$transaction(async (prisma) => {
+    if (id) {
+      await prisma.scheduledPayment.deleteMany({ where: { paymentId: id } });
+      payment =  await prisma.paymentOverview.update({
+        where: { id },
+        data: {
+          totalSale,
+          additionalDiscount1,
+          additionalDiscount2,
+          additionalSales1,
+          additionalSales2,
+          trade,
+          earlyPaymentDiscount,
+          earlyPaymentDiscountPercent,
+          amountPrepaid,
+          paymentMethod,
+          checkNumber,
+          paymentDueOn,
+          paymentOnLastDay,
+          lateFee,
+          lateFeePercent,
+          deliveryMethod,
+          cardType,
+          cardNumber,
+          cardExpirationDate,
+          invoiceMessage,
+          statementMessage,
         },
       });
-      if (!contact || !contact.contactTelecomInformation?.email) return false
+    } else {
+      // Create new payment
+     payment = await prisma.paymentOverview.create({
+        data: {
+          userId: session.user.id,
+          contactId,
+          totalSale,
+          additionalDiscount1,
+          additionalDiscount2,
+          additionalSales1,
+          additionalSales2,
+          trade,
+          earlyPaymentDiscount,
+          earlyPaymentDiscountPercent,
+          amountPrepaid,
+          paymentMethod,
+          checkNumber,
+          paymentDueOn,
+          paymentOnLastDay,
+          lateFee,
+          lateFeePercent,
+          deliveryMethod,
+          cardType,
+          cardNumber,
+          cardExpirationDate,
+          invoiceMessage,
+          statementMessage,
+        },
+      });
+    }
 
-      const payment = await createPrismaPayment(data, prismaClient, userId);
-      },
-      {
-        maxWait: 5000, // default: 2000
-        timeout: 20000, // default: 5000
+    for (const scheduledPayment of scheduledPayments) {
+      const { dueDate, month, year, amount, isPaid } = scheduledPayment;
+      await prisma.scheduledPayment.create({
+        data: {
+          paymentId: payment.id,
+          dueDate: formatDateToString(dueDate),
+          month: month,
+          year: year,
+          amount: amount || 0,
+          isPaid: isPaid,
+        },
+      });
+    }
+    await prisma.purchaseOverview.update({
+      where: { id: data.purchaseId},
+      data: {
+        paymentId: payment.id,
       }
-    );
-    return true
-  } catch (error: any) {
-    console.error("Error upserting purchase", error);
+    })
+  });
+
+
+    return true;
+  } catch (error) {
+    console.error("Error upserting payment", error);
     return false;
   }
-
-}
-
-async function createPrismaPayment(
-  paymentData: UpsertPaymentData,
-  prisma: Omit<
-    PrismaClient<PrismaClientOptions, never, DefaultArgs>,
-    "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
-  >,
-  userId: string
-) {
-  const payment: Payment = await prisma.payment.create({
-    data: {
-      startDate: formatDateToString(paymentData.startDate),
-      frequency: paymentData.frequency,
-      userId,
-      anticipatedEndDate: formatDateToString(paymentData.anticipatedEndDate),
-      status: paymentData.status,
-      contactId: paymentData.contactId,
-      totalOwed: paymentData.totalOwed,
-      totalPaid: paymentData.totalPaid,
-      totalPayments: paymentData.totalPayments,
-      paymentsMade: paymentData.paymentsMade,
-      purchases: {
-        connect: paymentData.purchasesIds.map((id) => ({ id })),
-      },
-    },
-  });
-  return payment;
-}
-
-async function updatePrismaPayment(
-  paymentId: string,
-  paymentData: UpsertPaymentData,
-  prisma: Omit<
-    PrismaClient<PrismaClientOptions, never, DefaultArgs>,
-    "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
-  >,
-  userId: string
-) {
-  const payment: Payment = await prisma.payment.update({
-    where: { id: paymentId, userId },
-    data: {
-      startDate: formatDateToString(paymentData.startDate),
-      frequency: paymentData.frequency,
-      anticipatedEndDate: formatDateToString(paymentData.anticipatedEndDate),
-      status: paymentData.status,
-      contactId: paymentData.contactId,
-      totalOwed: paymentData.totalOwed,
-      totalPaid: paymentData.totalPaid,
-      totalPayments: paymentData.totalPayments,
-      paymentsMade: paymentData.paymentsMade,
-      purchases: {
-        connect: paymentData.purchasesIds.map((id) => ({ id })),
-      },
-    },
-  });
-  return payment;
 }

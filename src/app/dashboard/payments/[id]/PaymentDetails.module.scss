@@ -1,0 +1,58 @@
+@use "/src/styles/mixins" as *;
+ 
+.container {
+  padding: 30px;
+  width: 50%;
+  margin: 0 auto;
+}
+
+.title {
+  color: var(--text-color);
+  font-weight: 600;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+.subTitle {
+  color: var(--text-color);
+  font-weight: 600;
+  margin-bottom: 10px;
+  font-size: 1rem;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.form {
+  display: grid;
+  gap: 10px;
+}
+
+.totalSaleLabel {
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.totalSale {
+  color: var(--primary-green-dark);
+  font-weight: 600;
+}
+
+.earlyPaymentDiscount, .amountPrepaid, .lateFee, .lastDay, .dueDate {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.paymentDue {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    color: var(--text-color);
+}
+
+.submitButton {
+    @include submit-button;
+    width: 100%;
+}

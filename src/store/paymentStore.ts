@@ -1,0 +1,118 @@
+import { create } from "zustand";
+
+export interface ScheduledPayment {
+  dueDate: Date;
+  month: number;
+  year: number;
+  amount: number | null;
+  isPaid?: boolean;
+  paymentDate?: string;
+}
+
+export interface PaymentOverview {
+  id: string;
+  purchaseId: string;
+  net?: number;
+  contactId?: string;
+  totalSale: number;
+  additionalDiscount1?: number;
+  additionalDiscount2?: number;
+  additionalSales1?: number;
+  additionalSales2?: number;
+  trade?: number;
+  earlyPaymentDiscount?: number;
+  earlyPaymentDiscountPercent?: number;
+  amountPrepaid?: number;
+  paymentMethod?: string;
+  checkNumber?: string;
+  paymentDueOn?: number;
+  paymentOnLastDay: boolean;
+  lateFee?: number;
+  lateFeePercent?: number;
+  deliveryMethod: string;
+  cardType: string;
+  cardNumber?: string;
+  cardExpirationDate?: Date;
+  invoiceMessage?: string;
+  statementMessage?: string;
+  scheduledPayments: ScheduledPayment[];
+  splitPaymentsEqually?: boolean;
+}
+
+interface PaymentStore {
+  paymentOverview: PaymentOverview;
+  addPaymentOverview: (newOverview: PaymentOverview) => void;
+  updateKeyValue: (key: keyof PaymentOverview, value: any) => void;
+  organziePaymentsByYear: () => { [key: number]: ScheduledPayment[] }
+  calculateNet: () => void;
+  reset: () => void;
+}
+
+export const usePaymentStore = create<PaymentStore>((set, get) => ({
+  paymentOverview: {} as PaymentOverview,
+  scheduledPayments: [],
+
+  addPaymentOverview: (newOverview) => {
+    const overviews = get().paymentOverview;
+    set({
+      paymentOverview: { ...overviews, [newOverview.id]: newOverview },
+    });
+  },
+
+  updateKeyValue: (key: keyof PaymentOverview, value: any) => {
+    const overview = get().paymentOverview;
+    set({
+      paymentOverview: { ...overview, [key]: value },
+    });
+  },
+  organziePaymentsByYear: () => {
+    const overview = get().paymentOverview;
+    const payments = overview.scheduledPayments || [];
+    const groupedPayments = payments.reduce((acc, payment) => {
+      const year = payment.year;
+      if (!acc[year]) {
+        acc[year] = [];
+      }
+      acc[year].push(payment);
+      return acc;
+    }, {} as { [key: number]: ScheduledPayment[] });
+
+    return groupedPayments || {};
+  },
+  
+  calculateNet: () => {
+    const overview = get().paymentOverview;
+    const {
+      additionalDiscount1,
+      additionalDiscount2,
+      additionalSales1,
+      additionalSales2,
+      amountPrepaid,
+      earlyPaymentDiscount,
+      totalSale,
+      earlyPaymentDiscountPercent,
+      trade,
+    } = overview;
+
+    // Calculate net
+    const earlyDiscount = earlyPaymentDiscount ? earlyPaymentDiscount :  ((earlyPaymentDiscountPercent || 0)/ 100) * totalSale 
+    const net =
+      totalSale -
+      (amountPrepaid || 0) -
+      earlyDiscount -
+      (additionalDiscount1 || 0) -
+      (additionalDiscount2 || 0) -
+      (additionalSales1 || 0) -
+      (additionalSales2 || 0) -
+      (trade || 0);
+    set({
+      paymentOverview: {
+        ...overview,
+        net: net
+      },
+    });
+  },
+  reset: () => {
+    set({ paymentOverview: {} as PaymentOverview });
+  },
+}));

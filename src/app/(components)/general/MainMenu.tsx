@@ -24,7 +24,7 @@ import { MenuItem } from "./MenuItem";
 import { MenuGroup } from "./MenuGroup";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 import useDarkMode from "@/hooks/useDarkMode";
-import AnimateWrapper from "../(components)/general/AnimateWrapper";
+import AnimateWrapper from "./AnimateWrapper";
 
 const MainMenu = () => {
   const [isOpen, setIsOpen] = useState(true);
@@ -72,8 +72,8 @@ const MainMenu = () => {
                 />
                 <MenuItem
                   icon={MdOutlinePayments}
-                  label="Payments"
-                  urlPath="/dashboard/payments"
+                  label="Billing"
+                  urlPath="/dashboard/billing"
                 />
                 <MenuItem
                   icon={MdAttachMoney}

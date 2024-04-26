@@ -2,14 +2,8 @@
 
 import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
-import { formatDateToString } from "@/lib/helpers/formatDateToString";
 import { PurchaseOverviewState } from "@/store/purchaseStore";
-import { Prisma } from "@prisma/client";
-// model PurchaseOverview {
-//   adPurchases      AdvertisementPurchase[]
-//   adPurchaseSlots  AdvertisementPurchaseSlot[]
-//   @@unique([year, contactId])
-// }
+
 export async function upsertPurchase(
   data: PurchaseOverviewState | null,
   contactId: string,
@@ -21,10 +15,9 @@ export async function upsertPurchase(
 
   const userId = session.user.id;
   const calendarIds = Object.keys(data);
-  const total = calculateTotalCharges(data);
-
   try {
     const total = calculateTotalCharges(data);
+    console.log("total", total);
 
     const result = await prisma.$transaction(async (prisma) => {
       // Upsert the PurchaseOverview
@@ -38,6 +31,7 @@ export async function upsertPurchase(
           amountOwed: total,
           year: parseInt(year),
           calendarEditions: {
+            set: [],
             connect: calendarIds.map((calendarId) => ({ id: calendarId })),
           },
         },
@@ -64,12 +58,14 @@ export async function upsertPurchase(
       // Upsert each AdvertisementPurchase and its related slots
       for (const [calendarId, ads] of Object.entries(data)) {
         for (const [adId, { quantity, charge, slots }] of Object.entries(ads)) {
+          if (!quantity || !charge || !slots) continue;
           const adPurchase = await prisma.advertisementPurchase.create({
             data: {
               purchaseId: purchaseOverview.id,
               advertisementId: adId,
               charge: parseFloat(charge),
               quantity: parseInt(quantity),
+              calendarId: calendarId,
             },
           });
 
@@ -79,6 +75,10 @@ export async function upsertPurchase(
             month: slot.month,
             slot: slot.slot,
             date: slot.date ? slot.date : null,
+            calendarId: calendarId,
+            year: parseInt(year),
+            advertisementId: adId,
+            contactId: contactId,
           }));
 
           if (slotRecords)
@@ -87,6 +87,9 @@ export async function upsertPurchase(
           });
         }
       }
+    }, {
+      maxWait: 10000,
+      timeout: 10000
     });
 
     return true;
@@ -94,41 +97,6 @@ export async function upsertPurchase(
     console.error("Error upserting purchase", error);
     return false;
   }
-
-  // try {
-  //   const result = await prisma.$transaction(async (prisma) => {
-  //     const adPurchasesData
-  //     const purchaseDataUpdate: Prisma.PurchaseOverviewUpdateInput = {
-  //       user: { connect: { id: userId } },
-  //       contact: { connect: { id: contactId } },
-  //       calendarEditions: {
-  //         connect: calendarIds.map((id) => ({ id })),
-  //       },
-  //       year: Number(year),
-  //       amountOwed: total,
-  //       adPurchases: {
-  //         createMany: {
-  //           data: [],
-  //         }
-  //       },
-  //       adPurchaseSlots: {
-  //         createMany: {
-  //           data: [],
-  //         }
-  //       }
-  //     };
-
-  //   },
-  //   {
-  //     maxWait: 5000, // default: 2000
-  //     timeout: 10000, // default: 5000
-  //   });
-
-  //  return true
-  // } catch (error: any) {
-  //   console.error("Error upserting purchase", error);
-  //   return false;
-  // }
 }
 
 function calculateTotalCharges(

@@ -21,7 +21,7 @@ model User {
   contacts         Contact[]
   advertisements   Advertisement[]
   purchases        PurchaseOverview[]
-  payments         Payment[]
+  payments         PaymentOverview[]
 }
 
 model Account {
@@ -43,21 +43,22 @@ model Account {
 }
 
 model Contact {
-  id                        String                     @id @default(uuid())
+  id                        String                      @id @default(uuid())
   userId                    String
   customerSince             String?
   notes                     String?
   webAddress                String?
-  user                      User?                      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  addressBooks              AddressBook[]              @relation("ContactAddressBooks")
+  user                      User?                       @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  addressBooks              AddressBook[]               @relation("ContactAddressBooks")
   category                  String?
   contactContactInformation ContactContactInformation?
   contactTelecomInformation ContactTelecomInformation?
   contactAddress            ContactAddress?
   purchases                 PurchaseOverview[]
   contactAddressBook        ContactAddressBook[]
-  payments                  Payment[]
-  isDeleted                 Boolean                    @default(false)
+  payments                  PaymentOverview[]
+  isDeleted                 Boolean                     @default(false)
+  AdvertisementPurchaseSlot AdvertisementPurchaseSlot[]
 }
 
 model ContactContactInformation {
@@ -98,24 +99,27 @@ model ContactAddress {
 }
 
 model CalendarEdition {
-  id        String             @id @default(uuid())
-  userId    String
-  name      String
-  code      String?            @unique
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  purchases PurchaseOverview[]
-  isDeleted Boolean            @default(false)
+  id                        String                      @id @default(uuid())
+  userId                    String
+  name                      String
+  code                      String?                     @unique
+  user                      User                        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  purchases                 PurchaseOverview[]
+  isDeleted                 Boolean                     @default(false)
+  AdvertisementPurchaseSlot AdvertisementPurchaseSlot[]
+  AdvertisementPurchase     AdvertisementPurchase[]
 }
 
 model Advertisement {
-  id        String                  @id @default(uuid())
-  name      String
-  isDayType Boolean                 @default(false)
-  isDeleted Boolean                 @default(false)
-  perMonth  Int                     @default(0)
-  purchases AdvertisementPurchase[]
-  userId    String
-  User      User                    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  id                        String                      @id @default(uuid())
+  name                      String
+  isDayType                 Boolean                     @default(false)
+  isDeleted                 Boolean                     @default(false)
+  perMonth                  Int                         @default(0)
+  purchases                 AdvertisementPurchase[]
+  userId                    String
+  User                      User                        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  AdvertisementPurchaseSlot AdvertisementPurchaseSlot[]
 }
 
 model AddressBook {
@@ -149,45 +153,69 @@ model PurchaseOverview {
   year             Int
   amountOwed       Decimal
   adPurchaseSlots  AdvertisementPurchaseSlot[]
-  payment          Payment?                    @relation(fields: [paymentId], references: [id])
+  payment          PaymentOverview?            @relation(fields: [paymentId], references: [id])
   paymentId        String?
   isDeleted        Boolean                     @default(false)
 
   @@unique([year, contactId])
 }
 
-model Payment {
-  id                 String             @id @default(uuid())
-  purchases          PurchaseOverview[]
-  totalOwed          Decimal
-  totalPaid          Decimal
-  frequency          String
-  totalPayments      Int
-  startDate          String
-  anticipatedEndDate String
-  status             String
-  paymentsMade       Int                @default(0)
-  contactId          String
-  contact            Contact            @relation(fields: [contactId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId             String
-  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  isDeleted          Boolean            @default(false)
-  createdAt          DateTime           @default(now())
-  PaymentInvoice     PaymentInvoice[]
+model PaymentOverview {
+  id                          String             @id @default(uuid())
+  purchaseId                  String
+  purchase                    PurchaseOverview   @relation(fields: [purchaseId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  User                        User?              @relation(fields: [userId], references: [id])
+  userId                      String?
+  Contact                     Contact?           @relation(fields: [contactId], references: [id])
+  contactId                   String?
+  totalSale                   Decimal
+  additionalDiscount1         Decimal? // You may add 'description' field as well if needed
+  additionalDiscount2         Decimal?
+  additionalSales1            Decimal?
+  additionalSales2            Decimal?
+  trade                       Decimal?
+  earlyPaymentDiscount        Decimal?
+  earlyPaymentDiscountPercent Decimal?
+  amountPrepaid               Decimal?
+  paymentMethod               String?
+  checkNumber                 String?
+  paymentDueOn                Int?
+  paymentOnLastDay            Boolean            @default(false)
+  lateFee                     Decimal?
+  lateFeePercent              Decimal?
+  deliveryMethod              String?
+  cardType                    String?
+  cardNumber                  String?
+  cardExpirationDate          DateTime?
+  invoiceMessage              String?
+  statementMessage            String?
+  scheduledPayments           ScheduledPayment[]
 }
 
-model PaymentInvoice {
-  id          String  @id @default(uuid())
+model ScheduledPayment {
+  id          String          @id @default(uuid())
   paymentId   String
-  status      String
-  amountOwed  Decimal
-  datePaid    String?
-  dateSent    String?
-  dateDue     String?
-  invoiceLink String?
-  isPaid      Boolean @default(false)
-  payment     Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  payment     PaymentOverview @relation(fields: [paymentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  dueDate     String
+  month       Int
+  year        Int
+  amount      Decimal
+  isPaid      Boolean         @default(false)
+  paymentDate String?
 }
+
+// model PaymentInvoice {
+//   id          String  @id @default(uuid())
+//   paymentId   String
+//   status      String
+//   amountOwed  Decimal
+//   datePaid    String?
+//   dateSent    String?
+//   dateDue     String?
+//   invoiceLink String?
+//   isPaid      Boolean @default(false)
+//   payment     Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+// }
 
 model AdvertisementPurchase {
   id               String                      @id @default(uuid())
@@ -199,6 +227,8 @@ model AdvertisementPurchase {
   purchaseOverview PurchaseOverview?           @relation(fields: [purchaseId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   adPurchaseSlots  AdvertisementPurchaseSlot[]
   isDeleted        Boolean                     @default(false)
+  calendarId       String
+  calendar         CalendarEdition             @relation(fields: [calendarId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model AdvertisementPurchaseSlot {
@@ -211,6 +241,11 @@ model AdvertisementPurchaseSlot {
   purchaseId              String?
   purchaseOverview        PurchaseOverview?     @relation(fields: [purchaseId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   isDeleted               Boolean               @default(false)
-
-  @@unique([advertisementPurchaseId, month, slot])
+  calendarId              String
+  calendar                CalendarEdition       @relation(fields: [calendarId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  advertisementId         String
+  advertisement           Advertisement         @relation(fields: [advertisementId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  year                    Int
+  contactId               String
+  contact                 Contact               @relation(fields: [contactId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
