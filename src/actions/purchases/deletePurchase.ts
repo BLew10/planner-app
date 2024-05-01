@@ -2,14 +2,35 @@
 
 import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
-import { revalidatePath } from "next/cache";
 
-const deletePurchase = async (purchaseId: string) => {
+
+const deletePurchase = async (purchaseId: string, paymentOverviewId: string) => {
   try {
     const session = await auth();
 
     await prisma.$transaction(async (prisma) => {
+      await prisma.payment.deleteMany({
+        where: {
+          paymentOverviewId: paymentOverviewId
+        }
+      })
 
+      await prisma.paymentAllocation.deleteMany({
+        where: {
+          paymentOverviewId
+        }
+      })
+
+      await prisma.scheduledPayment.deleteMany({
+        where: {
+          paymentOverviewId
+        }
+      })
+      await prisma.paymentOverview.delete({
+        where: {
+          id: paymentOverviewId,
+        }
+      })
       await prisma.advertisementPurchaseSlot.deleteMany({
         where: {
           purchaseId,

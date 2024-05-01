@@ -22,6 +22,8 @@
 
 .inputWrapper {
   position: relative;
+  display: flex;
+  align-items: center;
   button {
     position: absolute;
     right: 10px;

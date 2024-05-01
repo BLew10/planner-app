@@ -157,21 +157,6 @@ const ContactsPage = () => {
             Add Purchase
           </Link>
           <Link
-            href={`/dashboard/payments/add?contactId=${c.id}`}
-            className={styles.paymentAction}
-            onClick={(e) => {
-              if (!c.contactTelecomInformation?.email) {
-                e.preventDefault();
-                e.stopPropagation();
-                setOpenEmailModal(true);
-              } else {
-                setOpenEmailModal(false);
-              }
-            }}
-          >
-            Add Payment
-          </Link>
-          <Link
             href={`/dashboard/contacts/${c.id}`}
             className={styles.editAction}
           >
@@ -272,7 +257,8 @@ const ContactsPage = () => {
             addPath="/dashboard/contacts/add"
             filterOptions={addressBooksOptions}
             handleFilterChange={handleAddressBookChange}
-            deleteSelected={deleteSelectedContacts}
+            selectedAction={deleteSelectedContacts}
+            selectActionDescription="Delete"
             selectedCount={selectedCount}
             toggleSelectAll={toggleAllCheckboxes}
             allSelected={selectAll}

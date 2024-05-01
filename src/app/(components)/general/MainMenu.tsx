@@ -14,6 +14,7 @@ import {
   MdOutlinePayments,
   MdOutlineArrowCircleLeft,
   MdOutlineArrowCircleRight,
+  MdMoney,
 } from "react-icons/md";
 
 import styles from "./MainMenu.module.scss";
@@ -71,7 +72,7 @@ const MainMenu = () => {
                   urlPath="/dashboard"
                 />
                 <MenuItem
-                  icon={MdOutlinePayments}
+                  icon={MdMoney}
                   label="Billing"
                   urlPath="/dashboard/billing"
                 />
@@ -79,6 +80,11 @@ const MainMenu = () => {
                   icon={MdAttachMoney}
                   label="Purchases"
                   urlPath="/dashboard/purchases"
+                />
+                <MenuItem
+                  icon={MdOutlinePayments}
+                  label="Payments"
+                  urlPath="/dashboard/payments"
                 />
                 <MenuItem
                   icon={MdMenuBook}

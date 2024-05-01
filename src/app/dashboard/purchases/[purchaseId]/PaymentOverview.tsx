@@ -1,149 +1,125 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./PaymentOverview.module.scss";
-import { usePaymentStore } from "@/store/paymentStore";
+import { usePaymentOverviewStore } from "@/store/paymentOverviewStore";
 import { formatDateToString } from "@/lib/helpers/formatDateToString";
 import { MONTHS } from "@/lib/constants";
-import { toast } from "react-toastify";
-import { upsertPayment } from "@/actions/payments/upsertPayment";
 
-interface PaymentOverviewProps {
-  year: string | undefined;
-}
-const PaymentOverview = ({ year }: PaymentOverviewProps) => {
-  const { paymentOverview, organziePaymentsByYear } = usePaymentStore();
-  const paymentsByYear = organziePaymentsByYear();
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  if (!paymentsByYear) return null;
-
-  const onSubmit = async () => {
-    if (!paymentOverview) {
-      return;
-    }
-    setIsSubmitting(true);
-    const successs = await upsertPayment(paymentOverview);
-    setIsSubmitting(false);
-    if (successs) {
-      toast.success("Payment updated successfully");
-
-    router.push("/dashboard?year=" + year);
-    } else {
-      toast.error("Something went wrong. Please try again.");
-    }
-  };
+const PaymentOverview = () => {
+  const paymentOverviewStore = usePaymentOverviewStore();
+  const paymentsByYear = paymentOverviewStore.organziePaymentsByYear();
 
   return (
     <div>
       <h2 className={styles.title}>Payment Overview</h2>
       <div className={styles.infoContainer}>
         <div className={styles.info}>
-          <p className={styles.infoName}>Net:</p>
-          <p className={styles.infoValue}>${paymentOverview?.net}</p>
-        </div>
-        <div className={styles.info}>
           <p className={styles.infoName}>Total Sale:</p>
-          <p className={styles.infoValue}>${paymentOverview?.totalSale}</p>
+          <p className={styles.infoValue}>${paymentOverviewStore.paymentOverview?.totalSale}</p>
         </div>
 
-        {paymentOverview.additionalDiscount1 && (
+        {paymentOverviewStore.paymentOverview?.additionalDiscount1 && (
           <div className={styles.info}>
             <p className={styles.infoName}>Additional Discount 1:</p>
             <p className={styles.infoValue}>
-              ${paymentOverview?.additionalDiscount1}
+              -${paymentOverviewStore.paymentOverview?.additionalDiscount1}
             </p>
           </div>
         )}
 
-        {paymentOverview.additionalDiscount2 && (
+        {paymentOverviewStore.paymentOverview?.additionalDiscount2 && (
           <div className={styles.info}>
             <p className={styles.infoName}>Additional Discount 2:</p>
             <p className={styles.infoValue}>
               {" "}
-              ${paymentOverview?.additionalDiscount2}
+              -${paymentOverviewStore.paymentOverview?.additionalDiscount2}
             </p>
           </div>
         )}
 
-        {paymentOverview.additionalSales1 && (
+        {paymentOverviewStore.paymentOverview?.additionalSales1 && (
           <div className={styles.info}>
             <p className={styles.infoName}>Additional Sales 1:</p>
             <p className={styles.infoValue}>
-              ${paymentOverview?.additionalSales1}
+              -${paymentOverviewStore.paymentOverview?.additionalSales1}
             </p>
           </div>
         )}
 
-        {paymentOverview.additionalSales2 && (
+        {paymentOverviewStore.paymentOverview?.additionalSales2 && (
           <div className={styles.info}>
             <p className={styles.infoName}>Additional Sales 2:</p>
             <p className={styles.infoValue}>
-              ${paymentOverview?.additionalSales2}
+              -${paymentOverviewStore.paymentOverview?.additionalSales2}
             </p>
           </div>
         )}
 
-        {paymentOverview.trade && (
+        {paymentOverviewStore.paymentOverview?.trade && (
           <div className={styles.info}>
             <p className={styles.infoName}>Trade:</p>
-            <p className={styles.infoValue}>${paymentOverview?.trade}</p>
+            <p className={styles.infoValue}>-${paymentOverviewStore.paymentOverview?.trade}</p>
           </div>
         )}
 
-        {paymentOverview.earlyPaymentDiscount && (
+        {paymentOverviewStore.paymentOverview?.earlyPaymentDiscount && (
           <div className={styles.info}>
             <p className={styles.infoName}>Early Payment Discount:</p>
             <p className={styles.infoValue}>
-              ${paymentOverview?.earlyPaymentDiscount}
+              -${paymentOverviewStore.paymentOverview?.earlyPaymentDiscount}
             </p>
           </div>
         )}
 
-        {paymentOverview.earlyPaymentDiscountPercent && (
+        {paymentOverviewStore.paymentOverview?.earlyPaymentDiscountPercent && (
           <div className={styles.info}>
             <p className={styles.infoName}>Early Payment Discount Percent:</p>
             <p className={styles.infoValue}>
-              ${paymentOverview?.earlyPaymentDiscountPercent}
+              -${paymentOverviewStore.paymentOverview?.earlyPaymentDiscountPercent}
             </p>
           </div>
         )}
 
-        {paymentOverview.amountPrepaid && (
+        {paymentOverviewStore.paymentOverview?.amountPrepaid && (
           <div className={styles.info}>
             <p className={styles.infoName}>Amount Prepaid:</p>
             <p className={styles.infoValue}>
-              ${paymentOverview?.amountPrepaid}
+              -${paymentOverviewStore.paymentOverview?.amountPrepaid}
             </p>
           </div>
         )}
 
-        {paymentOverview.paymentMethod && (
+        <div className={styles.info}>
+          <p className={styles.infoName}>Net:</p>
+          <p className={styles.infoValue}>${paymentOverviewStore.paymentOverview?.net}</p>
+        </div>
+
+        {paymentOverviewStore.paymentOverview?.paymentMethod && (
           <div className={styles.info}>
             <p className={styles.infoName}>Payment Method:</p>
-            <p className={styles.infoValue}>{paymentOverview?.paymentMethod}</p>
+            <p className={styles.infoValue}>{paymentOverviewStore.paymentOverview?.paymentMethod}</p>
           </div>
         )}
 
-        {paymentOverview.checkNumber && (
+        {paymentOverviewStore.paymentOverview?.checkNumber && (
           <div className={styles.info}>
             <p className={styles.infoName}>Check Number:</p>
-            <p className={styles.infoValue}>{paymentOverview?.checkNumber}</p>
+            <p className={styles.infoValue}>{paymentOverviewStore.paymentOverview?.checkNumber}</p>
           </div>
         )}
 
-        {paymentOverview.lateFee && (
+        {paymentOverviewStore.paymentOverview?.lateFee && (
           <div className={styles.info}>
             <p className={styles.infoName}>Late Fee:</p>
-            <p className={styles.infoValue}>${paymentOverview?.lateFee}</p>
+            <p className={styles.infoValue}>${paymentOverviewStore.paymentOverview?.lateFee}</p>
           </div>
         )}
 
-        {paymentOverview.lateFeePercent && (
+        {paymentOverviewStore.paymentOverview?.lateFeePercent && (
           <div className={styles.info}>
             <p className={styles.infoName}>Late Fee Percent:</p>
             <p className={styles.infoValue}>
-              {paymentOverview?.lateFeePercent}%
+              {paymentOverviewStore.paymentOverview?.lateFeePercent}%
             </p>
           </div>
         )}
@@ -163,7 +139,7 @@ const PaymentOverview = ({ year }: PaymentOverviewProps) => {
               {paymentsByYear[year as any].map((payment) => (
                 <tr key={formatDateToString(payment.dueDate)}>
                   <td>{MONTHS[payment.month - 1]}</td>
-                  <td>${payment.amount}</td>
+                  <td>${Number(payment.amount).toFixed(2)}</td>
                   <td>{formatDateToString(payment.dueDate)}</td>
                 </tr>
               ))}
@@ -171,9 +147,6 @@ const PaymentOverview = ({ year }: PaymentOverviewProps) => {
           </table>
         </div>
       ))}
-      <button className={styles.submitButton} onClick={onSubmit}>
-        {isSubmitting ? "Submitting..." : "Submit"}
-      </button>
     </div>
   );
 };

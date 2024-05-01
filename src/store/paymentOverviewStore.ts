@@ -13,6 +13,7 @@ export interface PaymentOverview {
   id: string;
   purchaseId: string;
   net?: number;
+  year: number;
   contactId?: string;
   totalSale: number;
   additionalDiscount1?: number;
@@ -48,7 +49,7 @@ interface PaymentStore {
   reset: () => void;
 }
 
-export const usePaymentStore = create<PaymentStore>((set, get) => ({
+export const usePaymentOverviewStore = create<PaymentStore>((set, get) => ({
   paymentOverview: {} as PaymentOverview,
   scheduledPayments: [],
 

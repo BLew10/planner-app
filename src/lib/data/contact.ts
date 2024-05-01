@@ -159,3 +159,4 @@ export const deleteManyContacts = async (contactIds: string[]) => {
     return false;
   }
 };
+

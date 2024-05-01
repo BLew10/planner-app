@@ -588,7 +588,7 @@ function allYears() {
   const difference = currentYear - startYear;
   const years = [];
 
-  for (let i = 0; i <= (difference + 5); i++) {
+  for (let i = 0; i <= difference + 5; i++) {
     years.push({
       value: String(2024 + i),
       label: String(2024 + i),
@@ -599,7 +599,7 @@ function allYears() {
 
 export const FUTURE_YEARS = generateFutureYears();
 
-export const ALL_YEARS = allYears()
+export const ALL_YEARS = allYears();
 
 export const MONTHS = [
   "January",
@@ -616,3 +616,15 @@ export const MONTHS = [
   "December",
 ];
 
+export type InvoiceType = "invoiceTotalSale" | "statements";
+
+export const INVOICE_TYPES: { value: InvoiceType; label: string }[] = [
+  {
+    value: "invoiceTotalSale",
+    label: "Invoice Total Sale",
+  },
+  {
+    value: "statements",
+    label: "Statements",
+  },
+];

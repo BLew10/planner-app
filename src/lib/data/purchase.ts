@@ -52,6 +52,7 @@ export const getPurchaseByContactIdAndYear = async (
     },
     select: {
       id: true,
+      paymentOverviewId: true,
       calendarEditions: true,
       adPurchaseSlots: {
         include: {
@@ -63,18 +64,24 @@ export const getPurchaseByContactIdAndYear = async (
           advertisement: true,
         },
       },
+      paymentOverview: {
+        include: {
+          scheduledPayments: true,
+        }
+      },
     },
   });
   if (!purchase) {
     return null;
   }
 
+  console.log(purchase);
   return purchase;
 };
 
 export interface PurchaseTableData {
   id: string;
-  paymentScheduled: boolean;
+  paymentOverviewId: string | null;
   amountOwed: number;
   contactId: string;
   companyName: string;
@@ -101,7 +108,7 @@ export const getPurchaseTableData = async (
       id: true,
       amountOwed: true,
       year: true,
-      paymentId: true,
+      paymentOverviewId: true,
       calendarEditions: {
         select: {
           code: true,
@@ -126,7 +133,7 @@ export const getPurchaseTableData = async (
       .join(", ");
     return {
       id: purchase.id,
-      paymentScheduled: purchase.paymentId ? true : false,
+      paymentOverviewId: purchase.paymentOverviewId || null,
       amountOwed: parseFloat(purchase.amountOwed.toString()) || 0,
       contactId: purchase.contact.id,
       companyName: purchase.contact?.contactContactInformation?.company || "",
@@ -135,7 +142,6 @@ export const getPurchaseTableData = async (
     };
   });
 
-  console.log(allPurchases);
   return allPurchases;
 };
 

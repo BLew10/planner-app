@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { Advertisement } from "@prisma/client";
 import styles from "./PurchaseForm.module.scss";
 import { PurchaseOverviewModel } from "@/lib/models/purchaseOverview";
+import { PaymentOverviewModel } from "@/lib/models/paymentOverview";
 import { getContactById } from "@/lib/data/contact";
 import { usePurchasesStore } from "@/store/purchaseStore";
+import { usePaymentOverviewStore } from "@/store/paymentOverviewStore";
 import { getPurchaseByContactIdAndYear } from "@/lib/data/purchase";
 import { useSearchParams } from "next/navigation";
 import { CalendarEdition } from "@prisma/client";
@@ -16,6 +18,10 @@ import PurchaseOverview from "./PurchaseOverview";
 import { FUTURE_YEARS } from "@/lib/constants";
 import { ToastContainer, toast} from "react-toastify";
 import { upsertPurchase } from "@/actions/purchases/upsertPurchase";
+import LoadingSpinner from "@/app/(components)/general/LoadingSpinner";
+import PaymentOverview from "./PaymentOverview";
+import PaymentDetails from "./PaymentDetails";
+import PaymentSchedule from "./PaymentSchedule";
 
 interface PurchaseProps {
   advertisementTypes: Partial<Advertisement>[];
@@ -36,11 +42,13 @@ const Purchase: React.FC<PurchaseProps> = ({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [contact, setContact] = useState<Contact | null>(null);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isFetching, setIsFetching] = useState<boolean>(false);
   const purchaseStore = usePurchasesStore();
+  const paymentOverviewStore = usePaymentOverviewStore();
   const [year, setYear] = useState<string>(defaultYear);
   const [purchase, setPurchase] =
     useState<Partial<PurchaseOverviewModel> | null>(null);
+  const [paymentOverview, setPaymentOverview] = useState<Partial<PaymentOverviewModel> | null>(null);
   const [step, setStep] = useState(1);
   const goToNextStep = () => {
     setStep((prevStep) => prevStep + 1);
@@ -50,13 +58,22 @@ const Purchase: React.FC<PurchaseProps> = ({
     setStep((prevStep) => prevStep - 1);
   };
 
-  const fetchPurchases = async (contactId: string, year: string) => {
+  const fetchPurchase = async (contactId: string, year: string) => {
+    purchaseStore.reset();
+    setPurchase(null);
+    setIsFetching(true);
     const purchase = await getPurchaseByContactIdAndYear(contactId, year);
     if (purchase) {
       setPurchase(purchase);
+      setPaymentOverview(purchase.paymentOverview || null);
+      console.log(purchase);
     } else {
+      setPaymentOverview(null);
+      setPurchase(null);
       purchaseStore.reset();
+      paymentOverviewStore.reset();
     }
+    setIsFetching(false);
   };
 
   useEffect(() => {
@@ -81,29 +98,40 @@ const Purchase: React.FC<PurchaseProps> = ({
       setYear(paramYear);
     }
 
-    fetchPurchases(contactId, paramYear);
+    fetchPurchase(contactId, paramYear || defaultYear);
 
     return () => {
       purchaseStore.reset();
+      paymentOverviewStore.reset();
     };
   }, [purchaseId, searchParams]);
 
   const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setYear(e.target.value);
-    fetchPurchases(contact?.id as string, e.target.value);
+    fetchPurchase(contact?.id as string, e.target.value);
   };
 
   const onSave = async () => {
-    setIsSaving(true);
+    setIsFetching(true);
     const { purchaseOverview } = purchaseStore;
-    const success = await upsertPurchase(purchaseOverview, contact?.id as string, year, purchaseId as string);
-    setIsSaving(false);
+    const { paymentOverview } = paymentOverviewStore;
+    const success = await upsertPurchase(purchaseOverview, paymentOverview, contact?.id as string, year, purchaseId as string);
+    setIsFetching(false);
     if (success) {
-      router.push(`/dashboard/purchases?year=${year}`);
+      router.push(`/dashboard?year=${year}`);
     } else {
-      toast.error("Something went wrong. Purchase could not be saved");
+      toast.error("Something went wrong. Purchase could not be saved. Contact may already have a purchase for this year.");
     }
   };
+
+  if (isFetching) { 
+    return (
+    <section className={styles.container}>
+      <ToastContainer />
+      <LoadingSpinner />
+    </section>)
+  }
+
   return (
     <section className={styles.container}>
       <ToastContainer />
@@ -139,11 +167,22 @@ const Purchase: React.FC<PurchaseProps> = ({
         <PurchaseOverview
           calendars={calendars}
           advertisementTypes={advertisementTypes}
+          onNext={goToNextStep}
         />
       )}
-      {step === 3 && (
+      {step === 4 && (
+        <PaymentDetails onNext={goToNextStep} paymentOverview={paymentOverview} />
+      )}
+      {step === 5 && (
+        <PaymentSchedule onNext={goToNextStep} />
+      )}
+
+      {step === 6 && (
+        <PaymentOverview />
+      )}
+      {step === 6 && (
         <button className={styles.back} onClick={onSave}>
-          {isSaving ? "Saving..." : "Save"}
+          {isFetching ? "Saving..." : "Save"}
         </button>
       )}
     </section>

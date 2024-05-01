@@ -13,10 +13,12 @@
         text-align: left; // Align text to the left
         padding: 0.8rem; // Adds padding inside each table cell
         border-bottom: 1px solid #ccc; // Adds a bottom border to each cell for better separation
+        color: var(--text-color);
     }
 
     th {
-        background-color: #f4f4f4; // Gives a background color to header cells
+        background-color: var(--primary-color); // Gives a background color to header cells
+        color: var(--text-secondary);
         font-weight: bold; // Makes header text bold
     }
 

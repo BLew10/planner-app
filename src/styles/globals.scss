@@ -22,11 +22,14 @@
   --primary-green-dark: rgb(26, 171, 151);
   --primary-green-opacity: rgba(28, 221, 157, 0.5);
   --primary-green-dark-opacity: rgba(26, 171, 151, 0.5);
+  --primary-purple: rgb(83, 58, 253);
+  --primary-purple-dark: rgb(72, 51, 255);
+  --primary-purple-opacity: rgba(83, 58, 253, 0.5);
+
   --primary-color: rgb(23, 34, 53);
   --primary-color-opacity: rgba(23, 34, 53, 0 5);
   --bg-color: rgb(20, 29, 41);
   --bg-color-opacity: rgba(20, 29, 41, 0.5);
-  --stripe-color: #533afd;
   --text-color: #b7bac1;
   --text-secondary: #ffffff;
   --row-odd-color: var(--primary-color); /* Light grey color, for example */
@@ -46,6 +49,9 @@
     --primary-yellow-dark: rgb(240, 134, 13);
     --primary-blue: rgb(24, 90, 188);
     --primary-blue-dark: rgb(9, 164, 228);
+    --primary-purple: rgb(70, 58, 253);
+    --primary-purple-dark: rgb(72, 51, 255);
+
   }
 }
 

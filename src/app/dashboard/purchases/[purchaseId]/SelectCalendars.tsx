@@ -37,7 +37,6 @@ const SelectCalendars = ({ calendars, onNext, purchase, onYearChange, year }: Se
       purchaseStore.removeCalendarId(calendarId);
     }
   };
-console.log('year', year)
   return (
     <AnimateWrapper>
       <div className={styles.container}>

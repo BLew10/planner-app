@@ -85,6 +85,19 @@
 .deleteButton {
   @include addButton;
   background-color: var(--primary-red);
+
+  &:hover {
+    background-color: var(--primary-red-dark);
+  }
+}
+
+.selectAction {
+  @include addButton;
+  background-color: var(--primary-yellow);
+
+  &:hover {
+    background-color: var(--primary-yellow-dark);
+  }
 }
 
 .subHeading {

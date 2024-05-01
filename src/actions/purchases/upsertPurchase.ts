@@ -3,25 +3,29 @@
 import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
 import { PurchaseOverviewState } from "@/store/purchaseStore";
+import { PaymentOverview } from "@/store/paymentOverviewStore";
+import { upsertPaymentOverview } from "../paymentOverview/upsertPaymentOverview";
 
 export async function upsertPurchase(
-  data: PurchaseOverviewState | null,
+  purchaseData: PurchaseOverviewState | null,
+  paymentOverview: PaymentOverview,
   contactId: string,
   year: string,
   purchaseId: string
 ) {
   const session = await auth();
-  if (!session || !data) return false;
+  if (!session || !purchaseData) return false;
 
   const userId = session.user.id;
-  const calendarIds = Object.keys(data);
+  const calendarIds = Object.keys(purchaseData);
   try {
-    const total = calculateTotalCharges(data);
+    const total = calculateTotalCharges(purchaseData);
     console.log("total", total);
 
-    const result = await prisma.$transaction(async (prisma) => {
+    const result = await prisma.$transaction(async (prismaClient) => {
+      const paymentOverviewId = await upsertPaymentOverview(prismaClient, paymentOverview, year, contactId);
       // Upsert the PurchaseOverview
-      let purchaseOverview = await prisma.purchaseOverview.upsert({
+      let purchaseOverview = await prismaClient.purchaseOverview.upsert({
         where: {
           id: purchaseId,
           userId: userId,
@@ -30,6 +34,7 @@ export async function upsertPurchase(
         update: {
           amountOwed: total,
           year: parseInt(year),
+          paymentOverviewId,
           calendarEditions: {
             set: [],
             connect: calendarIds.map((calendarId) => ({ id: calendarId })),
@@ -38,6 +43,7 @@ export async function upsertPurchase(
         create: {
           userId,
           contactId,
+          paymentOverviewId,
           year: parseInt(year),
           amountOwed: total,
           calendarEditions: {
@@ -45,21 +51,33 @@ export async function upsertPurchase(
           },
         },
       });
-      const d = await prisma.advertisementPurchase.deleteMany({
+      const updatedPaymentOverview = await prismaClient.paymentOverview.update({
+        where: {
+          id: paymentOverviewId,
+        },
+        data: {
+          purchase: {
+            connect: {
+              id: purchaseOverview.id,
+            },
+          },
+        },
+      })
+      const d = await prismaClient.advertisementPurchase.deleteMany({
         where: {
           purchaseId: purchaseOverview.id,
         },
       });
-      const d2 = await prisma.advertisementPurchaseSlot.deleteMany({
+      const d2 = await prismaClient.advertisementPurchaseSlot.deleteMany({
         where: {
           purchaseId: purchaseOverview.id,
         },
       });
       // Upsert each AdvertisementPurchase and its related slots
-      for (const [calendarId, ads] of Object.entries(data)) {
+      for (const [calendarId, ads] of Object.entries(purchaseData)) {
         for (const [adId, { quantity, charge, slots }] of Object.entries(ads)) {
           if (!quantity || !charge || !slots) continue;
-          const adPurchase = await prisma.advertisementPurchase.create({
+          const adPurchase = await prismaClient.advertisementPurchase.create({
             data: {
               purchaseId: purchaseOverview.id,
               advertisementId: adId,
@@ -82,7 +100,7 @@ export async function upsertPurchase(
           }));
 
           if (slotRecords)
-          await prisma.advertisementPurchaseSlot.createMany({
+          await prismaClient.advertisementPurchaseSlot.createMany({
             data: slotRecords,
           });
         }

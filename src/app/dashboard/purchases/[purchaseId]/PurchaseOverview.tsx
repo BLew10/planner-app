@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import styles from "./PurchaseOverview.module.scss";
-import { useRouter } from "next/navigation";
 import { usePurchasesStore } from "@/store/purchaseStore";
 import { CalendarEdition } from "@prisma/client";
 import { Advertisement } from "@prisma/client";
@@ -9,16 +8,17 @@ import { MONTHS } from "@/lib/constants";
 interface PurchaseOverviewProps {
   calendars: Partial<CalendarEdition>[];
   advertisementTypes: Partial<Advertisement>[];
+  onNext: () => void;
 }
 const PurchaseOverview = ({
   calendars,
   advertisementTypes,
+  onNext,
 }: PurchaseOverviewProps) => {
-  const router = useRouter();
   const [selectedCalendars, setSelectedCalendars] = useState<
     Partial<CalendarEdition>[]
   >([]);
-  const { purchaseOverview } = usePurchasesStore();
+  const { purchaseOverview, total } = usePurchasesStore();
   useEffect(() => {
     const filteredCalendars = calendars?.filter(
       (calendar) => calendar.id && purchaseOverview?.[calendar.id]
@@ -29,6 +29,7 @@ const PurchaseOverview = ({
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Purchase Overview</h1>
+      <h2 className={styles.subtitle}>Total: ${total.toFixed(2)}</h2>
       {selectedCalendars.map((c) => (
         <div key={c.id} className={styles.calendar}>
           <h2 className={styles.calendarName}>{c.name}</h2>
@@ -87,6 +88,12 @@ const PurchaseOverview = ({
           </div>
         </div>
       ))}
+      <button
+        className={styles.continue}
+        onClick={onNext}  
+      >
+        Continue
+      </button>
     </div>
   );
 };

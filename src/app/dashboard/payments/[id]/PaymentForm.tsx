@@ -1,91 +1,174 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import PaymentDetails from "./PaymentDetails";
-import PaymentSchedule from "./PaymentSchedule";
-import PaymentOverview from "./PaymentOverview";
-import { useSearchParams, useRouter } from "next/navigation";
-import { usePaymentStore } from "@/store/paymentStore";
+import React, { useState, useEffect } from "react";
 import styles from "./PaymentForm.module.scss";
-import { getPurchaseById } from "@/lib/data/purchase";
-import { getPaymentById } from "@/lib/data/payment";
+import MoneyInput from "@/app/(components)/form/MoneyInput";
+import TextInput from "@/app/(components)/form/TextInput";
+import SelectInput from "@/app/(components)/form/SelectInput";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
-import { ToastContainer } from "react-toastify";
-import { PurchaseOverviewModel } from "@/lib/models/purchaseOverview";
+import { getPaymentOverviewById } from "@/lib/data/paymentOverview";
+import { getPurchaseById } from "@/lib/data/purchase";
+import {
+  upsertPayment,
+  UpsertPaymentData,
+} from "@/actions/payment/upsertPayment";
+import { PaymentModel } from "@/lib/models/payment";
 import { PaymentOverviewModel } from "@/lib/models/paymentOverview";
+import { PurchaseOverviewModel } from "@/lib/models/purchaseOverview";
+import { useSearchParams, useRouter } from "next/navigation";
+import { formatDateToString } from "@/lib/helpers/formatDateToString";
+import { ToastContainer, toast } from "react-toastify";
 
 interface PaymentFormProps {
-  paymentId: string | null | undefined;
+  payment: Partial<PaymentModel> | null;
 }
-
-const PaymentForm = ({ paymentId }: PaymentFormProps) => {
-  const router = useRouter();
-  const paymentStore = usePaymentStore();
-
-  const [purchaseData, setPurchaseData] = useState<Partial<PurchaseOverviewModel> | null>(null);
-  const [paymentData, setPaymentData] = useState<Partial<PaymentOverviewModel> | null>(null);
-  const [step, setStep] = useState(1);
+const PaymentDetails = ({ payment }: PaymentFormProps) => {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const [formData, setFormData] = useState<Partial<PaymentModel> | null>(
+    payment
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentOverview, setPaymentOverview] =
+    useState<Partial<PaymentOverviewModel> | null>(null);
+  const [purchaseOverview, setPurchaseOverview] =
+    useState<Partial<PurchaseOverviewModel> | null>(null);
 
   useEffect(() => {
+
+    const paymentOverviewId = searchParams.get("paymentOverviewId");
     const purchaseId = searchParams.get("purchaseId");
-    if (!purchaseId) {
-      router.push(`/dashboard/purchases`);
-      return;
-    }
-    const fetchPurchases = async (purchaseId: string) => {
-      const purchase: Partial<PurchaseOverviewModel> | null =
-        await getPurchaseById(purchaseId);
-      if (purchase) {
-        setPurchaseData(purchase);
-        paymentStore.updateKeyValue(
-          "totalSale",
-          Number(purchase.amountOwed).toFixed(2)
-        );
-        paymentStore.updateKeyValue("contactId", purchase.contactId);
-        paymentStore.updateKeyValue("purchaseId", purchase.id);
-      } else {
-        router.push(`/dashboard/purchases`);
-        return;
-      }
-    };
-
-    fetchPurchases(purchaseId);
-
-    if (paymentId) {
-      const fetchPayment = async (paymentId: string) => {
-        const payment = await getPaymentById(paymentId);
-        if (payment) {
-          setPaymentData(payment);
-        }
+    if (paymentOverviewId && purchaseId) {
+      const fetchPaymentOverview = async () => {
+        const paymentOverview = await getPaymentOverviewById(paymentOverviewId);
+        setPaymentOverview(paymentOverview);
       };
-      fetchPayment(paymentId);
+      const fetchPurchaseOverview = async () => {
+        const purchaseOverview = await getPurchaseById(purchaseId);
+        setPurchaseOverview(purchaseOverview);
+      };
+      fetchPaymentOverview();
+      fetchPurchaseOverview();
     }
-  }, [searchParams, paymentId]);
+    if (payment) {
+      setFormData({
+        id: payment.id,
+        amount: Number(payment.amount),
+        paymentMethod: payment.paymentMethod,
+        paymentDate: payment.paymentDate,
+        checkNumber: payment.checkNumber,
+      });
+    } else {
+      setFormData({
+        amount: null,
+        paymentMethod: "",
+        paymentDate: formatDateToString(new Date()),
+        checkNumber: "",
+      });
+    }
+  }, [searchParams]);
 
-
+  const onSubmit = async () => {
+    const data: UpsertPaymentData = {
+      id: formData?.id || "",
+      amount: Number(formData?.amount),
+      paymentMethod: formData?.paymentMethod || "",
+      paymentDate: formData?.paymentDate || "",
+      checkNumber: formData?.checkNumber || "",
+      purchaseId: purchaseOverview?.id || "",
+      paymentOverviewId: paymentOverview?.id || "",
+      contactId: purchaseOverview?.contact?.id || "",
+    };
+    
+    if (formData) {
+      setIsSubmitting(true);
+      const success = await upsertPayment(data);
+      if (success) {
+        toast.success("Payment updated successfully");
+        router.push("/dashboard/payments");
+      } else {
+        toast.error("Something went wrong. Please try again.");
+      }
+      setIsSubmitting(false);
+    }
+  };
   return (
-    <>
-      <AnimateWrapper>
-      <ToastContainer />
-        <h1 className={styles.heading}>
-        {step !== 1 && (
-          <button className={styles.backButton} onClick={() => setStep(prev => prev - 1)}>
-            Back
+    <AnimateWrapper>
+      <div className={styles.container}>
+        <h1 className={styles.title}>Payment Details</h1>
+        <form className={styles.form}>
+          <MoneyInput
+            name="amount"
+            label="Amount"
+            isRequired={true}
+            onChange={(e) => {
+              setFormData({
+                ...formData,
+                amount: Number(e.target.value),
+              });
+            }}
+            value={formData?.amount?.toString() || ""}
+          />
+          <SelectInput
+            name="paymentMethod"
+            label="Payment Method"
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                paymentMethod: e.target.value,
+              })
+            }
+            value={formData?.paymentMethod || "N/A"}
+            options={[
+              { value: "", label: "N/A" },
+              { value: "Cash", label: "Cash" },
+              { value: "Check", label: "Check" },
+              { value: "Credit Card", label: "Credit Card" },
+              { value: "Credit Memo", label: "Credit Memo" },
+            ]}
+          />
+
+          <MoneyInput
+            name="checkNumber"
+            label="Check Number"
+            isRequired={formData?.paymentMethod === "Check"}
+            onChange={(e) => {
+              setFormData({
+                ...formData,
+                checkNumber: e.target.value,
+              });
+            }}
+            value={formData?.checkNumber?.toString() || ""}
+          />
+          <TextInput
+            name="paymentDate"
+            label="Payment Date"
+            type="date"
+            isRequired={true}
+            value={
+              (formData?.paymentDate &&
+                new Date(formData?.paymentDate).toISOString().split("T")[0]) ||
+              new Date().toISOString().split("T")[0]
+            }
+            onChange={(e) => {
+              setFormData({
+                ...formData,
+                paymentDate: formatDateToString(e.target.value),
+              });
+            }}
+          />
+          <button
+            type="button"
+            className={styles.submitButton}
+            onClick={onSubmit}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Submitting..." : "Submit"}
           </button>
-        )}
-          Payment Details for{" "}
-          <span>
-            {purchaseData?.contact?.contactContactInformation?.company}{" "}
-          </span>{" "}
-          for the year <span>{purchaseData?.year}</span>
-        </h1>
-        {step === 1 && <PaymentDetails onNext={() => setStep(2)} />}
-        {step === 2 && <PaymentSchedule onNext={() => setStep(3)} />}
-        {step === 3 && <PaymentOverview year={purchaseData?.year?.toString()}  />}
-      </AnimateWrapper>
-    </>
+        </form>
+      </div>
+    </AnimateWrapper>
   );
 };
 
-export default PaymentForm;
+export default PaymentDetails;

@@ -18,7 +18,8 @@ interface TableProps {
   handleFilterChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   filterOptionsTwo?: { value: string; label: string }[];
   handleFilterChangeTwo?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  deleteSelected?: () => void;
+  selectedAction?: () => void;
+  selectActionDescription?: string;
   selectedCount?: number;
   toggleSelectAll?: () => void;
   allSelected?: boolean;
@@ -34,10 +35,11 @@ const Table = ({
   handleFilterChange,
   filterOptionsTwo,
   handleFilterChangeTwo,
-  deleteSelected,
+  selectedAction,
   selectedCount,
   toggleSelectAll,
-  allSelected
+  allSelected,
+  selectActionDescription
 }: TableProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState(data);
@@ -148,9 +150,9 @@ const Table = ({
               Add
             </Link>
           )}
-          {deleteSelected && (
-            <button className={styles.deleteButton} onClick={deleteSelected}>
-              Delete Selected ({selectedCount})
+          {selectedAction && (
+            <button className={`${selectActionDescription?.includes("Delete") ? styles.deleteButton : styles.selectAction}`} onClick={selectedAction}>
+              {selectActionDescription} ({selectedCount})
             </button>
           )}
         </div>

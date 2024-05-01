@@ -16,11 +16,17 @@
  * console.log(formattedDate); // "04-10-2024"
  * Ensures the date is the same date when used with new Date().toDateString()
  */
-export const formatDateToString = (date: Date, monthFirst = true): string => {
+export const formatDateToString = (date: Date | string, monthFirst = true): string => {
   if (!date) return "";
+  let newDateFormat = "";
+  if (typeof date !== "string") {
   const timezoneOffset = date.getTimezoneOffset() * 60000;
   const localDate = new Date(date.getTime() - timezoneOffset);
   const [year, month, day] = localDate.toISOString().split("T")[0].split("-");
-  const newDateFormat =  monthFirst ? `${month}-${day}-${year}` : `${year}-${month}-${day}`;
+  newDateFormat =  monthFirst ? `${month}-${day}-${year}` : `${year}-${month}-${day}`;
+  } else {
+    const [year, month, day] = date.split("-");
+    newDateFormat =  monthFirst ? `${month}-${day}-${year}` : `${year}-${month}-${day}`;
+  }
   return newDateFormat;
 };

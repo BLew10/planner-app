@@ -1,0 +1,238 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import styles from "./page.module.scss";
+import { getOwedPayments } from "@/lib/data/paymentOverview";
+import { PaymentOverviewModel } from "@/lib/models/paymentOverview";
+import { formatDateToString } from "@/lib/helpers/formatDateToString";
+import InvoiceSending from "./InvoiceSending";
+import Table from "@/app/(components)/general/Table";
+import CheckboxInput from "@/app/(components)/form/CheckboxInput";
+import { ALL_YEARS, INVOICE_TYPES, InvoiceType } from "@/lib/constants";
+import { ScheduledPayment } from "@prisma/client";
+import SimpleModal from "@/app/(components)/general/SimpleModal";
+import SelectInput from "@/app/(components)/form/SelectInput";
+import PaymentScheduleModal from "./PaymentScheduleModal";
+
+const columns = [
+  {
+    name: "Contact",
+    size: "default",
+  },
+  {
+    name: "Purchased On",
+    size: "default",
+  },
+  {
+    name: "Next Payment Due On",
+    size: "default",
+  },
+  {
+    name: "Balance",
+    size: "default",
+  },
+  {
+    name: "Invoice Number",
+    size: "default",
+  },
+  {
+    name: "Action",
+    size: "default",
+  },
+];
+
+const getNextPaymentDate = (scheduledPayments: ScheduledPayment[] | null) => {
+  if (scheduledPayments) {
+    for (const scheduledPayment of scheduledPayments || []) {
+      return { dueDate: scheduledPayment.dueDate, isLate: scheduledPayment.isLate };
+    }
+  }
+  return { dueDate: "", isLate: false };
+};
+
+const BillingPage = () => {
+  const [owedPayments, setOwedPayments] = useState<
+    Partial<PaymentOverviewModel>[] | null
+  >(null);
+  const [payment, setPayment] = useState<Partial<PaymentOverviewModel> | null>(
+    null
+  );
+  const [step, setStep] = useState(1);
+  const [selectedPayments, setSelectedPayments] = useState<
+    Partial<PaymentOverviewModel>[]
+  >([]);
+  const [invoiceType, setInvoiceType] =
+    useState<InvoiceType>("invoiceTotalSale");
+  const [year, setYear] = useState(ALL_YEARS[0].value);
+  const [selectAll, setSelectAll] = useState(false);
+  const [tableData, setTableData] = useState<any[]>();
+  const [openModal, setOpenModal] = useState(false);
+  const [openPaymentScheduleModal, setOpenPaymentScheduleModal] =
+    useState(false);
+  const onPaymentClick = (paymentId: string) => {
+    setPayment(owedPayments?.find((p) => p.id === paymentId) || null);
+    setOpenPaymentScheduleModal(true);
+  };
+
+  useEffect(() => {
+    const fetchPayments = async (year: string) => {
+      const payments = await getOwedPayments(year);
+      setOwedPayments(payments);
+      setSelectedPayments([]);
+      setSelectAll(false);
+    };
+    fetchPayments(year);
+  }, [year]);
+
+  const handleSelectedPayment = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const paymentId = event.target.value;
+    if (event.target.checked) {
+      if (selectedPayments?.find((payment) => payment.id === paymentId)) return;
+      setSelectedPayments([
+        ...(selectedPayments || []),
+        owedPayments?.find((payment) => payment.id === paymentId)!,
+      ]);
+    } else {
+      setSelectedPayments(
+        selectedPayments.filter((payment) => payment.id !== paymentId)
+      );
+    }
+  };
+
+  useEffect(() => {
+    const newTableData = owedPayments?.map((p) => {
+      const balance = Number(p.net || 0) - Number(p.amountPaid || 0);
+      const nextPaymentDate = getNextPaymentDate(
+        p.scheduledPayments as ScheduledPayment[]
+      );
+      return [
+        <div
+          key={p.id}
+          dataset-search={`${p.contact?.contactContactInformation?.firstName} ${p.contact?.contactContactInformation?.lastName} ${p.contact?.contactContactInformation?.company}`}
+        >
+          <CheckboxInput
+            name="payments"
+            value={p.id}
+            checked={selectedPayments?.some((payment) => payment.id === p.id)}
+            onChange={handleSelectedPayment}
+            label={
+              <p className={styles.contactName}>
+                 <span>
+                  {p.contact?.contactContactInformation?.firstName} {" "}
+                  {p.contact?.contactContactInformation?.lastName}
+                </span>
+                <span>{p.contact?.contactContactInformation?.company}</span>
+              </p>
+            }
+          />
+        </div>,
+        formatDateToString(p.purchase?.createdAt as Date),
+        <p
+          className={nextPaymentDate.isLate  ? styles.latePayment : ""}
+          dataset-search={nextPaymentDate.dueDate}
+        >
+          {nextPaymentDate.dueDate}{" "}
+          {nextPaymentDate.isLate ? "- Late!" : ""}
+        </p>,
+        `$${balance.toFixed(2)}`,
+        p.invoiceNumber,
+        <button
+          onClick={() => onPaymentClick(p.id as string)}
+          className={styles.paymentScheduleButton}
+        >
+          View Payment Details
+        </button>,
+      ];
+    });
+    setTableData(newTableData);
+  }, [owedPayments, selectedPayments]);
+
+  const handleInvoiceType = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const invoiceType = event.target.value;
+    setInvoiceType(invoiceType as InvoiceType);
+  };
+
+  const handleYearChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const year = event.target.value;
+    setYear(year);
+  };
+
+  const onNext = () => {
+    setStep((prev) => prev + 1);
+  };
+
+  const toggleAllCheckboxes = () => {
+    const toggledSelectAll = !selectAll;
+    if (toggledSelectAll) {
+      setSelectedPayments(owedPayments || []);
+    } else {
+      setSelectedPayments([]);
+    }
+    setSelectAll(toggledSelectAll);
+  };
+
+  return (
+    <div className={styles.container}>
+      <SimpleModal
+        isOpen={openModal}
+        closeModal={() => setOpenModal(false)}
+        title="Invoice Type Selection"
+        actionText="Generate Invoices"
+        onAction={() => {
+          onNext();
+          setOpenModal(false);
+        }}
+        text={
+          <SelectInput
+            name="invoiceType"
+            label="Invoice Type"
+            id="invoiceType"
+            onChange={handleInvoiceType}
+            value={invoiceType}
+            options={INVOICE_TYPES}
+          />
+        }
+      />
+
+      <PaymentScheduleModal
+        isOpen={openPaymentScheduleModal}
+        closeModal={() => setOpenPaymentScheduleModal(false)}
+        title={`Payment Schedule for ${payment?.contact?.contactContactInformation?.firstName} ${payment?.contact?.contactContactInformation?.lastName}`}
+        paymentId={payment?.id as string}
+      />
+
+      {step !== 1 && (
+        <button
+          className={styles.backButton}
+          onClick={() => setStep((prev) => prev - 1)}
+        >
+          Back
+        </button>
+      )}
+      {step === 1 && (
+        <Table
+          tableName="Upcoming Payments"
+          columns={columns}
+          data={tableData}
+          filterOptions={ALL_YEARS}
+          handleFilterChange={handleYearChange}
+          filterValue={year}
+          selectedCount={selectedPayments?.length || 0}
+          toggleSelectAll={toggleAllCheckboxes}
+          allSelected={selectAll}
+          selectedAction={() => setOpenModal(true)}
+          selectActionDescription="Generate Invoices"
+        />
+      )}
+      {step === 2 && (
+        <InvoiceSending
+          paymentOverviews={selectedPayments}
+          invoiceType={invoiceType}
+        />
+      )}
+    </div>
+  );
+};
+
+export default BillingPage;

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import styles from "./ContactPaymentsOverview.module.scss";
-import { getPaymentsByContactId } from "@/lib/data/payment";
+import { getPaymentsByContactId } from "@/lib/data/paymentOverview";
 import Table from "@/app/(components)/general/Table";
-import { PaymentTableData } from "@/lib/data/payment";
+import { PaymentTableData } from "@/lib/data/paymentOverview";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 interface ContactPaymentsOverviewProps {
   contactId: string;

@@ -13,7 +13,6 @@ export interface PurchaseSlot {
   date?: string | null;
 }
 
-
 export interface PurchaseOverviewState {
   [calendarId: string]: {
     [adId: string]: {
@@ -26,8 +25,15 @@ export interface PurchaseOverviewState {
 
 interface PurchasesStore {
   purchaseOverview: PurchaseOverviewState | null;
+  total: number;
   setPurchaseData: (
-    data: { [adId: string]: { quantity: string, charge: string, slots?: { slot: number, month: number; date: string | null }[] } },
+    data: {
+      [adId: string]: {
+        quantity: string;
+        charge: string;
+        slots?: { slot: number; month: number; date: string | null }[];
+      };
+    },
     calendarId: string
   ) => void;
   addCalendarId: (calendarId: string) => void;
@@ -35,17 +41,26 @@ interface PurchasesStore {
   setCharge: (calendarId: string, adId: string, charge: string) => void;
   setQuantity: (calendarId: string, adId: string, quantity: string) => void;
   reset: () => void;
-  getByCalendarIdAdId: (calendarId: string, adId: string) => { quantity: string, charge: string, slots?: { slot: number, month: number; date: string | null }[]};
+  updateTotal: () => void;
+  getByCalendarIdAdId: (
+    calendarId: string,
+    adId: string
+  ) => {
+    quantity: string;
+    charge: string;
+    slots?: { slot: number; month: number; date: string | null }[];
+  };
 }
-
 
 export const usePurchasesStore = create<PurchasesStore>()(
   persist(
     (set, get) => ({
       purchaseOverview: null,
+      total: 0,
       setPurchaseData: (data, calendarId) => {
         const { purchaseOverview } = get();
-        set({
+        set((state) => ({
+          ...state,
           purchaseOverview: {
             ...purchaseOverview,
             [calendarId]: {
@@ -53,22 +68,23 @@ export const usePurchasesStore = create<PurchasesStore>()(
               ...data,
             },
           },
-        });
+        }));
       },
       addCalendarId: (calendarId: string) => {
         const { purchaseOverview } = get();
         if (!purchaseOverview) {
-          set({ purchaseOverview: { [calendarId]: {} } });
+          set((state) => ({ ...state, purchaseOverview: { [calendarId]: {} } }));
           return;
         }
 
         if (!purchaseOverview[calendarId]) {
-          set({
+          set((state) => ({
+            ...state,
             purchaseOverview: {
               ...purchaseOverview,
               [calendarId]: {},
             },
-          });
+          }));
         }
       },
       removeCalendarId: (calendarId: string) => {
@@ -77,12 +93,16 @@ export const usePurchasesStore = create<PurchasesStore>()(
 
         const updatedOverview = { ...purchaseOverview };
         delete updatedOverview[calendarId];
-        set({ purchaseOverview: updatedOverview });
+        set((state) => ({...state, purchaseOverview: updatedOverview }));
       },
-      reset: () => set({ purchaseOverview: null }),
+      reset: () => set({ total: 0, purchaseOverview: null }),
       getByCalendarIdAdId: (calendarId, adId) => {
         const { purchaseOverview } = get();
-        if (!purchaseOverview || !purchaseOverview[calendarId] || !purchaseOverview[calendarId][adId]) {
+        if (
+          !purchaseOverview ||
+          !purchaseOverview[calendarId] ||
+          !purchaseOverview[calendarId][adId]
+        ) {
           return { quantity: "", charge: "", slots: [] };
         } else {
           return purchaseOverview[calendarId][adId];
@@ -91,8 +111,13 @@ export const usePurchasesStore = create<PurchasesStore>()(
       setCharge: (calendarId: string, adId: string, charge: string) => {
         set((state) => {
           const currentCalendar = state.purchaseOverview?.[calendarId] || {};
-          const currentAd = currentCalendar[adId] || { quantity: '', charge: '', slots: [] };
+          const currentAd = currentCalendar[adId] || {
+            quantity: "",
+            charge: "",
+            slots: [],
+          };
           return {
+            total: state.total,
             purchaseOverview: {
               ...state.purchaseOverview,
               [calendarId]: {
@@ -109,8 +134,13 @@ export const usePurchasesStore = create<PurchasesStore>()(
       setQuantity: (calendarId: string, adId: string, quantity: string) => {
         set((state) => {
           const currentCalendar = state.purchaseOverview?.[calendarId] || {};
-          const currentAd = currentCalendar[adId] || { quantity: '', charge: '', slots: [] };
+          const currentAd = currentCalendar[adId] || {
+            quantity: "",
+            charge: "",
+            slots: [],
+          };
           return {
+            total: state.total,
             purchaseOverview: {
               ...state.purchaseOverview,
               [calendarId]: {
@@ -121,6 +151,22 @@ export const usePurchasesStore = create<PurchasesStore>()(
                 },
               },
             },
+          };
+        });
+      },
+      updateTotal: () => {
+        set((state) => {
+          let newTotal = 0;
+          const { purchaseOverview } = get();
+          if (!purchaseOverview) return { ...state };
+          Object.values(purchaseOverview).forEach((calendar) => {
+            Object.values(calendar).forEach((ad) => {
+              newTotal += Number(ad.charge);
+            });
+          });
+          return {
+            ...state,
+            total: newTotal,
           };
         });
       },

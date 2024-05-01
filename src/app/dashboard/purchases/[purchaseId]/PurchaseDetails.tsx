@@ -137,6 +137,7 @@ const Purchase: React.FC<PurchaseProps> = ({
         }
       }
     }
+    purchaseStore.updateTotal();
     onNext();
   };
 

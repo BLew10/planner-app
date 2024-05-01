@@ -1,45 +1,59 @@
 import React, { useEffect, useState } from "react";
 import styles from "./PaymentSchedule.module.scss";
-import { usePaymentStore } from "@/store/paymentStore";
+import { usePaymentOverviewStore } from "@/store/paymentOverviewStore";
 import { MONTHS } from "@/lib/constants";
 import CheckboxInput from "@/app/(components)/form/CheckboxInput";
 import MoneyInput from "@/app/(components)/form/MoneyInput";
-import { ScheduledPayment } from "@/store/paymentStore";
+import { ScheduledPayment } from "@/store/paymentOverviewStore";
 import { toast } from "react-toastify";
 
 const currentYear = new Date().getFullYear();
 const currentMonth = new Date().getMonth();
-const nextThreeYears = [currentYear, currentYear + 1, currentYear + 2];
+let upcomingYears = [currentYear, currentYear + 1, currentYear + 2];
 
 interface PaymentScheduleProps {
   onNext: () => void;
 }
 
-interface ScheduledPaymentData extends ScheduledPayment {
-  isChecked?: boolean | null;
-}
 const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
-  const paymentStore = usePaymentStore();
+  const paymentStore = usePaymentOverviewStore();
+  const [paymentYears, setPaymentYears] = useState<number[] | null>(null);
   const [splitPaymentsEqually, setSplitPaymentsEqually] = useState<boolean>(
-    paymentStore.paymentOverview.splitPaymentsEqually ?? true
+    !paymentStore.paymentOverview.splitPaymentsEqually ? false : true
   );
 
   useEffect(() => {
+    let paymentYear = paymentStore.paymentOverview.year;
+    if (paymentYear && !upcomingYears.includes(paymentYear)) {
+      const difference = Math.abs(upcomingYears[0] - paymentYear);
+      const prevYears = [];
+      for (let i = 0; i < difference; i++) {
+        prevYears.push(paymentYear + i);
+      }
+      upcomingYears = [...prevYears, ...upcomingYears];
+      setPaymentYears(prevYears);
+    } else {
+      setPaymentYears(upcomingYears);
+    }
     const payments: ScheduledPayment[] = [];
-    nextThreeYears.forEach((year) => {
-      MONTHS.forEach((_, monthIndex) => {
-        if (!(year === currentYear && monthIndex < currentMonth)) {
-          const dueDate = generateDueDates(year, monthIndex);
-          const payment = paymentStore.paymentOverview.scheduledPayments?.find(
-            (p) => p.month === monthIndex + 1 && p.year === year
-          );
-          if (paymentStore.paymentOverview.scheduledPayments && payment) {
-            payments.push({ ...payment, dueDate });
+    if (paymentYears) {
+      paymentYears?.forEach((year) => {
+        MONTHS.forEach((_, monthIndex) => {
+          if (!(year === currentYear && monthIndex < currentMonth)) {
+            const dueDate = generateDueDates(year, monthIndex);
+            const payment =
+              paymentStore.paymentOverview.scheduledPayments?.find(
+                (p) => p.month === monthIndex + 1 && p.year === year
+              );
+            if (paymentStore.paymentOverview.scheduledPayments && payment) {
+              payments.push({ ...payment, dueDate });
+            }
           }
-        }
+        });
       });
-    });
-    paymentStore.updateKeyValue("scheduledPayments", payments);
+      paymentStore.updateKeyValue("scheduledPayments", payments);
+    }
+    paymentStore.updateKeyValue("splitPaymentsEqually", splitPaymentsEqually);
   }, [paymentStore.paymentOverview.net]);
 
   function getLastDayOfMonth(year: number, month: number) {
@@ -70,7 +84,6 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
   const handleSplitPaymentsEquallyChange = (splitEqually: boolean) => {
     setSplitPaymentsEqually(splitEqually);
     paymentStore.updateKeyValue("splitPaymentsEqually", splitEqually);
-    paymentStore.updateKeyValue("scheduledPayments", []);
   };
 
   const onSubmit = async () => {
@@ -102,8 +115,10 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
     }
 
     // Verify that the total payments equal the net amount
-    let totalPaymentsAmount =
-      payments?.reduce((acc, curr) => acc + (curr.amount || 0), 0) || 0;
+    let totalPaymentsAmount = 0;
+    for (const payment of payments) {
+      totalPaymentsAmount += Number(payment.amount || 0);
+    }
 
     if (totalPaymentsAmount !== totalNet) {
       const lastPaymentIndex = payments.length - 1;
@@ -131,7 +146,7 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
     );
     if (index !== -1 && !isChecked) {
       const updatedPayments = [
-        ...paymentStore.paymentOverview.scheduledPayments,
+        ...(paymentStore.paymentOverview.scheduledPayments || []),
       ];
       updatedPayments.splice(index, 1);
       paymentStore.updateKeyValue("scheduledPayments", updatedPayments);
@@ -154,7 +169,7 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
     );
     if (index !== -1 && amount) {
       const updatedPayments = [
-        ...paymentStore.paymentOverview.scheduledPayments,
+        ...(paymentStore.paymentOverview.scheduledPayments || []),
       ];
       updatedPayments[index] = { ...updatedPayments[index], amount };
       paymentStore.updateKeyValue("scheduledPayments", updatedPayments);
@@ -179,7 +194,7 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
           <input
             type="radio"
             name="payment-schedule"
-            checked={splitPaymentsEqually}
+            checked={splitPaymentsEqually === true}
             onChange={() => handleSplitPaymentsEquallyChange(true)}
           />
           <label>Split payments equally</label>
@@ -188,14 +203,14 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
           <input
             type="radio"
             name="payment-schedule"
-            checked={!splitPaymentsEqually}
+            checked={splitPaymentsEqually === false}
             onChange={() => handleSplitPaymentsEquallyChange(false)}
           />
           <label>Enter custom monthly amounts</label>
         </div>
       </div>
       <div className={styles.paymentSchedule}>
-        {nextThreeYears.map((year, i) => (
+        {paymentYears?.map((year, i) => (
           <div key={year} className={styles.year}>
             <p className={styles.yearText}>{year}</p>
             <div className={styles.months}>
