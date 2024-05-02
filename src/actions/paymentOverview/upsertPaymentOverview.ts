@@ -3,7 +3,6 @@
 import { auth } from "@/auth";
 import { formatDateToString } from "@/lib/helpers/formatDateToString";
 import { ScheduledPayment, PaymentOverview } from "@/store/paymentOverviewStore";
-import { DefaultArgs } from "@prisma/client/runtime/library";
 
 export interface UpsertPaymentData {
   id?: string; // Optional, if provided, it will try to update an existing payment
@@ -67,9 +66,17 @@ export async function upsertPaymentOverview(prisma: any, data: PaymentOverview, 
       scheduledPayments,
       splitPaymentsEqually,
     } = data;
+
+    let lateFeeFinal = null;
+
+    if (lateFee) {
+      lateFeeFinal = lateFee;
+    } else if (lateFeePercent) {
+      lateFeeFinal = (totalSale) * (lateFeePercent / 100);
+    }
+
     let paymentOverview;
       if (id) {
-        console.log("Updating payment overview **********", data);
         await prisma.scheduledPayment.deleteMany({ where: { paymentOverviewId: id } });
         paymentOverview = await prisma.paymentOverview.update({
           where: { id },
@@ -137,6 +144,7 @@ export async function upsertPaymentOverview(prisma: any, data: PaymentOverview, 
         let firstPayment = await prisma.payment.findFirst({
           where: {
             paymentOverviewId: paymentOverview.id,
+            wasPrepaid: true,
           },
         });
         if (firstPayment) {
@@ -159,6 +167,7 @@ export async function upsertPaymentOverview(prisma: any, data: PaymentOverview, 
               checkNumber,
               paymentMethod,
               purchaseId,
+              wasPrepaid: true,
               paymentDate: formatDateToString(new Date()),
             },
           });

@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
 import { PaymentOverviewModel } from "../models/paymentOverview";
+import { isLate } from "../helpers/isLate";
 
 export const getPaymentOverviewById = async (
   id: string
@@ -48,9 +49,6 @@ export const getOwedPayments = async (year: string) => {
           },
         },
         scheduledPayments: {
-          where: {
-            isPaid: false,
-          },
           orderBy: {
             dueDate: "asc",
           },
@@ -88,7 +86,7 @@ export const getOwedPayments = async (year: string) => {
   }
 };
 
-const flagLatePayments = async (userId: string) => {
+export const flagLatePayments = async (userId: string) => {
   const user = await prisma.user.findFirst({
     where: {
       id: userId,
@@ -109,49 +107,60 @@ const flagLatePayments = async (userId: string) => {
       const scheduledPayments = await prisma.scheduledPayment.findMany({
         where: {
           isPaid: false,
+          isLate: false,
           paymentOverview: {
             userId,
-          }
+          },
         },
-      })
+      });
 
       for (const payment of scheduledPayments) {
         const paymentDueDate = new Date(payment.dueDate);
         if (isLate(paymentDueDate)) {
-          await prisma.scheduledPayment.update({
+          const paymentOverview = await prisma.paymentOverview.findFirst({
             where: {
-              id: payment.id
+              id: payment.paymentOverviewId,
+            },
+          });
+          let lateFee = 0;
+
+          if (paymentOverview?.lateFee && payment.lateFeeWaived === false || !payment.lateFeeAddedToNet) {
+            lateFee = Number(paymentOverview?.lateFee);
+          } else if (paymentOverview?.lateFeePercent && payment.lateFeeWaived === false || !payment.lateFeeAddedToNet) {
+            lateFee =
+              Number(paymentOverview?.totalSale) *
+              (Number(paymentOverview?.lateFeePercent) / 100);
+          }
+
+          await prisma.paymentOverview.update({
+            where: {
+              id: payment.paymentOverviewId,
             },
             data: {
-              isLate: true
-            }
-          }) 
+              net: {
+                increment: lateFee,
+              },
+            },
+          });
+          await prisma.scheduledPayment.update({
+            where: {
+              id: payment.id,
+            },
+            data: {
+              isLate: true,
+              lateFeeAddedToNet: payment.lateFeeWaived ? false : true,
+            },
+          });
         }
       }
     }
-
   }
-
 };
-const billingUpdatedAlready =  (date: Date): boolean => {
+const billingUpdatedAlready = (date: Date): boolean => {
   const today = new Date();
-  return date.getDate() === today.getDate() &&
+  return (
+    date.getDate() === today.getDate() &&
     date.getMonth() === today.getMonth() &&
-    date.getFullYear() === today.getFullYear();
-
+    date.getFullYear() === today.getFullYear()
+  );
 };
-
-const isLate = (date: Date): boolean => {
-  try {
-    const today = new Date();
-    const realDateTime = new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate()
-    );
-    return realDateTime < today;
-  } catch (e) {
-    console.error(e, date)
-    return false
-  }
-}

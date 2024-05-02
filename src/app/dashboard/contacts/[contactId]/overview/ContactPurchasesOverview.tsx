@@ -10,7 +10,7 @@ interface ContactPurchasesOverviewProps {
 
 interface GroupedPurchases {
   [key: string]: {
-    calendarEdition: string; // Assuming calendarEdition is a string; adjust if it's an object or another type
+    calendarName: string; // Assuming calendarEdition is a string; adjust if it's an object or another type
     year: number;
     purchases: {
       id: string;
@@ -18,7 +18,7 @@ interface GroupedPurchases {
         name: string;
         id: string;
       };
-      calendarEdition: string;
+      calendarName: string;
       year: number;
       quantity: number;
       charge: number;
@@ -56,12 +56,11 @@ const ContactPurchasesOverview = ({
     return (
       purchases?.reduce((acc: { [key: string]: any }, purchaseOverviews) => {
         purchaseOverviews.forEach((purchase) => {
-          const { calendarEdition, year } = purchase;
-          const key = `${calendarEdition}-${year}`;
+          const { year } = purchase;
+          const key = `${year}`;
 
           if (!acc[key]) {
             acc[key] = {
-              calendarEdition,
               year,
               purchases: [],
             };
@@ -92,7 +91,7 @@ const ContactPurchasesOverview = ({
           <div key={key}>
             <h3
               className={styles.calendarAndYear}
-            >{`${value.calendarEdition} - ${value.year}`}</h3>
+            >{`${value.year}`}</h3>
             <div className={styles.purchases}>
             {value.purchases.map((purchase) => {
               const monthSlots = purchase.slots
@@ -101,6 +100,7 @@ const ContactPurchasesOverview = ({
               return (
                 <div key={purchase.id} className={styles.purchase}>
                   <div className={styles.purchaseHeading}>
+                    <p className={styles.calendarName}>{purchase.calendarName}</p>
                     <p className={styles.adType}>{purchase.advertisement.name}</p>
                     <p className={styles.adCharge}>Total: ${purchase.charge.toFixed(2)}</p>
                   </div>

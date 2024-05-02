@@ -6,7 +6,6 @@ import styles from "./Dashboard.module.scss";
 import { getAllCalendars } from "@/lib/data/calendarEdition";
 import {
   getAllAdvertisementTypes,
-  getManyAdvertisementTypes,
 } from "@/lib/data/advertisementType";
 import { getAllSlotsByYearAndCalendarId } from "@/lib/data/purchase";
 import SelectInput from "../(components)/form/SelectInput";

@@ -36,7 +36,6 @@
 }
 
 .purchaseHeading {
-  display: flex;
   gap: 10px;
   align-items: center;
   margin-bottom: 10px;
@@ -66,4 +65,10 @@
 .slotText {
   color: var(--text-secondary);
   font-size: 0.8rem;
+}
+
+.calendarName {
+  color: var(--primary-blue-dark);
+  font-size: 1.3rem;
+  font-weight: bold;
 }

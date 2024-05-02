@@ -16,22 +16,11 @@ interface NextPayment {
   amount: number;
 }
 
-interface PastDue {
-  pastDueAmount: number;
-  noPastDueCount: number;
-}
 
 const rightAlignedX = 200;
 const leftAlignedX = 10;
 const centerAlignedX = 105;
 const Statement = ({ paymentOverview }: StatementProps) => {
-  const getTotalPaid = () => {
-    let totalPaid = 0;
-    paymentOverview?.payments?.forEach((payment) => {
-      totalPaid += Number(payment.amount || 0);
-    });
-    return totalPaid;
-  };
   const generateStatementTable = () => {
     const lateFee = calculateLateFee();
     const prePaymentAmount =
@@ -58,13 +47,15 @@ const Statement = ({ paymentOverview }: StatementProps) => {
         paymentMethod: payment.paymentMethod || "Deposit",
         isLate: false, // Default to false for payments
         lateFee: null, // Default to null for payments
+        lateFeeWaived: null, // Default to null for payments
       })) || []),
       ...(paymentOverview?.scheduledPayments?.map((scheduled) => ({
         date: scheduled.dueDate as string,
         type: "ScheduledPayment",
         amount: scheduled.amount, // You might or might not need this depending on your structure
         paymentMethod: "Scheduled", // Default or indicative value
-        isLate: true,
+        isLate: scheduled.isLate, // this needs to be scheduled.IsLate
+        lateFeeWaived: scheduled.lateFeeWaived
       })) || []),
     ];
 
@@ -72,7 +63,7 @@ const Statement = ({ paymentOverview }: StatementProps) => {
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
     combinedPayments.forEach((payment) => {
-      if (payment.type === "ScheduledPayment" && payment.isLate) {
+      if (payment.type === "ScheduledPayment" && payment.isLate && !payment.lateFeeWaived && lateFee) {
         balance += lateFee || 0;
         const lateFeeRow = [
           payment.date,
@@ -108,50 +99,37 @@ const Statement = ({ paymentOverview }: StatementProps) => {
     return null;
   };
 
-  const getPastDueAmount = (): PastDue => {
-    const today = new Date(2022, 0, 1);
+  const getPastDueAmount = () => {
     let pastDueAmount = 0;
-    let noPastDueCount = 0;
+    let pastDueCount = 0;
     const lateFee = calculateLateFee();
 
     paymentOverview?.scheduledPayments
       ?.filter(
-        (scheduled: ScheduledPayment) => new Date(scheduled.dueDate) > today
+        (scheduled: ScheduledPayment) => scheduled.isLate && !scheduled.isPaid
       )
       .forEach((scheduled: ScheduledPayment) => {
-        const dueDate = new Date(scheduled.dueDate);
-        const paymentAmount =
-          paymentOverview?.payments?.reduce((acc, payment) => {
-            const paymentDate = new Date(payment.paymentDate as string);
-            if (paymentDate <= dueDate) {
-              pastDueAmount++;
-              acc += Number(payment.amount || 0) + (lateFee || 0);
-            }
-            return acc;
-          }, 0) || 0;
-
-        if (paymentAmount < Number(scheduled.amount)) {
-          // Add the unpaid amount to past due
-          pastDueAmount += Number(scheduled.amount) - paymentAmount;
-        }
+        
+        pastDueAmount +=
+          Number(scheduled.amount) - Number(scheduled.amountPaid) || 0;
+          if (!scheduled.lateFeeWaived) pastDueCount += 1;
       });
 
-    return { pastDueAmount, noPastDueCount };
+    pastDueAmount += (lateFee || 0) * pastDueCount;
+    return pastDueAmount
   };
 
   const getNextPayment = (): NextPayment => {
     const today = new Date();
     let nextPayment: NextPayment = { dueDate: "", amount: 0 };
-    let totalPaid = getTotalPaid();
-    for (const payment of paymentOverview?.scheduledPayments || []) {
-      totalPaid -= Number(payment.amount || 0);
-      if (
-        new Date(payment.dueDate) > today &&
-        totalPaid < Number(payment.amount || 0)
-      ) {
+    const unpaidPayments = paymentOverview?.scheduledPayments?.filter(
+      (payment: ScheduledPayment) => !payment.isPaid
+    )
+    for (const payment of unpaidPayments || []) {
+      if (new Date(payment.dueDate) > today) {
         nextPayment = {
           dueDate: payment.dueDate,
-          amount: Number(payment.amount || 0) - (totalPaid < 0 ? 0 : totalPaid), // Subtract the amount already paid, if it's negative, set it to 0
+          amount: Number(payment.amount || 0) - Number(payment.amountPaid || 0)
         };
         break;
       }
@@ -300,29 +278,18 @@ const Statement = ({ paymentOverview }: StatementProps) => {
       currentY = 20;
     }
 
-    let lateFee = paymentOverview?.lateFee
-      ? `$${Number(paymentOverview?.lateFee).toFixed(2) || 0}`
-      : paymentOverview?.lateFeePercent
-      ? `$${
-          (
-            Number(paymentOverview?.lateFeePercent || 0 / 100) *
-            Number(paymentOverview?.totalSale)
-          ).toFixed(2) || 0
-        }`
-      : null;
+    const lateFee = calculateLateFee();
 
-      
-    let footerY = currentY; // Add some space after the previous content
     const pageHeight = doc.internal.pageSize.getHeight();
     const bottomMargin = 10; // Margin from the bottom of the page
     const footerPositionY = pageHeight - bottomMargin;
-    const footerHeight = 150;
-    if (doc.internal.pageSize.height - footerY < footerHeight) {
+    let footerHeight = 74;
+    if (doc.internal.pageSize.height - (currentY + 30) < footerHeight) {
       // Check if there's enough space for the footer; if not, add a new page
       doc.addPage();
-      footerY = 20; // Start at the top of the new page
+      currentY = 20; // Start at the top of the new page
     } else {
-      footerY += 20; // Add some space after the previous content
+      currentY += 20; // Add some space after the previous content
     }
     const dueDay = generateDaySuffix(Number(paymentOverview?.paymentDueOn));
     const firstPaymentDate =
@@ -336,109 +303,133 @@ const Statement = ({ paymentOverview }: StatementProps) => {
       lateFee ? lateFeeMessage : ""
     } A $25 fee will be charged for any NSF payment. Thank you.`;
 
-    doc.text(footerText, leftAlignedX, footerY, { maxWidth: 180 });
+    doc.text(footerText, leftAlignedX, currentY, { maxWidth: 180 });
     doc.setFont("Times", "normal", "700");
 
     doc.text(
       "-------------------------Please return the below portion with your payment------------------------",
       centerAlignedX,
-      (footerY += 30),
+      footerPositionY - footerHeight,
       {
         align: "center",
       }
     );
     doc.setFont("Times", "normal", "400");
-
-    let footerContactY = footerY;
+    footerHeight -= 10;
+    let difference = footerHeight;
     if (sponsorName) {
-      doc.text(sponsorName, leftAlignedX, (footerContactY += 10));
+      doc.text(sponsorName, leftAlignedX, footerPositionY - difference);
+      difference -= 5;
     }
     if (sponsorAddress) {
-      doc.text(sponsorAddress, leftAlignedX, (footerContactY += 5));
+      doc.text(sponsorAddress, leftAlignedX, footerPositionY - difference);
+      difference -= 5;
     }
 
     if (sponsorCityStateZip) {
-      doc.text(sponsorCityStateZip, leftAlignedX, (footerContactY += 5));
+      doc.text(sponsorCityStateZip, leftAlignedX, footerPositionY - difference);
     }
+
     doc.text(
       `Amount Due this Statement for Invoice #${
         paymentOverview?.invoiceNumber || "" // TODO Add invoice number
       }`,
       rightAlignedX,
-      (footerY += 10),
+      footerPositionY - footerHeight,
+      {
+        align: "right",
+      }
+    );
+    footerHeight -= 8;
+
+    const pastDue = getPastDueAmount();
+    const nextPayment = getNextPayment();
+    doc.text(
+      `PAST DUE AMOUNT: $${pastDue.toFixed(2)}`,
+      rightAlignedX,
+      footerPositionY - footerHeight,
       {
         align: "right",
       }
     );
 
-    const pastDue = getPastDueAmount();
-    const nextPayment = getNextPayment();
-    doc.text(
-      `PAST DUE AMOUNT: $${pastDue.pastDueAmount.toFixed(2)}`,
-      rightAlignedX,
-      (footerY += 8),
-      {
-        align: "right",
-      }
-    );
+    footerHeight -= 8;
+
     doc.text(
       `PLUS CURRENT AMOUNT DUE IF PAID BY ${
         nextPayment.dueDate
       }: $${nextPayment.amount.toFixed(2)}`,
       rightAlignedX,
-      (footerY += 8),
+      footerPositionY - footerHeight,
       {
         align: "right",
       }
     );
-
+    footerHeight -= 8;
     doc.setFont("Times", "normal", "700");
     doc.text(
       `TOTAL AMOUNT DUE IF PAID BY ${nextPayment.dueDate}: $${(
-        nextPayment.amount + pastDue.pastDueAmount
+        nextPayment.amount + pastDue
       ).toFixed(2)}`,
       rightAlignedX,
-      (footerY += 8),
+      footerPositionY - footerHeight,
       {
         align: "right",
       }
     );
 
-    footerY += 10;
+    footerHeight -= 10;
     doc.setFont("Times", "normal", "700");
     doc.setFontSize(10);
-    doc.text("Please remit to:", leftAlignedX, footerY);
-    doc.text("Credit Card Payments:", rightAlignedX - 90, footerY);
-
+    let remitYDiff = footerHeight;
+    let ccDiff = footerHeight;
+    doc.text("Please remit to:", leftAlignedX, footerPositionY - remitYDiff);
+    remitYDiff -= 10;
     doc.setFont("Times", "normal", "400");
-    doc.text("Town Planner", leftAlignedX, footerY + 10);
-    doc.text("P.O. Box 188", leftAlignedX, footerY + 15);
-    doc.text("Elk Grove, CA 95759", leftAlignedX, footerY + 20);
-
+    doc.text("Town Planner", leftAlignedX, footerPositionY - remitYDiff);
+    remitYDiff -= 5;
+    doc.text("P.O. Box 188", leftAlignedX, footerPositionY - remitYDiff);
+    remitYDiff -= 5;
+    doc.text("Elk Grove, CA 95759", leftAlignedX, footerPositionY - remitYDiff);
+    doc.setFont("Times", "normal", "700");
+    doc.text(
+      "Credit Card Payments:",
+      rightAlignedX - 90,
+      footerPositionY - ccDiff
+    );
+    ccDiff -= 10;
+    doc.setFont("Times", "normal", "400");
     doc.text(
       "Name on Card: ____________________________________",
       rightAlignedX - 90,
-      footerY + 10
+      footerPositionY - ccDiff
     );
+
+    ccDiff -= 5;
     doc.text(
       "Card No.: ________________________________________",
       rightAlignedX - 90,
-      footerY + 18
+      footerPositionY - ccDiff
     );
+
+    ccDiff -= 5;
     doc.text(
       "Exp. Date: ___________   3-Digit Sec. Code: ___________",
       rightAlignedX - 90,
-      footerY + 26
+      footerPositionY - ccDiff
     );
+
+    ccDiff -= 5;
     doc.text(
       "Billing Address: __________________________________",
       rightAlignedX - 90,
-      footerY + 34
+      footerPositionY - ccDiff
     );
+
     doc.text(
       "Billing Zip/PC: __________  Amt. Paid: $______________",
       rightAlignedX - 90,
-      footerY + 42
+      footerPositionY
     );
     // Save the PDF
     doc.save("Invoice.pdf");

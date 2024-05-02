@@ -9,6 +9,7 @@ import styles from "./ContactOverview.module.scss";
 import ContactInfoOverview from "./ContactInfoOverview";
 import ContactPurchasesOverview from "./ContactPurchasesOverview";
 import ContactPaymentsOverview from "./ContactPaymentsOverview";
+import ContactScheduledPayments from "./ContactScheduledPayments";
 import LoadingSpinner from "@/app/(components)/general/LoadingSpinner";
 
 interface ContactOverviewProps {
@@ -17,7 +18,7 @@ interface ContactOverviewProps {
 
 const isTesting = process.env.VERCEL_ENV === 'preview' || process.env.NEXT_PUBLIC_IS_TESTING === 'true';
 
-type ContactOverviewTabs = "info" | "purchases" | "payments";
+type ContactOverviewTabs = "info" | "purchases" | "payments" | "paymentSchedules";
 const ContactOverview = ({ contactId }: ContactOverviewProps) => {
   const router = useRouter();
   const [requesting, setRequesting] = useState(false);
@@ -81,7 +82,17 @@ const ContactOverview = ({ contactId }: ContactOverviewProps) => {
           }`}
           onClick={() => setActiveTab("payments")}
         >
-          Payments
+          Payments Made
+        </button>
+
+        <button
+          className={`${styles.tab} ${
+            activeTab === "paymentSchedules" ? styles.active : ""
+          }
+          }`}
+          onClick={() => setActiveTab("paymentSchedules")}
+        >
+          Payment Schedules
         </button>
       </div>
       {activeTab === "info" && (
@@ -92,6 +103,9 @@ const ContactOverview = ({ contactId }: ContactOverviewProps) => {
       )}
       {activeTab === "payments" && (
         <ContactPaymentsOverview contactId={contactId} />
+      )}
+      {activeTab == "paymentSchedules" && (
+        <ContactScheduledPayments contactId={contactId} />
       )}
     </div>
   );

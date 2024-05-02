@@ -14,6 +14,7 @@ interface InvoiceTotalStatementProps {
 
 const rightAlignedX = 200;
 const leftAlignedX = 10;
+const centerAlignedX = 105;
 const InvoiceTotalStatement = ({
   paymentOverview,
 }: InvoiceTotalStatementProps) => {
@@ -51,7 +52,7 @@ const InvoiceTotalStatement = ({
     return values;
   };
 
-  const generatePaypPlan = (scheduledPayments: ScheduledPayment[]): string => {
+  const generatePayPlan = (scheduledPayments: ScheduledPayment[]): string => {
     let plan = "PAY PLAN: ";
     for (let i = 0; i < scheduledPayments.length; i++) {
       const payment = scheduledPayments[i];
@@ -67,6 +68,18 @@ const InvoiceTotalStatement = ({
     }
 
     return plan;
+  };
+
+  const calculateLateFee = (): number | null => {
+    if (paymentOverview?.lateFeePercent) {
+      const fee =
+        Number(paymentOverview?.totalSale || 0) *
+        (Number(paymentOverview?.lateFeePercent || 0) / 100);
+      return fee;
+    } else if (paymentOverview?.lateFee) {
+      return Number(paymentOverview?.lateFee || 0);
+    }
+    return null;
   };
 
   const generatePdf = () => {
@@ -103,7 +116,7 @@ const InvoiceTotalStatement = ({
     );
 
     doc.setFont("Courier", "normal", "700");
-    doc.text(`INVOICE #${paymentOverview?.id}`, rightAlignedX, 70, { // TODO add invoice number
+    doc.text(`INVOICE #${paymentOverview?.invoiceNumber}`, rightAlignedX, 70, { // TODO add invoice number
       align: "right",
     });
     doc.setFont("Courier", "normal", "400");
@@ -292,46 +305,104 @@ const InvoiceTotalStatement = ({
       doc.addPage();
       currentY = 20;
     }
-
-    const payPlan = generatePaypPlan(paymentOverview?.scheduledPayments || []);
+    const payPlan = generatePayPlan(paymentOverview?.scheduledPayments || []);
     doc.setFontSize(10);
     doc.setFont("", "normal", "700");
-    currentY += 20;
-    doc.text(payPlan, leftAlignedX, currentY, { maxWidth: 180 });
-    doc.setFont("", "normal", "400");
+    doc.text(payPlan, leftAlignedX, currentY + 20, { maxWidth: 180 });
 
-    let lateFee = paymentOverview?.lateFee
-      ? `$${Number(paymentOverview?.lateFee).toFixed(2) || 0}`
-      : paymentOverview?.lateFeePercent
-      ? `$${
-          (
-            Number(paymentOverview?.lateFeePercent || 0 / 100) *
-            Number(paymentOverview?.totalSale)
-          ).toFixed(2) || 0
-        }`
-      : null;
-
-    let footerY = currentY; // Add some space after the previous content
-    if (doc.internal.pageSize.height - footerY < 100) {
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const bottomMargin = 10; // Margin from the bottom of the page
+    const footerPositionY = pageHeight - bottomMargin;
+    let footerHeight = 60;
+    if (doc.internal.pageSize.height - (currentY + 30) < footerHeight) {
       // Check if there's enough space for the footer; if not, add a new page
       doc.addPage();
-      footerY = 20; // Start at the top of the new page
+      currentY = 20; // Start at the top of the new page
     } else {
-      footerY += 20; // Add some space after the previous content
+      currentY += 20; // Add some space after the previous content
     }
 
+    doc.setFont("", "normal", "400");
+
+    const lateFee = calculateLateFee();
     const dueDay = generateDaySuffix(Number(paymentOverview?.paymentDueOn));
     const firstPaymentDate =
       paymentOverview?.scheduledPayments?.[0]?.dueDate ?? null;
-    const lateFeeMessage = ` Starting ${firstPaymentDate}, a late fee of ${lateFee} will be charged for payments not received by the ${
+    const lateFeeMessage = ` Starting ${firstPaymentDate}, a late fee of ${lateFee?.toFixed(2)} will be charged for payments not received by the ${
       paymentOverview?.paymentOnLastDay ? "last day" : dueDay
     } of each month.`;
-    let footerText = `Thank you for Sponsoring your Town Planner Community Calendar. Please be aware payments are to be received no later than  ${
-      paymentOverview?.paymentOnLastDay ? "the last day" : dueDay
+    let footerText = `Thank you for Sponsoring your Town Planner Community Calendar. Please be aware payments are to be received no later than the ${
+      paymentOverview?.paymentOnLastDay ? " last day" : dueDay
     } of each month.${
       lateFee ? lateFeeMessage : ""
     } A $25 fee will be charged for any NSF payment. Thank you.`;
-    doc.text(footerText, leftAlignedX, footerY, { maxWidth: 180 });
+
+    doc.text(footerText, leftAlignedX, footerPositionY - footerHeight, { maxWidth: 180 });
+    footerHeight -= 20;
+    doc.setFont("Times", "normal", "700");
+
+    doc.text(
+      "-------------------------Please return the below portion with your payment------------------------",
+      centerAlignedX,
+      footerPositionY - footerHeight,
+      {
+        align: "center",
+      }
+    );
+    doc.setFont("Times", "normal", "400");
+    footerHeight -= 10;
+    doc.setFont("Times", "normal", "700");
+    doc.setFontSize(10);
+    let remitYDiff = footerHeight;
+    let ccDiff = footerHeight;
+    doc.text("Please remit to:", leftAlignedX, footerPositionY - remitYDiff);
+    remitYDiff -= 10;
+    doc.setFont("Times", "normal", "400");
+    doc.text("Town Planner", leftAlignedX, footerPositionY - remitYDiff);
+    remitYDiff -= 5;
+    doc.text("P.O. Box 188", leftAlignedX, footerPositionY - remitYDiff);
+    remitYDiff -= 5;
+    doc.text("Elk Grove, CA 95759", leftAlignedX, footerPositionY - remitYDiff);
+    doc.setFont("Times", "normal", "700");
+    doc.text(
+      "Credit Card Payments:",
+      rightAlignedX - 90,
+      footerPositionY - ccDiff
+    );
+    ccDiff -= 10;
+    doc.setFont("Times", "normal", "400");
+    doc.text(
+      "Name on Card: ____________________________________",
+      rightAlignedX - 90,
+      footerPositionY - ccDiff
+    );
+
+    ccDiff -= 5;
+    doc.text(
+      "Card No.: ________________________________________",
+      rightAlignedX - 90,
+      footerPositionY - ccDiff
+    );
+
+    ccDiff -= 5;
+    doc.text(
+      "Exp. Date: ___________   3-Digit Sec. Code: ___________",
+      rightAlignedX - 90,
+      footerPositionY - ccDiff
+    );
+
+    ccDiff -= 5;
+    doc.text(
+      "Billing Address: __________________________________",
+      rightAlignedX - 90,
+      footerPositionY - ccDiff
+    );
+
+    doc.text(
+      "Billing Zip/PC: __________  Amt. Paid: $______________",
+      rightAlignedX - 90,
+      footerPositionY
+    );
     // Save the PDF
     doc.save("Invoice.pdf");
   };

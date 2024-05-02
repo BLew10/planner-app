@@ -10,15 +10,16 @@ import {
 import { auth } from "@/auth";
 import { PurchaseOverviewModel } from "../models/purchaseOverview";
 import { AdvertisementPurchaseSlotModel } from "../models/advertisementPurchaseSlots";
+import { flagLatePayments } from "./paymentOverview";
 
 export interface Purchase {
   id: string;
   year: number;
-  calendarEdition: string;
   adPurchases: {
     id: string;
     charge: number;
     quantity: number;
+    calendarName: string; 
     advertisement: {
       id: string;
       name: string;
@@ -42,7 +43,7 @@ export const getPurchaseByContactIdAndYear = async (
   }
 
   const userId = session.user.id;
-
+  await flagLatePayments(userId);
   const purchase = await prisma.purchaseOverview.findFirst({
     where: {
       contactId: contactId,
@@ -75,7 +76,6 @@ export const getPurchaseByContactIdAndYear = async (
     return null;
   }
 
-  console.log(purchase);
   return purchase;
 };
 
@@ -271,6 +271,7 @@ export const getPurchasesByContactId = async (
           id: true,
           charge: true,
           quantity: true,
+          calendar: true,
           adPurchaseSlots: {
             select: {
               id: true,
@@ -294,11 +295,10 @@ export const getPurchasesByContactId = async (
     return null;
   }
   const purchasesData: Partial<Purchase>[][] | null = purchases.map((p) => {
-    const calendarEditions = p.calendarEditions.map((e) => e.code).join(", ");
     return p.adPurchases.map((purchase) => ({
       id: purchase.id,
       year: p.year,
-      calendarEditions: calendarEditions,
+      calendarName: purchase.calendar.name,
       charge: parseFloat(purchase.charge.toString()),
       quantity: purchase.quantity,
       advertisement: {
