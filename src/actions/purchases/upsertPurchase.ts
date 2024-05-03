@@ -23,8 +23,6 @@ export async function upsertPurchase(
     console.log("total", total);
 
     const result = await prisma.$transaction(async (prismaClient) => {
-      const paymentOverviewId = await upsertPaymentOverview(prismaClient, paymentOverview, year, contactId);
-      // Upsert the PurchaseOverview
       let purchaseOverview = await prismaClient.purchaseOverview.upsert({
         where: {
           id: purchaseId,
@@ -34,7 +32,6 @@ export async function upsertPurchase(
         update: {
           amountOwed: total,
           year: parseInt(year),
-          paymentOverviewId,
           calendarEditions: {
             set: [],
             connect: calendarIds.map((calendarId) => ({ id: calendarId })),
@@ -43,7 +40,6 @@ export async function upsertPurchase(
         create: {
           userId,
           contactId,
-          paymentOverviewId,
           year: parseInt(year),
           amountOwed: total,
           calendarEditions: {
@@ -51,18 +47,6 @@ export async function upsertPurchase(
           },
         },
       });
-      const updatedPaymentOverview = await prismaClient.paymentOverview.update({
-        where: {
-          id: paymentOverviewId,
-        },
-        data: {
-          purchase: {
-            connect: {
-              id: purchaseOverview.id,
-            },
-          },
-        },
-      })
       const d = await prismaClient.advertisementPurchase.deleteMany({
         where: {
           purchaseId: purchaseOverview.id,
@@ -105,6 +89,19 @@ export async function upsertPurchase(
           });
         }
       }
+
+      const paymentOverviewId = await upsertPaymentOverview(prismaClient, paymentOverview, year, contactId, purchaseOverview.id);
+      // Upsert the PurchaseOverview
+      if (!paymentOverviewId) throw new Error("Failed to upsert payment overview");
+
+      await prismaClient.purchaseOverview.update({
+        where: {
+          id: purchaseOverview.id
+        },
+        data: {
+          paymentOverviewId
+        }
+      })
     }, {
       maxWait: 10000,
       timeout: 10000

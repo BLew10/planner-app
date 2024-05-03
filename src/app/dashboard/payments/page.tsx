@@ -111,6 +111,8 @@ const PaymentsPage = () => {
       p.paymentMethod,
       p.checkNumber,
       <div className={styles.modWrapper} key={p.id}>
+        {!p.wasPrepaid ?
+        <>
           <Link
             href={`/dashboard/payments/${p.id}?purchaseId=${p.purchaseId}&paymentOverviewId=${p.paymentOverviewId}`}
             className={styles.paymentAction}
@@ -123,7 +125,11 @@ const PaymentsPage = () => {
           onDelete={() => {
             onDeletePayment(p.id || "");
           }}
-        />
+        /></> :
+        <p className={styles.prepayment}>
+          PREPAYMENT - CAN'T EDIT HERE
+        </p>
+        }
       </div>,
     ];
   });
@@ -136,6 +142,8 @@ const PaymentsPage = () => {
           title={`Payment Details for ${paymentOverview.companyName} in ${year}`}
           paymentId={paymentOverview.id}
         />
+
+        
       <AnimateWrapper>
         <section className={styles.container}>
           <ToastContainer />

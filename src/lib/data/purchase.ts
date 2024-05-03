@@ -11,6 +11,7 @@ import { auth } from "@/auth";
 import { PurchaseOverviewModel } from "../models/purchaseOverview";
 import { AdvertisementPurchaseSlotModel } from "../models/advertisementPurchaseSlots";
 import { flagLatePayments } from "./paymentOverview";
+import { formatDateToString } from "../helpers/formatDateToString";
 
 export interface Purchase {
   id: string;
@@ -68,6 +69,7 @@ export const getPurchaseByContactIdAndYear = async (
       paymentOverview: {
         include: {
           scheduledPayments: true,
+          payments: true,
         }
       },
     },
@@ -87,6 +89,9 @@ export interface PurchaseTableData {
   companyName: string;
   year: number;
   calendarEditions: string;
+  purchasedOn: string;
+  total: number;
+  amountPaid: number;
 }
 export const getPurchaseTableData = async (
   year: string
@@ -107,8 +112,23 @@ export const getPurchaseTableData = async (
     select: {
       id: true,
       amountOwed: true,
+      createdAt: true,
       year: true,
       paymentOverviewId: true,
+      paymentOverview: {
+        select: {
+          amountPaid: true,
+          net: true,
+          scheduledPayments: {
+            where: {
+              isLate: true,
+              lateFeeWaived: false,
+            lateFeeAddedToNet: true,
+            
+            }
+          },
+        }
+      },
       calendarEditions: {
         select: {
           code: true,
@@ -131,6 +151,7 @@ export const getPurchaseTableData = async (
     const calendarsEditions = purchase.calendarEditions
       .map((e) => e.code)
       .join(", ");
+
     return {
       id: purchase.id,
       paymentOverviewId: purchase.paymentOverviewId || null,
@@ -139,6 +160,9 @@ export const getPurchaseTableData = async (
       companyName: purchase.contact?.contactContactInformation?.company || "",
       year: purchase.year,
       calendarEditions: calendarsEditions,
+      purchasedOn: formatDateToString(purchase.createdAt),
+      total: Number(purchase.paymentOverview?.net || 0),
+      amountPaid: Number(purchase.paymentOverview?.amountPaid || 0),
     };
   });
 

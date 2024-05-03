@@ -44,7 +44,7 @@ const Statement = ({ paymentOverview }: StatementProps) => {
         date: payment.paymentDate as string,
         type: "Payment",
         amount: payment.amount,
-        paymentMethod: payment.paymentMethod || "Deposit",
+        paymentMethod: `${payment.paymentMethod || "Deposit"} ${payment.checkNumber || ""} ${payment.wasPrepaid ? "- Prepayment" : ""}`,
         isLate: false, // Default to false for payments
         lateFee: null, // Default to null for payments
         lateFeeWaived: null, // Default to null for payments
@@ -294,7 +294,7 @@ const Statement = ({ paymentOverview }: StatementProps) => {
     const dueDay = generateDaySuffix(Number(paymentOverview?.paymentDueOn));
     const firstPaymentDate =
       paymentOverview?.scheduledPayments?.[0]?.dueDate ?? null;
-    const lateFeeMessage = ` Starting ${firstPaymentDate}, a late fee of ${lateFee} will be charged for payments not received by the ${
+    const lateFeeMessage = ` Starting ${firstPaymentDate}, a late fee of $${lateFee?.toFixed(2)} will be charged for payments not received by the ${
       paymentOverview?.paymentOnLastDay ? "last day" : dueDay
     } of each month.`;
     let footerText = `Thank you for Sponsoring your Town Planner Community Calendar. Please be aware payments are to be received no later than the ${

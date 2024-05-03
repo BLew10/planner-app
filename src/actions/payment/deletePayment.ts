@@ -22,8 +22,10 @@ const deletePayment = async (paymentId: string) => {
         data: {
           amountPaid: Number(paymentOverview?.amountPaid) - Number(deletedPayment.amount),
           lastPaymentId: null,
+          isPaid: Number(paymentOverview?.amountPaid) - Number(deletedPayment.amount) >= Number(paymentOverview?.net)
         },
       });
+
     });
 
     return true;

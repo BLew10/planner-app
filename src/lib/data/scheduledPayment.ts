@@ -53,20 +53,7 @@ export const updateSchedulePaymentLateFeesByYear = async (
       });
 
       if (!payment) continue;
-      const paymentOverview = await prisma.paymentOverview.findUnique({
-        where: {
-          id: payment?.paymentOverviewId,
-        },
-      });
-      let lateFee = 0;
 
-      if (paymentOverview?.lateFee) {
-        lateFee = Number(paymentOverview?.lateFee);
-      } else if (paymentOverview?.lateFeePercent) {
-        lateFee =
-          Number(paymentOverview?.totalSale) *
-          (Number(paymentOverview?.lateFeePercent) / 100);
-      }
       await prisma.scheduledPayment.update({
         where: {
           id: paymentId,
@@ -82,7 +69,7 @@ export const updateSchedulePaymentLateFeesByYear = async (
         },
         data: {
           net: {
-            increment: -lateFee,
+            increment: -Number(payment.lateFee || 0),
           },
         },
       });
@@ -116,27 +103,13 @@ export const updateSchedulePaymentLateFeesByYear = async (
           },
         });
   
-        const paymentOverview = await prisma.paymentOverview.findUnique({
-          where: {
-            id: payment?.paymentOverviewId,
-          },
-        });
-        let lateFee = 0;
-
-        if (paymentOverview?.lateFee) {
-          lateFee = Number(paymentOverview?.lateFee);
-        } else if (paymentOverview?.lateFeePercent) {
-          lateFee =
-            Number(paymentOverview?.totalSale) *
-            (Number(paymentOverview?.lateFeePercent) / 100);
-        }
         await prisma.paymentOverview.update({
           where: {
             id: payment.paymentOverviewId,
           },
           data: {
             net: {
-              increment: lateFee,
+              increment: Number(payment.lateFee || 0),
             },
           },
         });

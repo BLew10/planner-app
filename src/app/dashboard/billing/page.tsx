@@ -43,6 +43,7 @@ const columns = [
 const getNextPaymentDate = (scheduledPayments: ScheduledPayment[] | null) => {
   if (scheduledPayments) {
     for (const scheduledPayment of scheduledPayments || []) {
+      if (!scheduledPayment.isPaid)
       return { dueDate: scheduledPayment.dueDate, isLate: scheduledPayment.isLate };
     }
   }

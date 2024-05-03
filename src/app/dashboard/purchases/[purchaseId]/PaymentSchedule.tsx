@@ -35,11 +35,14 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
     } else {
       setPaymentYears(upcomingYears);
     }
+  }, [paymentStore.paymentOverview.net]);
+
+  useEffect(() => {
     const payments: ScheduledPayment[] = [];
     if (paymentYears) {
       paymentYears?.forEach((year) => {
         MONTHS.forEach((_, monthIndex) => {
-          if (!(year === currentYear && monthIndex < currentMonth)) {
+   
             const dueDate = generateDueDates(year, monthIndex);
             const payment =
               paymentStore.paymentOverview.scheduledPayments?.find(
@@ -47,14 +50,15 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
               );
             if (paymentStore.paymentOverview.scheduledPayments && payment) {
               payments.push({ ...payment, dueDate });
+            } else {
+              payments.push({ month: monthIndex + 1, year, amount: null, dueDate });
             }
-          }
         });
       });
       paymentStore.updateKeyValue("scheduledPayments", payments);
     }
     paymentStore.updateKeyValue("splitPaymentsEqually", splitPaymentsEqually);
-  }, [paymentStore.paymentOverview.net]);
+  }, [paymentYears]);
 
   function getLastDayOfMonth(year: number, month: number) {
     return new Date(year, month + 1, 0); // Month is 0-indexed, 0 day is the last day of the previous month
@@ -105,7 +109,7 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
     } else {
       payments =
         paymentStore.paymentOverview.scheduledPayments?.filter(
-          (p) => p.amount !== null && !isNaN(p.amount as number)
+          (p) => p.amount !== null && !isNaN(p.amount as number) && p.amount > 0
         ) || null;
     }
 
@@ -164,13 +168,9 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
     year: number,
     amount: number | null
   ) => {
-    const index = paymentStore.paymentOverview.scheduledPayments?.findIndex(
-      (p) => p.month === month && p.year === year
-    );
-    if (index !== -1 && amount) {
-      const updatedPayments = [
-        ...(paymentStore.paymentOverview.scheduledPayments || []),
-      ];
+    const index = paymentStore.paymentOverview.scheduledPayments?.findIndex((p) => p.month === month && p.year === year);
+    if (index !== -1) {
+      const updatedPayments = [...(paymentStore.paymentOverview.scheduledPayments || [])];
       updatedPayments[index] = { ...updatedPayments[index], amount };
       paymentStore.updateKeyValue("scheduledPayments", updatedPayments);
     } else if ((!index && amount) || (index === -1 && amount)) {
@@ -215,9 +215,6 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
             <p className={styles.yearText}>{year}</p>
             <div className={styles.months}>
               {MONTHS.map((month, index) => {
-                if (year === currentYear && index <= currentMonth) {
-                  return null;
-                }
                 return (
                   <div key={`${year}-${month}`} className={styles.month}>
                     {splitPaymentsEqually ? (
@@ -249,8 +246,7 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
                           )
                         }
                         value={
-                          paymentStore.paymentOverview.scheduledPayments
-                            ?.find(
+                          paymentStore.paymentOverview.scheduledPayments?.find(
                               (p) => p.month === index + 1 && p.year === year
                             )
                             ?.amount?.toString() || ""

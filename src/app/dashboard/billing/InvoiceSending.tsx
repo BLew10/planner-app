@@ -3,6 +3,7 @@ import styles from "./InvoiceSending.module.scss";
 import InvoiceTotalStatement from "./InvoiceTotalStatement";
 import { PaymentOverviewModel } from "@/lib/models/paymentOverview";
 import Statement from "./Statement";
+import { sendEmail } from "@/utils/sendEmail";
 
 interface InvoiceSendingProps {
   paymentOverviews: Partial<PaymentOverviewModel>[] | null;
@@ -32,6 +33,7 @@ export default function InvoiceSending({
 
   const sendInvoices = async () => {
     //TODO send invoices
+    await sendEmail("brandonlewis.10@gmail.com", "Invoice", "Invoice", "Invoice");
   }
   return (
     <div className={styles.container}>

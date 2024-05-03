@@ -65,9 +65,8 @@ const PaymentDetails = ({ onNext, paymentOverview }: PaymentDetailsProps) => {
       }
       paymentOverviewStore.updateKeyValue("lateFee", paymentOverview.lateFee);
       paymentOverviewStore.updateKeyValue("lateFeePercent", paymentOverview.lateFeePercent);
-
-      if (paymentOverview.amountPaid) {
-        const prePaidPayment = paymentOverview.payments ? paymentOverview.payments[0] : null;
+      const prePaidPayment = paymentOverview.payments?.find((p) => p.wasPrepaid);
+      if (prePaidPayment) {
         paymentOverviewStore.updateKeyValue("paymentMethod", prePaidPayment?.paymentMethod);
         paymentOverviewStore.updateKeyValue("checkNumber", prePaidPayment?.checkNumber);
         paymentOverviewStore.updateKeyValue("amountPrepaid", prePaidPayment?.amount);
@@ -83,7 +82,6 @@ const PaymentDetails = ({ onNext, paymentOverview }: PaymentDetailsProps) => {
         "splitPaymentsEqually",
         paymentOverview.splitPaymentsEqually
       );
-      console
       paymentOverviewStore.updateKeyValue(
         "scheduledPayments",
         paymentOverview.scheduledPayments

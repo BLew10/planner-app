@@ -16,7 +16,7 @@ import SelectCalendars from "./SelectCalendars";
 import PurchaseDetails from "./PurchaseDetails";
 import PurchaseOverview from "./PurchaseOverview";
 import { FUTURE_YEARS } from "@/lib/constants";
-import { ToastContainer, toast} from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import { upsertPurchase } from "@/actions/purchases/upsertPurchase";
 import LoadingSpinner from "@/app/(components)/general/LoadingSpinner";
 import PaymentOverview from "./PaymentOverview";
@@ -48,7 +48,8 @@ const Purchase: React.FC<PurchaseProps> = ({
   const [year, setYear] = useState<string>(defaultYear);
   const [purchase, setPurchase] =
     useState<Partial<PurchaseOverviewModel> | null>(null);
-  const [paymentOverview, setPaymentOverview] = useState<Partial<PaymentOverviewModel> | null>(null);
+  const [paymentOverview, setPaymentOverview] =
+    useState<Partial<PaymentOverviewModel> | null>(null);
   const [step, setStep] = useState(1);
   const goToNextStep = () => {
     setStep((prevStep) => prevStep + 1);
@@ -115,21 +116,30 @@ const Purchase: React.FC<PurchaseProps> = ({
     setIsFetching(true);
     const { purchaseOverview } = purchaseStore;
     const { paymentOverview } = paymentOverviewStore;
-    const success = await upsertPurchase(purchaseOverview, paymentOverview, contact?.id as string, year, purchaseId as string);
+    const success = await upsertPurchase(
+      purchaseOverview,
+      paymentOverview,
+      contact?.id as string,
+      year,
+      purchaseId as string
+    );
     setIsFetching(false);
     if (success) {
       router.push(`/dashboard?year=${year}`);
     } else {
-      toast.error("Something went wrong. Purchase could not be saved. Contact may already have a purchase for this year.");
+      toast.error(
+        "Something went wrong. Purchase could not be saved. Contact may already have a purchase for this year."
+      );
     }
   };
 
-  if (isFetching) { 
+  if (isFetching) {
     return (
-    <section className={styles.container}>
-      <ToastContainer />
-      <LoadingSpinner />
-    </section>)
+      <section className={styles.container}>
+        <ToastContainer />
+        <LoadingSpinner />
+      </section>
+    );
   }
 
   return (
@@ -171,15 +181,14 @@ const Purchase: React.FC<PurchaseProps> = ({
         />
       )}
       {step === 4 && (
-        <PaymentDetails onNext={goToNextStep} paymentOverview={paymentOverview} />
+        <PaymentDetails
+          onNext={goToNextStep}
+          paymentOverview={paymentOverview}
+        />
       )}
-      {step === 5 && (
-        <PaymentSchedule onNext={goToNextStep} />
-      )}
+      {step === 5 && <PaymentSchedule onNext={goToNextStep} />}
 
-      {step === 6 && (
-        <PaymentOverview />
-      )}
+      {step === 6 && <PaymentOverview />}
       {step === 6 && (
         <button className={styles.back} onClick={onSave}>
           {isFetching ? "Saving..." : "Save"}

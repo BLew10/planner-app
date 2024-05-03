@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import styles from "./Dashboard.module.scss";
 import { getAllCalendars } from "@/lib/data/calendarEdition";
 import {
@@ -22,7 +22,6 @@ const currentYear = new Date().getFullYear();
 const selectFirstYear =
   ALL_YEARS.find((year) => year.value === String(currentYear)) || ALL_YEARS[0];
 const Dashboard = () => {
-  const router = useRouter();
   const [selectedYear, setSelectedYear] = useState(selectFirstYear.value);
   const [selectedCalendar, setSelectedCalendar] = useState("");
   const [selectedAdtypes, setSelectedAdtypes] = useState<
@@ -39,7 +38,7 @@ const Dashboard = () => {
     Partial<CalendarEdition>[] | null
   >([]);
   const [fetching, setFetching] = useState(true);
-
+  const searchParams = useSearchParams();
   useEffect(() => {
     const fetchFilterData = async () => {
       const calendars = await getAllCalendars();
@@ -69,6 +68,15 @@ const Dashboard = () => {
 
     fetchData();
   }, [selectedYear, selectedCalendar, advertisementTypes]);
+
+  useEffect(() => {
+    const year = searchParams.get("year");
+
+    if (year) {
+      setSelectedYear(year);
+    }
+    
+  }, [searchParams])
 
   const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedYear(e.target.value);

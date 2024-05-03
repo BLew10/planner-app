@@ -257,6 +257,17 @@ const InvoiceTotalStatement = ({
       ]);
     }
 
+    const prePaidPayment = paymentOverview?.payments?.find(
+      (payment) => payment.wasPrepaid
+    )
+    if (prePaidPayment) {
+      discounts.push([
+        "",
+        "Prepaid",
+        `-$${Number(prePaidPayment.amount).toFixed(2) || 0}`,
+      ]);
+    }
+
     transfomedData = [
       ...transfomedData,
       ["", "", "-------"],
@@ -328,7 +339,7 @@ const InvoiceTotalStatement = ({
     const dueDay = generateDaySuffix(Number(paymentOverview?.paymentDueOn));
     const firstPaymentDate =
       paymentOverview?.scheduledPayments?.[0]?.dueDate ?? null;
-    const lateFeeMessage = ` Starting ${firstPaymentDate}, a late fee of ${lateFee?.toFixed(2)} will be charged for payments not received by the ${
+    const lateFeeMessage = ` Starting ${firstPaymentDate}, a late fee of $${lateFee?.toFixed(2)} will be charged for payments not received by the ${
       paymentOverview?.paymentOnLastDay ? "last day" : dueDay
     } of each month.`;
     let footerText = `Thank you for Sponsoring your Town Planner Community Calendar. Please be aware payments are to be received no later than the ${

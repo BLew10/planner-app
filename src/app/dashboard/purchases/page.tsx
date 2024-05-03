@@ -8,11 +8,11 @@ import Table from "@/app/(components)/general/Table";
 import { getPurchaseTableData, PurchaseTableData } from "@/lib/data/purchase";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import deletePurchase from "@/actions/purchases/deletePurchase";
-import SimpleModal from "@/app/(components)/general/SimpleModal";
 import PurchaseDetailsModal from "./PurchaseDetailsModal";
 import DeleteButton from "@/app/(components)/general/DeleteButton";
 import { ALL_YEARS } from "@/lib/constants";
 import { toast, ToastContainer } from "react-toastify";
+import { formatDateToString } from "@/lib/helpers/formatDateToString";
 const columns = [
   {
     name: "Company Name",
@@ -22,6 +22,18 @@ const columns = [
     name: "Purchase Total",
     size: "default",
   },
+  {
+    name: "Purchased On",
+    size: "default",
+  },
+  {
+    name: "Total with Discounts and Late Fees",
+    size: "default",
+  },
+   {
+    name: "Amount Paid",
+    size: "default",
+   },
   {
     name: "Calendar Editions",
     size: "default",
@@ -93,6 +105,9 @@ const PurchasesPage = () => {
         {p.companyName}
       </button>,
       `$${p.amountOwed?.toFixed(2)}`,
+      p.purchasedOn,
+      `$${p.total?.toFixed(2)}`,
+      `$${p.amountPaid?.toFixed(2)}`,
       p.calendarEditions,
       <div className={styles.modWrapper} key={p.id}>
         {!p.paymentOverviewId ? (

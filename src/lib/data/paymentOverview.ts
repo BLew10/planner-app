@@ -94,7 +94,7 @@ export const flagLatePayments = async (userId: string) => {
   });
   if (user) {
     const alreadyFlaggedToday = billingUpdatedAlready(user?.billingUpdated);
-    if (!alreadyFlaggedToday) {
+    if (true) {
       await prisma.user.update({
         where: {
           id: userId,
@@ -117,28 +117,13 @@ export const flagLatePayments = async (userId: string) => {
       for (const payment of scheduledPayments) {
         const paymentDueDate = new Date(payment.dueDate);
         if (isLate(paymentDueDate)) {
-          const paymentOverview = await prisma.paymentOverview.findFirst({
-            where: {
-              id: payment.paymentOverviewId,
-            },
-          });
-          let lateFee = 0;
-
-          if (paymentOverview?.lateFee && payment.lateFeeWaived === false || !payment.lateFeeAddedToNet) {
-            lateFee = Number(paymentOverview?.lateFee);
-          } else if (paymentOverview?.lateFeePercent && payment.lateFeeWaived === false || !payment.lateFeeAddedToNet) {
-            lateFee =
-              Number(paymentOverview?.totalSale) *
-              (Number(paymentOverview?.lateFeePercent) / 100);
-          }
-
           await prisma.paymentOverview.update({
             where: {
               id: payment.paymentOverviewId,
             },
             data: {
               net: {
-                increment: lateFee,
+                increment: payment.lateFeeWaived ? 0 :Number(payment.lateFee || 0),
               },
             },
           });

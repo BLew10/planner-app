@@ -60,17 +60,15 @@ const ContactPurchasesOverview = ({
   };
 
   const onSubmit = async () => {
-    if (selectedPayments.length > 0) {
       const result = await updateSchedulePaymentLateFeesByYear(
         selectedPayments,
         selectedYear
       );
       if (result) {
-        toast.success("Successfully waived late fees!");
+        toast.success("Change successfully saved!");
       } else {
         toast.error("Failed to waive late fees! Please try again.");
       }
-    }
   };
 
   return (

@@ -3,7 +3,9 @@ import { Fragment, useEffect, useState } from "react";
 import styles from "./PaymentScheduleModal.module.scss";
 import { getPaymentOverviewById } from "@/lib/data/paymentOverview";
 import LoadingSpinner from "@/app/(components)/general/LoadingSpinner";
+import { ScheduledPayment } from "@prisma/client";
 import { PaymentOverviewModel } from "@/lib/models/paymentOverview";
+import { PaymentModel } from "@/lib/models/payment";
 
 interface PaymentScheduleModalProps {
   isOpen: boolean;
@@ -21,11 +23,41 @@ export default function PaymentScheduleModal({
   const [paymentOverview, setPaymentOverviewData] =
     useState<Partial<PaymentOverviewModel> | null>(null);
   const [isFetching, setIsFetching] = useState(false);
+  const [scheduledPayments, setScheduledPayments] = useState<ScheduledPayment[] | null>(null);
+  const [paymentsMade, setPaymentsMade] = useState<Partial<PaymentModel>[] | null>(null);
+
+  const sortByDateScheduledPayments = (payments: ScheduledPayment[] | null) => {
+    if (payments) {
+      return payments.sort((a, b) => {
+        if (a.dueDate && b.dueDate) {
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        }
+        return 0;
+      });
+    }
+    return [];
+  }
+
+  const sortByDatePaymentsMade = (payments: Partial<PaymentModel>[] | null) => {
+    if (payments) {
+      return payments.sort((a, b) => {
+        if (a.paymentDate && b.paymentDate) {
+          return new Date(a.paymentDate).getTime() - new Date(b.paymentDate).getTime();
+        }
+        return 0;
+      });
+    }
+    return [];
+  }
   useEffect(() => {
     const fetchData = async () => {
       setIsFetching(true);
       const data = await getPaymentOverviewById(paymentId);
       setPaymentOverviewData(data || null);
+      if (data) {
+        setScheduledPayments(sortByDateScheduledPayments(paymentOverview?.scheduledPayments || null));
+        setPaymentsMade(sortByDatePaymentsMade(paymentOverview?.payments || null));
+      }
       setIsFetching(false);
     };
     fetchData();
@@ -94,7 +126,7 @@ export default function PaymentScheduleModal({
                             </tr>
                           </thead>
                           <tbody>
-                            {paymentOverview.scheduledPayments?.map(
+                            {sortByDateScheduledPayments(paymentOverview?.scheduledPayments || null).map(
                               (payment) => (
                                 <tr
                                   className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
@@ -148,7 +180,7 @@ export default function PaymentScheduleModal({
                               </tr>
                             </thead>
                             <tbody>
-                              {paymentOverview.payments?.map((payment) => (
+                              {sortByDatePaymentsMade(paymentOverview?.payments || null).map((payment) => (
                                 <tr
                                   className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
                                   key={payment.id}
@@ -157,7 +189,7 @@ export default function PaymentScheduleModal({
                                     {payment.paymentDate}
                                   </td>
                                   <td className="px-6 py-4">
-                                    {payment.paymentMethod}
+                                    {payment.paymentMethod || "Deposit"} {payment.wasPrepaid && "- Prepayment"}
                                   </td>
                                   <td className="px-6 py-4">
                                     {payment.checkNumber}
