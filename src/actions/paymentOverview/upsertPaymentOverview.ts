@@ -179,6 +179,7 @@ export async function upsertPaymentOverview(
       } else {
         await prisma.payment.create({
           data: {
+            userId: session.user.id,
             paymentOverviewId: paymentOverview.id,
             contactId: contactId as string,
             amount: amountPrepaid,

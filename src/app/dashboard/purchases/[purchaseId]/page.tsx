@@ -1,3 +1,5 @@
+import React, { Suspense } from "react";
+import LoadingSpinner from "@/app/(components)/general/LoadingSpinner";
 import PurchaseForm from "./PurchaseForm";
 import styles from "./page.module.scss";
 import { getAllAdvertisementTypes } from "@/lib/data/advertisementType";
@@ -23,13 +25,15 @@ const PurchaseOverviewPage = async ({
   }
 
   return (
-    <section className={styles.container}>
-      <PurchaseForm
-        advertisementTypes={advertisementTypes}
-        purchaseId={purchaseId}
-        calendars={calendars}
-      />
-    </section>
+    <Suspense fallback={<LoadingSpinner />}>
+      <section className={styles.container}>
+        <PurchaseForm
+          advertisementTypes={advertisementTypes}
+          purchaseId={purchaseId}
+          calendars={calendars}
+        />
+      </section>
+    </Suspense>
   );
 };
 
