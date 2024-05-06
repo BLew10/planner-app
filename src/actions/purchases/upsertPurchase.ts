@@ -20,7 +20,6 @@ export async function upsertPurchase(
   const calendarIds = Object.keys(purchaseData);
   try {
     const total = calculateTotalCharges(purchaseData);
-    console.log("total", total);
 
     const result = await prisma.$transaction(async (prismaClient) => {
       let purchaseOverview = await prismaClient.purchaseOverview.upsert({

@@ -1,5 +1,4 @@
 "use client";
-export const dynamic = 'force-dynamic'
 import React, { useEffect, useState } from "react";
 import { Suspense } from "react";
 import PrintInventory from "./PrintInventory";

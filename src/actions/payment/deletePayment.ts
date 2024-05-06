@@ -4,7 +4,6 @@ import prisma from "@/lib/prisma/prisma";
 // TODO: update payment schedules based off deleted payment
 const deletePayment = async (paymentId: string) => {
   try {
-    console.log("deleting payment", paymentId);
     const result = await prisma.$transaction(async (prisma) => {
 
       const allocations = await prisma.paymentAllocation.findMany({
@@ -13,9 +12,7 @@ const deletePayment = async (paymentId: string) => {
         },
       });
 
-      console.log("allocations", allocations);
       for (const allocation of allocations) {
-        console.log("allocation", allocation);
         await prisma.scheduledPayment.update({
           where: {
             id: allocation.scheduledPaymentId,

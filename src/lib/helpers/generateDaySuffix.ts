@@ -1,5 +1,4 @@
 export const generateDaySuffix = (day: number): string => {
-  console.log("day", day);
     let suffix = "th";
     if (day === 1 || day === 21 || day === 31) {
       suffix = "st";

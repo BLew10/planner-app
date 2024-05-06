@@ -522,7 +522,6 @@ export const getPurchaseById = async (
 
 export const getTakenSlots = async (year: string, calendarId: string, contactId: string) => {
   try {
-    console.log("getTakenSlots", year, calendarId, contactId);
     const slots = await prisma.advertisementPurchaseSlot.findMany({
       where: {
         isDeleted: false,

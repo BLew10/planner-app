@@ -118,7 +118,6 @@ export const flagLatePayments = async (userId: string) => {
       for (const payment of scheduledPayments) {
         const paymentDueDate = new Date(payment.dueDate);
         if (isLate(paymentDueDate)) {
-          console.log("flagging late payment", payment.id);
           await prisma.paymentOverview.update({
             where: {
               id: payment.paymentOverviewId,

@@ -26,7 +26,7 @@ const generateStatementTable = (
   }
 
   const latePaymentCount = paymentOverview?.scheduledPayments?.filter((payment) => payment.isLate && !payment.lateFeeWaived);
-  
+
   let balance = Number(paymentOverview?.net || 0) + Number(prePayment?.amount || 0) - (latePaymentCount?.length || 0) * lateFee;
   const tableData = [];
   const firstRow = [
@@ -120,7 +120,6 @@ const getPastDueAmount = (
     )
     .forEach((scheduled: ScheduledPayment) => {
       pastDueAmount += Number(scheduled.amount) - Number(scheduled.amountPaid) || 0;
-      console.log("pastDueAmount", scheduled.lateFeeWaived, scheduled.lateFee, scheduled.lateFeeAddedToNet);
       if (
         !scheduled.lateFeeWaived &&
         scheduled.lateFee &&
