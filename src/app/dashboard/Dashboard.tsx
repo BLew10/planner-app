@@ -4,9 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import styles from "./Dashboard.module.scss";
 import { getAllCalendars } from "@/lib/data/calendarEdition";
-import {
-  getAllAdvertisementTypes,
-} from "@/lib/data/advertisementType";
+import { getAllAdvertisementTypes } from "@/lib/data/advertisementType";
 import { getAllSlotsByYearAndCalendarId } from "@/lib/data/purchase";
 import SelectInput from "../(components)/form/SelectInput";
 import { ALL_YEARS } from "@/lib/constants";
@@ -75,8 +73,7 @@ const Dashboard = () => {
     if (year) {
       setSelectedYear(year);
     }
-    
-  }, [searchParams])
+  }, [searchParams]);
 
   const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedYear(e.target.value);
@@ -85,6 +82,10 @@ const Dashboard = () => {
   const handleCalendarChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCalendar(e.target.value);
   };
+
+  if (fetching) {
+    return <LoadingSpinner />;
+  }
 
   if (!calendarData?.length) {
     return (
@@ -118,15 +119,15 @@ const Dashboard = () => {
     <AnimateWrapper>
       <div className={styles.container}>
         <div className={styles.printWrapper}>
-        <a
-          className={styles.printButton}
-          href={`/print?year=${selectedYear}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Print Inventory
-        </a>
-      </div>
+          <a
+            className={styles.printButton}
+            href={`/print?year=${selectedYear}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Print Inventory
+          </a>
+        </div>
         <div className={styles.filterWrapper}>
           <div className={styles.selectWrapper}>
             <SelectInput
@@ -167,14 +168,10 @@ const Dashboard = () => {
             </button>
           </div>
         </div>
-        {fetching ? (
-          <LoadingSpinner />
-        ) : (
-          <CalendarInventory
-            slots={slotData}
-            advertisementTypes={selectedAdtypes}
-          />
-        )}
+        <CalendarInventory
+          slots={slotData}
+          advertisementTypes={selectedAdtypes}
+        />
       </div>
     </AnimateWrapper>
   );

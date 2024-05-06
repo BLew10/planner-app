@@ -40,10 +40,7 @@ const columns = [
   },
 ];
 
-const currentYear = new Date().getFullYear();
-const defaultYear =
-  ALL_YEARS.find((year) => year.value === String(currentYear))?.value ||
-  ALL_YEARS[0].value;
+const currentYear = new Date().getFullYear().toString();
 const PaymentsPage = () => {
   const [showPaymentScheduleModal, setShowPaymentScheduleModal] =
     useState(false);
@@ -52,7 +49,7 @@ const PaymentsPage = () => {
     id: "",
     companyName: "",
   });
-  const [year, setYear] = useState(defaultYear);
+  const [year, setYear] = useState(currentYear);
   const searchParams = useSearchParams();
   const successNotify = () => toast.success("Successfully Deleted");
   const errorNotify = () =>
