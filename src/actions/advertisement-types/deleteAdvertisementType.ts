@@ -39,24 +39,6 @@ const deleteAdvertisementType = async (advertisementId: string) => {
       });
     }
 
-    const deletePurchases = await prisma.advertisementPurchase.deleteMany({
-      where: {
-        advertisementId,
-        purchaseOverview: {
-          paymentId: null
-        }
-      }
-    })
-
-    const deleteSlots = await prisma.advertisementPurchaseSlot.deleteMany({
-      where: {
-        advertisementId,
-        purchaseOverview: {
-          paymentId: null
-        }
-      }
-    })
-
     return true
   } catch (error: any) {
     console.error("Error deleting advertisement type", error);
