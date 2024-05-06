@@ -26,3 +26,14 @@
   gap: 10px;
   padding: 20px;
 }
+
+.company {
+  font-size: 0.7rem;
+  color: var(--primary-green-dark);
+}
+
+.taken {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}

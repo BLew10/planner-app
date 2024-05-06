@@ -23,17 +23,17 @@ const columns = [
     size: "default",
   },
   {
+    name: "Total with Discounts and Late Fees",
+    size: "default",
+  },
+  {
     name: "Purchased On",
     size: "default",
   },
   {
-    name: "Total with Discounts and Late Fees",
-    size: "default",
-  },
-   {
     name: "Amount Paid",
     size: "default",
-   },
+  },
   {
     name: "Calendar Editions",
     size: "default",
@@ -84,7 +84,10 @@ const PurchasesPage = () => {
     setShowPurchaseModal(true);
   };
 
-  const onDeletePurchase = async (purchaseId: string, paymentOverviewId: string) => {
+  const onDeletePurchase = async (
+    purchaseId: string,
+    paymentOverviewId: string
+  ) => {
     const deleted = await deletePurchase(purchaseId, paymentOverviewId);
     const newPurchases = purchases?.filter((p) => p.id !== purchaseId);
     setPurchases(newPurchases || null);
@@ -105,8 +108,8 @@ const PurchasesPage = () => {
         {p.companyName}
       </button>,
       `$${p.amountOwed?.toFixed(2)}`,
-      p.purchasedOn,
       `$${p.total?.toFixed(2)}`,
+      p.purchasedOn,
       `$${p.amountPaid?.toFixed(2)}`,
       p.calendarEditions,
       <div className={styles.modWrapper} key={p.id}>

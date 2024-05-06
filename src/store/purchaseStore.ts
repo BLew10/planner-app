@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { AdvertisementPurchaseModel } from "@/lib/models/advertisementPurchase";
 
 export interface PurchaseSlot {
   id?: string | null;

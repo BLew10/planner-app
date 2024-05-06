@@ -19,6 +19,7 @@ export async function upsertPayment(data: UpsertPaymentData) {
   try {
     const session = await auth();
     if (!session || !session.user?.id) return false;
+    const userId = session?.user?.id;
 
     const {
       id,
@@ -73,6 +74,7 @@ export async function upsertPayment(data: UpsertPaymentData) {
         // Create new payment
         upsertedPayment = await prismaClient.payment.create({
           data: {
+            userId: userId,
             contactId,
             amount,
             paymentMethod,

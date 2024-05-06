@@ -7,20 +7,25 @@ import CheckboxGroup from "@/app/(components)/form/CheckboxGroup";
 import { AdvertisementPurchaseData } from "./PurchaseDetails";
 import { Dialog, Transition } from "@headlessui/react";
 import { MONTHS } from "@/lib/constants";
+import { getTakenSlots } from "@/lib/data/purchase";
 
 interface PurchaseNonDayTypeProps {
   data: AdvertisementPurchaseData | undefined | null;
   closeModal: () => void;
   isOpen: boolean;
+  year: string;
+  contactId: string
 }
 
 const PurchaseNonDayType = ({
   data,
   closeModal,
   isOpen,
+  year,
+  contactId
 }: PurchaseNonDayTypeProps) => {
   const [options, setOptions] = useState<
-    Array<{ label: string; value: string; checked: boolean }[]>
+    Array<{ label: string | React.ReactNode ; value: string; checked: boolean, disabled: boolean }[]>
   >(MONTHS.map(() => []));
   const purchaseStore = usePurchasesStore();
 
@@ -38,6 +43,7 @@ const PurchaseNonDayType = ({
             label: `${i + 1}`,
             value: `${i + 1}`,
             checked: false,
+            disabled: false,
           }))
         )
       );
@@ -58,10 +64,41 @@ const PurchaseNonDayType = ({
             storeData?.slots?.some(
               (slot) => slot.slot === i + 1 && slot.month === monthIndex + 1
             ) || false,
+          disabled: false,
         }))
       )
     );
   }, [data, purchaseStore.purchaseOverview]);
+
+  useEffect(() => {
+    const fetchTakenSlots = async () => {
+      if (!data) return;
+      const { adId, calendarId } = data; // Assuming these are provided
+      if (!adId || !calendarId) {
+        return;
+      }
+      const takenSlots = await getTakenSlots(year, calendarId, contactId);
+      if (!takenSlots) return;
+      setOptions((prevOptions) =>
+        prevOptions.map((monthOpts, monthIndex) => {
+          return monthOpts.map((opt, slotIndex) => {
+            const alreadyTaken = takenSlots.find(
+              (slot) =>
+                slot.month === monthIndex + 1 && slot.slot === Number(opt.value)
+            ) ;
+            return {
+              ...opt,
+              label: alreadyTaken ? <div className={styles.taken}><span>{slotIndex + 1} - </span> <span className={styles.company}>{alreadyTaken?.contact?.contactContactInformation?.company}</span></div>: opt.label,
+              checked: !!alreadyTaken || opt.checked,
+              disabled: !!alreadyTaken,
+            };
+          });
+        })
+      );
+    };
+
+    fetchTakenSlots();
+  }, [year, contactId, data]);
 
   const handleCheckboxChange = (
     monthIndex: number,
@@ -94,9 +131,9 @@ const PurchaseNonDayType = ({
       .map((monthOpts, monthIndex) => ({
         month: monthIndex + 1,
         slots: monthOpts
-          .filter((opt) => opt.checked)
+          .filter((opt) => opt.checked && !opt.disabled)
           .map((opt) => ({
-            slot: parseInt(opt.label),
+            slot: Number(opt.value),
             date: null,
           })),
       }))

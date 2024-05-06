@@ -9,6 +9,7 @@ interface CheckboxInputProps {
   checked?: boolean;
   isReadOnly?: boolean;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
 }
 
 const CheckboxInput = ({
@@ -19,6 +20,7 @@ const CheckboxInput = ({
   onChange,
   isReadOnly = false,
   labelLocation = "right",
+  disabled = false,
 }: CheckboxInputProps) => {
   const [isChecked, setIsChecked] = useState<boolean>(checked || false);
 
@@ -39,7 +41,7 @@ const CheckboxInput = ({
             onChange(e);
           }
         }}
-        disabled={isReadOnly}
+        disabled={isReadOnly || disabled}
       />
       {labelLocation === "right" && <label className={styles.label}>{label}</label>}
     </div>

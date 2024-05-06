@@ -2,6 +2,8 @@
 
 import prisma from "@/lib/prisma/prisma";
 import { PaymentModel } from "../models/payment";
+import { flagLatePayments } from "./paymentOverview";
+import { auth } from "@/auth";
 
 export const getPaymentById = async (
   id: string
@@ -27,8 +29,12 @@ export const getPaymentsByYear = async (
   year: String
 ) => {
   try {
+    const session = await auth();
+    const userId = session?.user?.id;
+    await flagLatePayments(userId);
     const payments = await prisma.payment.findMany({
       where: {
+        userId,
         purchase: {
           year: Number(year),
         }

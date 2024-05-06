@@ -7,6 +7,7 @@ export interface ScheduledPayment {
   amount: number | null;
   isPaid?: boolean;
   paymentDate?: string;
+  checked?: boolean;
 }
 
 export interface PaymentOverview {

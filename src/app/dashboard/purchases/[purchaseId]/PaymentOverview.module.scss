@@ -42,6 +42,8 @@
     display: flex;
     gap: 1rem;
     align-items: center;
+    justify-content: space-between;
+    width: 250px;
 }
 
 .infoName {
@@ -55,6 +57,27 @@
     font-size: 0.9rem;
 }
 
+.infoValueDiscount {
+    color: var(--primary-red);
+    font-size: 0.9rem;
+}
+
 .submitButton {
     @include submit-button;
+}
+
+.title {
+    color: var(--text-color);
+    font-weight: 600;
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+
+.net {
+    padding-top: 20px;
+    padding-bottom: 20px;
+    border-top: 1px solid #ccc;
 }

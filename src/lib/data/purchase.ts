@@ -20,7 +20,7 @@ export interface Purchase {
     id: string;
     charge: number;
     quantity: number;
-    calendarName: string; 
+    calendarName: string;
     advertisement: {
       id: string;
       name: string;
@@ -70,7 +70,7 @@ export const getPurchaseByContactIdAndYear = async (
         include: {
           scheduledPayments: true,
           payments: true,
-        }
+        },
       },
     },
   });
@@ -123,11 +123,10 @@ export const getPurchaseTableData = async (
             where: {
               isLate: true,
               lateFeeWaived: false,
-            lateFeeAddedToNet: true,
-            
-            }
+              lateFeeAddedToNet: true,
+            },
           },
-        }
+        },
       },
       calendarEditions: {
         select: {
@@ -270,7 +269,6 @@ export interface PurchaseInfo extends PurchaseOverview {
   calendarEditions: CalendarEdition[] | null;
 }
 
-
 export const getPurchasesByContactId = async (
   contactId: string | undefined = "-1"
 ): Promise<Partial<Purchase>[][] | null> => {
@@ -343,6 +341,7 @@ export interface SlotInfo {
   date?: string;
   contactCompany?: string;
   added?: boolean;
+  advertisementId?: string;
 }
 
 export const getAllSlotsByYearAndCalendarId = async (
@@ -418,7 +417,7 @@ export interface CalendarSlots {
   ads: Record<string, AdvertisementSlots>;
 }
 export const getAllSlotsFromPurchase = async (
-  purchaseId: string,
+  purchaseId: string
 ): Promise<Record<string, CalendarSlots> | null> => {
   const session = await auth();
   if (!session || !purchaseId) {
@@ -462,20 +461,21 @@ export const getAllSlotsFromPurchase = async (
         if (!groupedSlots[calendarId]) {
           groupedSlots[calendarId] = {
             name: calendarName || "",
-            ads: {}
+            ads: {},
           };
         }
         if (!groupedSlots[calendarId].ads[adId]) {
           groupedSlots[calendarId].ads[adId] = {
             name: adName || "",
-            slots: []
+            slots: [],
           };
         }
         groupedSlots[calendarId].ads[adId].slots.push({
           month: slot.month || 0,
           slot: slot.slot || 0,
           date: slot.date || "",
-          contactCompany: companyName || ""
+          contactCompany: companyName || "",
+          advertisementId: slot.advertisementPurchase?.advertisementId || "",
         });
       }
     });
@@ -487,15 +487,15 @@ export const getAllSlotsFromPurchase = async (
   }
 };
 
-
-export const getPurchaseById = async (id: string): Promise<Partial<PurchaseOverviewModel> | null> => {
+export const getPurchaseById = async (
+  id: string
+): Promise<Partial<PurchaseOverviewModel> | null> => {
   const session = await auth();
   if (!session) {
     return null;
   }
 
   try {
-    
     const purchase = await prisma.purchaseOverview.findUnique({
       where: {
         id,
@@ -504,9 +504,9 @@ export const getPurchaseById = async (id: string): Promise<Partial<PurchaseOverv
         contact: {
           include: {
             contactContactInformation: true,
-          }
+          },
         },
-      }
+      },
     });
 
     if (!purchase) {
@@ -518,4 +518,43 @@ export const getPurchaseById = async (id: string): Promise<Partial<PurchaseOverv
     console.error(`Error getting purchase ${id}: ${error}`);
     return null;
   }
-}
+};
+
+export const getTakenSlots = async (year: string, calendarId: string, contactId: string) => {
+  try {
+    console.log("getTakenSlots", year, calendarId, contactId);
+    const slots = await prisma.advertisementPurchaseSlot.findMany({
+      where: {
+        isDeleted: false,
+        year: Number(year),
+        calendarId,
+        contactId: {
+          not: contactId
+        }
+      },
+      select: {
+        id: true,
+        slot: true,
+        date: true,
+        month: true,
+        contact: {
+          select: {
+            id: true,
+            contactContactInformation: {
+              select: {
+                company: true,
+              },
+            },
+          },
+        }
+      },
+    });
+
+    return slots;
+  } catch (error) {
+    console.error(
+      `Error getting slots for calendar ${calendarId} and year ${year}: ${error}`
+    );
+    return null;
+  }
+};

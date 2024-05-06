@@ -84,7 +84,7 @@ const PaymentDetails = ({ onNext, paymentOverview }: PaymentDetailsProps) => {
       );
       paymentOverviewStore.updateKeyValue(
         "scheduledPayments",
-        paymentOverview.scheduledPayments
+        paymentOverview.scheduledPayments?.map((s) => ({ ...s, checked: true }))
       );
       paymentOverviewStore.updateKeyValue("contactId", paymentOverview.contactId);
       }

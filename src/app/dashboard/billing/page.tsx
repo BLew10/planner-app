@@ -12,6 +12,7 @@ import { ScheduledPayment } from "@prisma/client";
 import SimpleModal from "@/app/(components)/general/SimpleModal";
 import SelectInput from "@/app/(components)/form/SelectInput";
 import PaymentScheduleModal from "./PaymentScheduleModal";
+import { ToastContainer } from "react-toastify";
 
 const columns = [
   {
@@ -19,24 +20,25 @@ const columns = [
     size: "default",
   },
   {
-    name: "Purchased On",
+    name: "Email",
     size: "default",
+    wrap: true,
   },
   {
     name: "Next Payment Due On",
     size: "default",
   },
   {
+    name: "Purchased On",
+    size: "medium",
+  },
+  {
     name: "Balance",
-    size: "default",
+    size: "medium",
   },
   {
     name: "Invoice Number",
-    size: "default",
-  },
-  {
-    name: "Action",
-    size: "default",
+    size: "medium",
   },
 ];
 
@@ -44,7 +46,10 @@ const getNextPaymentDate = (scheduledPayments: ScheduledPayment[] | null) => {
   if (scheduledPayments) {
     for (const scheduledPayment of scheduledPayments || []) {
       if (!scheduledPayment.isPaid)
-      return { dueDate: scheduledPayment.dueDate, isLate: scheduledPayment.isLate };
+        return {
+          dueDate: scheduledPayment.dueDate,
+          isLate: scheduledPayment.isLate,
+        };
     }
   }
   return { dueDate: "", isLate: false };
@@ -112,38 +117,61 @@ const BillingPage = () => {
           key={p.id}
           dataset-search={`${p.contact?.contactContactInformation?.firstName} ${p.contact?.contactContactInformation?.lastName} ${p.contact?.contactContactInformation?.company}`}
         >
-          <CheckboxInput
-            name="payments"
-            value={p.id}
-            checked={selectedPayments?.some((payment) => payment.id === p.id)}
-            onChange={handleSelectedPayment}
-            label={
-              <p className={styles.contactName}>
-                 <span>
-                  {p.contact?.contactContactInformation?.firstName} {" "}
-                  {p.contact?.contactContactInformation?.lastName}
-                </span>
-                <span>{p.contact?.contactContactInformation?.company}</span>
-              </p>
-            }
-          />
+          {p.contact?.contactTelecomInformation?.email ? (
+            <CheckboxInput
+              name="payments"
+              value={p.id}
+              checked={selectedPayments?.some((payment) => payment.id === p.id)}
+              onChange={handleSelectedPayment}
+              label={
+                <p
+                  className={styles.contactName}
+                  onClick={() => onPaymentClick(p.id as string)}
+                >
+                  <span>
+                    {p.contact?.contactContactInformation?.firstName}{" "}
+                    {p.contact?.contactContactInformation?.lastName}
+                  </span>
+                  <span>{p.contact?.contactContactInformation?.company}</span>
+                </p>
+              }
+            />
+          ) : (
+            <p
+              className={styles.contactName}
+              onClick={() => onPaymentClick(p.id as string)}
+            >
+              <span>
+                {p.contact?.contactContactInformation?.firstName}{" "}
+                {p.contact?.contactContactInformation?.lastName}
+              </span>
+              <span>{p.contact?.contactContactInformation?.company}</span>
+            </p>
+          )}
         </div>,
-        formatDateToString(p.purchase?.createdAt as Date),
+        <div
+          key={p.id}
+          dataset-search={`${p.contact?.contactContactInformation?.firstName} ${p.contact?.contactContactInformation?.lastName} ${p.contact?.contactContactInformation?.company}`}
+        >
+          {p.contact?.contactTelecomInformation?.email ? (
+            <p className={styles.email}>
+              {p.contact?.contactTelecomInformation?.email}
+            </p>
+          ) : (
+            <p className={styles.noEmail}>
+              No Email Provided, Please Add Email
+            </p>
+          )}
+        </div>,
         <p
-          className={nextPaymentDate.isLate  ? styles.latePayment : ""}
+          className={nextPaymentDate.isLate ? styles.latePayment : ""}
           dataset-search={nextPaymentDate.dueDate}
         >
-          {nextPaymentDate.dueDate}{" "}
-          {nextPaymentDate.isLate ? "- Late!" : ""}
+          {nextPaymentDate.dueDate} {nextPaymentDate.isLate ? "- Late!" : ""}
         </p>,
+        formatDateToString(p.purchase?.createdAt as Date),
         `$${balance.toFixed(2)}`,
         p.invoiceNumber,
-        <button
-          onClick={() => onPaymentClick(p.id as string)}
-          className={styles.paymentScheduleButton}
-        >
-          View Payment Details
-        </button>,
       ];
     });
     setTableData(newTableData);
@@ -175,6 +203,7 @@ const BillingPage = () => {
 
   return (
     <div className={styles.container}>
+      <ToastContainer />
       <SimpleModal
         isOpen={openModal}
         closeModal={() => setOpenModal(false)}
@@ -230,6 +259,7 @@ const BillingPage = () => {
         <InvoiceSending
           paymentOverviews={selectedPayments}
           invoiceType={invoiceType}
+          onSendInvoices={() => setStep((prev) => prev - 1)}
         />
       )}
     </div>

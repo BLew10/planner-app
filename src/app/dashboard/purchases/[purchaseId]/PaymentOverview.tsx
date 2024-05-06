@@ -14,14 +14,14 @@ const PaymentOverview = () => {
       <h2 className={styles.title}>Payment Overview</h2>
       <div className={styles.infoContainer}>
         <div className={styles.info}>
-          <p className={styles.infoName}>Total Sale:</p>
+          <p className={`${styles.infoName} ${styles.totalSale}`}>Total Sale:</p>
           <p className={styles.infoValue}>${paymentOverviewStore.paymentOverview?.totalSale}</p>
         </div>
 
         {paymentOverviewStore.paymentOverview?.additionalDiscount1 && (
           <div className={styles.info}>
             <p className={styles.infoName}>Additional Discount 1:</p>
-            <p className={styles.infoValue}>
+            <p className={styles.infoValueDiscount}>
               -${paymentOverviewStore.paymentOverview?.additionalDiscount1}
             </p>
           </div>
@@ -30,7 +30,7 @@ const PaymentOverview = () => {
         {paymentOverviewStore.paymentOverview?.additionalDiscount2 && (
           <div className={styles.info}>
             <p className={styles.infoName}>Additional Discount 2:</p>
-            <p className={styles.infoValue}>
+            <p className={styles.infoValueDiscount}>
               {" "}
               -${paymentOverviewStore.paymentOverview?.additionalDiscount2}
             </p>
@@ -40,7 +40,7 @@ const PaymentOverview = () => {
         {paymentOverviewStore.paymentOverview?.additionalSales1 && (
           <div className={styles.info}>
             <p className={styles.infoName}>Additional Sales 1:</p>
-            <p className={styles.infoValue}>
+            <p className={styles.infoValueDiscount}>
               -${paymentOverviewStore.paymentOverview?.additionalSales1}
             </p>
           </div>
@@ -49,7 +49,7 @@ const PaymentOverview = () => {
         {paymentOverviewStore.paymentOverview?.additionalSales2 && (
           <div className={styles.info}>
             <p className={styles.infoName}>Additional Sales 2:</p>
-            <p className={styles.infoValue}>
+            <p className={styles.infoValueDiscount}>
               -${paymentOverviewStore.paymentOverview?.additionalSales2}
             </p>
           </div>
@@ -58,14 +58,14 @@ const PaymentOverview = () => {
         {paymentOverviewStore.paymentOverview?.trade && (
           <div className={styles.info}>
             <p className={styles.infoName}>Trade:</p>
-            <p className={styles.infoValue}>-${paymentOverviewStore.paymentOverview?.trade}</p>
+            <p className={styles.infoValueDiscount}>-${paymentOverviewStore.paymentOverview?.trade}</p>
           </div>
         )}
 
         {paymentOverviewStore.paymentOverview?.earlyPaymentDiscount && (
           <div className={styles.info}>
             <p className={styles.infoName}>Early Payment Discount:</p>
-            <p className={styles.infoValue}>
+            <p className={styles.infoValueDiscount}>
               -${paymentOverviewStore.paymentOverview?.earlyPaymentDiscount}
             </p>
           </div>
@@ -74,7 +74,7 @@ const PaymentOverview = () => {
         {paymentOverviewStore.paymentOverview?.earlyPaymentDiscountPercent && (
           <div className={styles.info}>
             <p className={styles.infoName}>Early Payment Discount Percent:</p>
-            <p className={styles.infoValue}>
+            <p className={styles.infoValueDiscount}>
               -${paymentOverviewStore.paymentOverview?.earlyPaymentDiscountPercent}
             </p>
           </div>
@@ -83,13 +83,13 @@ const PaymentOverview = () => {
         {paymentOverviewStore.paymentOverview?.amountPrepaid && (
           <div className={styles.info}>
             <p className={styles.infoName}>Amount Prepaid:</p>
-            <p className={styles.infoValue}>
+            <p className={styles.infoValueDiscount}>
               -${paymentOverviewStore.paymentOverview?.amountPrepaid}
             </p>
           </div>
         )}
 
-        <div className={styles.info}>
+        <div className={`${styles.info} ${styles.net}`}>
           <p className={styles.infoName}>Net:</p>
           <p className={styles.infoValue}>${paymentOverviewStore.paymentOverview?.net}</p>
         </div>

@@ -23,6 +23,7 @@ model User {
   purchases        PurchaseOverview[]
   paymentOverviews PaymentOverview[]
   billingUpdated   DateTime           @default(now())
+  Payment          Payment[]
 }
 
 model Account {
@@ -223,6 +224,8 @@ model ScheduledPayment {
 
 model Payment {
   id                String              @id @default(uuid())
+  userId            String
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   contactId         String
   contact           Contact?            @relation(fields: [contactId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   paymentOverviewId String

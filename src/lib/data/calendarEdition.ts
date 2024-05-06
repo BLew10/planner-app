@@ -23,6 +23,7 @@ export const getCalendarById = async (
       select: {
         id: true,
         name: true,
+        code: true
       },
     });
 
@@ -52,6 +53,7 @@ export const getAllCalendars = async (): Promise<
       select: {
         id: true,
         name: true,
+        code: true
       },
     });
 

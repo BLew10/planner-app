@@ -67,7 +67,6 @@ const Purchase: React.FC<PurchaseProps> = ({
     if (purchase) {
       setPurchase(purchase);
       setPaymentOverview(purchase.paymentOverview || null);
-      console.log(purchase);
     } else {
       setPaymentOverview(null);
       setPurchase(null);
@@ -170,6 +169,7 @@ const Purchase: React.FC<PurchaseProps> = ({
           purchase={purchase}
           onNext={goToNextStep}
           calendars={calendars}
+          contactId={contact?.id as string}
           year={year}
         />
       )}

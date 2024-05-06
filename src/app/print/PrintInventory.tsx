@@ -11,6 +11,7 @@ import LoadingSpinner from "../(components)/general/LoadingSpinner";
 import AnimateWrapper from "../(components)/general/AnimateWrapper";
 import CalendarInventory from "../dashboard/CalendarInventory";
 import { SlotInfo } from "@/lib/data/purchase";
+import createCalendarPDF from "./(hooks)/useSlotsPDF";
 
 const defaultYear = "2023";
 interface PrintInventoryProps {
@@ -66,7 +67,6 @@ const PrintInventory = ({
     const fetchData = async (selectedYear: string) => {
       setFetching(true);
       const adIds = advertisementTypes?.map((ad) => ad.id) || [];
-      console.log("adIds", adIds);
       const slots = await getAllSlotsByYearAndCalendarId(
         calendar.id || "",
         selectedYear,
@@ -74,12 +74,12 @@ const PrintInventory = ({
       );
       setFetching(false);
       setSlotData(slots || null);
-      console.log(slots);
     };
     fetchData(year);
   }, []);
-
-
+// const previewPDF = () => {
+//   createCalendarPDF({ slots: slotData, advertisementTypes });
+// }
 
   return (
     <AnimateWrapper>

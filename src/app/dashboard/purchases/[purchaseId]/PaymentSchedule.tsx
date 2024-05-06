@@ -8,8 +8,8 @@ import { ScheduledPayment } from "@/store/paymentOverviewStore";
 import { toast } from "react-toastify";
 
 const currentYear = new Date().getFullYear();
-const currentMonth = new Date().getMonth();
 let upcomingYears = [currentYear, currentYear + 1, currentYear + 2];
+
 
 interface PaymentScheduleProps {
   onNext: () => void;
@@ -46,12 +46,12 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
             const dueDate = generateDueDates(year, monthIndex);
             const payment =
               paymentStore.paymentOverview.scheduledPayments?.find(
-                (p) => p.month === monthIndex + 1 && p.year === year
+                (p) => p.month === monthIndex + 1 && p.year === year && p.checked
               );
             if (paymentStore.paymentOverview.scheduledPayments && payment) {
-              payments.push({ ...payment, dueDate });
+              payments.push({ ...payment, dueDate, checked: true });
             } else {
-              payments.push({ month: monthIndex + 1, year, amount: null, dueDate });
+              payments.push({ month: monthIndex + 1, year, amount: null, dueDate, checked: false });
             }
         });
       });
@@ -95,12 +95,13 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
     let payments: ScheduledPayment[] | null = [];
 
     if (splitPaymentsEqually) {
-      const equalAmount =
-        Math.round(
-          (totalNet / paymentStore.paymentOverview.scheduledPayments.length) *
-            100
-        ) / 100;
-      payments = paymentStore.paymentOverview.scheduledPayments?.map(
+      const checkedScheduledPayments = paymentStore.paymentOverview.scheduledPayments?.filter(p => p.checked)
+      if (!checkedScheduledPayments) {
+        return toast.error("Please select at least one payment");
+      }
+
+      const equalAmount =Math.round((totalNet / checkedScheduledPayments?.length) * 100) / 100;
+      payments = checkedScheduledPayments?.map(
         (payment) => ({
           ...payment,
           amount: equalAmount,
@@ -146,7 +147,7 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
     isChecked: boolean
   ) => {
     const index = paymentStore.paymentOverview.scheduledPayments?.findIndex(
-      (p) => p.month === month && p.year === year
+      (p) => p.month === month && p.year === year && p.checked
     );
     if (index !== -1 && !isChecked) {
       const updatedPayments = [
@@ -157,7 +158,7 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
     } else if (!index || (index === -1 && isChecked)) {
       const updatedPayments = [
         ...(paymentStore.paymentOverview.scheduledPayments || []),
-        { month, year, amount: null, dueDate: generateDueDates(year, month) },
+        { month, year, amount: null, dueDate: generateDueDates(year, month), checked: isChecked },
       ];
       paymentStore.updateKeyValue("scheduledPayments", updatedPayments);
     }
@@ -230,7 +231,7 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
                           )
                         }
                         checked={paymentStore.paymentOverview.scheduledPayments?.some(
-                          (p) => p.month === index + 1 && p.year === year
+                          (p) => p.month === index + 1 && p.year === year && p.checked
                         )}
                       />
                     ) : (

@@ -7,7 +7,6 @@ import PurchaseNonDayType from "./PurchaseNonDayType";
 import PurchaseDayType from "./PurchaseDayType";
 import styles from "./PurchaseDetails.module.scss";
 import {
-  PurchaseOverviewState,
   usePurchasesStore,
 } from "@/store/purchaseStore";
 import { PurchaseOverviewModel } from "@/lib/models/purchaseOverview";
@@ -21,6 +20,7 @@ interface PurchaseProps {
   purchase?: Partial<PurchaseOverviewModel> | null;
   onNext: () => void;
   year: string;
+  contactId: string;
 }
 
 export interface AdvertisementPurchaseData {
@@ -39,6 +39,7 @@ const Purchase: React.FC<PurchaseProps> = ({
   calendars,
   onNext,
   year,
+  contactId
 }) => {
   const purchaseStore = usePurchasesStore();
   const [selectedCalendars, setSelectedCalendars] = useState<
@@ -288,6 +289,8 @@ const Purchase: React.FC<PurchaseProps> = ({
         {activeModalData.isOpenNonDayType && (
           <PurchaseNonDayType
             data={activeModalData.data}
+            year={year}
+            contactId={contactId}
             closeModal={() =>
               setActiveModalData({
                 isOpenDayType: false,

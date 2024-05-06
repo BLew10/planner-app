@@ -4,7 +4,7 @@ import styles from "./CheckboxGroup.module.scss";
 
 interface CheckboxGroupProps {
   name: string;
-  options: { label: any; value: any; checked: boolean }[];
+  options: { label: any; value: any; checked: boolean, disabled?: boolean }[];
   useGrid?: boolean;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
@@ -19,6 +19,7 @@ const CheckboxGroup = ({ name, options, useGrid = true, onChange }: CheckboxGrou
           value={option.value}
           label={option.label}
           checked={option.checked}
+          disabled={option.disabled}
           onChange={onChange}
         />
       ))}

@@ -46,6 +46,7 @@ export const getOwedPayments = async (year: string) => {
         contact: {
           include: {
             contactContactInformation: true,
+            contactTelecomInformation: true,
           },
         },
         scheduledPayments: {
@@ -117,13 +118,14 @@ export const flagLatePayments = async (userId: string) => {
       for (const payment of scheduledPayments) {
         const paymentDueDate = new Date(payment.dueDate);
         if (isLate(paymentDueDate)) {
+          console.log("flagging late payment", payment.id);
           await prisma.paymentOverview.update({
             where: {
               id: payment.paymentOverviewId,
             },
             data: {
               net: {
-                increment: payment.lateFeeWaived ? 0 :Number(payment.lateFee || 0),
+                increment: payment.lateFeeWaived ? 0 : Number(payment.lateFee || 0),
               },
             },
           });

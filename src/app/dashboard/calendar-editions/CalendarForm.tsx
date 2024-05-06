@@ -7,7 +7,9 @@ import TextInput from "@/app/(components)/form/TextInput";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 
 import { getCalendarById } from "@/lib/data/calendarEdition";
-import upsertCalendarEdition, { CalendarEditionFormData} from "@/actions/calendar-editions/upsertCalendarEdition";
+import upsertCalendarEdition, {
+  CalendarEditionFormData,
+} from "@/actions/calendar-editions/upsertCalendarEdition";
 import { CalendarEdition } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { toast, ToastContainer } from "react-toastify";
@@ -19,10 +21,11 @@ interface CalendarFormProps {
 const CalendarForm = ({ id }: CalendarFormProps) => {
   const [formData, setFormData] = useState<CalendarEditionFormData>({
     name: "",
-  })
+    code: "",
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-  
+
   const notifyError = () =>
     toast.error("Something went wrong. Please try again.");
 
@@ -32,7 +35,8 @@ const CalendarForm = ({ id }: CalendarFormProps) => {
       if (data) {
         setFormData({
           name: data.name || "",
-        })
+          code: data.code || "",
+        });
       }
     };
 
@@ -41,37 +45,52 @@ const CalendarForm = ({ id }: CalendarFormProps) => {
     }
   }, [id]);
 
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, name: e.target.value }));
-  }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
+    const data = {
+      name: formData.name || "",
+      code: formData.code.toUpperCase() || "",
+    }
     const success = await upsertCalendarEdition(formData, id);
     setIsSubmitting(false);
     if (success) {
       router.push("/dashboard/calendar-editions");
     } else {
       notifyError();
-  }
+    }
   };
-
 
   return (
     <AnimateWrapper>
       <form onSubmit={handleSubmit} className={styles.form}>
         <h2 className={styles.heading}>
-          {id? "Edit" : "Add"} Calendar Edition
+          {id ? "Edit" : "Add"} Calendar Edition
         </h2>
         <TextInput
           name="name"
           label="Name"
           value={formData.name}
-          onChange={handleNameChange}
+          onChange={handleInputChange}
           isRequired={true}
           title="Name is required"
         />
-        <button type="submit" className={styles.submitButton}
+        <TextInput
+          name="code"
+          label="Code"
+          maxLength={2}
+          value={formData.code}
+          onChange={handleInputChange}
+          isRequired={true}
+          title="Code is required"
+        />
+        <button
+          type="submit"
+          className={styles.submitButton}
           disabled={isSubmitting}
         >
           {isSubmitting ? "Saving..." : "Save"}
