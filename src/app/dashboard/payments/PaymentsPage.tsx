@@ -52,8 +52,7 @@ const PaymentsPage = () => {
   const [year, setYear] = useState(currentYear);
   const searchParams = useSearchParams();
   const successNotify = () => toast.success("Successfully Deleted");
-  const errorNotify = () =>
-    toast.error("Something went wrong. Deletion failed");
+  const errorNotify = () => toast.error("Something went wrong. Deletion failed");
 
   useEffect(() => {
     const yearParam = searchParams.get("year");

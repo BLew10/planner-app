@@ -138,7 +138,7 @@ const BillingPage = () => {
             />
           ) : (
             <p
-              className={styles.contactName}
+              className={styles.contactNameNoEmail}
               onClick={() => onPaymentClick(p.id as string)}
             >
               <span>
@@ -195,7 +195,10 @@ const BillingPage = () => {
   const toggleAllCheckboxes = () => {
     const toggledSelectAll = !selectAll;
     if (toggledSelectAll) {
-      setSelectedPayments(owedPayments || []);
+      const paymentsWithEmail = owedPayments?.filter(
+        (payment) => payment.contact?.contactTelecomInformation?.email
+      );
+      setSelectedPayments(paymentsWithEmail || []);
     } else {
       setSelectedPayments([]);
     }

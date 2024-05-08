@@ -35,6 +35,13 @@
   gap: 10px;
 }
 
+.contactNameNoEmail {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  margin-left: 20px;
+}
+
 .contactName {
   color: var(--primary-blue-dark);
   text-decoration: underline;
