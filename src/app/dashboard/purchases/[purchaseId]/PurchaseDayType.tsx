@@ -84,6 +84,7 @@ const PurchaseDayType: React.FC<PurchaseDayTypeProps> = ({
   };
 
 
+  // on isSelected and value in dev env, do slotIndex / 2
   const tileContent = (
     { date, view, }: { date: Date; view: string },
     month: number
@@ -101,7 +102,7 @@ const PurchaseDayType: React.FC<PurchaseDayTypeProps> = ({
       if (!isSelected) {
         isSelected =
           storeData?.slots?.some(
-            (s) => s.slot === slotIndex / 2 && s.month === month + 1
+            (s) => s.slot === slotIndex && s.month === month + 1
           ) || false;
       }
 
@@ -109,7 +110,7 @@ const PurchaseDayType: React.FC<PurchaseDayTypeProps> = ({
         <input
           type="checkbox"
           name={`adid-${data?.adId}-month-${month + 1}`}
-          value={value || slotIndex / 2}
+          value={value || slotIndex}
           defaultChecked={isSelected}
           className={styles.checkbox}
         />
