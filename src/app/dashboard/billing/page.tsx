@@ -166,7 +166,7 @@ const BillingPage = () => {
         <p
           key={p.id}
           className={nextPaymentDate.isLate ? styles.latePayment : ""}
-          dataset-search={nextPaymentDate.dueDate}
+          dataset-search={`${nextPaymentDate.dueDate} ${nextPaymentDate.isLate ? "- Late!" : ""}`}
         >
           {nextPaymentDate.dueDate} {nextPaymentDate.isLate ? "- Late!" : ""}
         </p>,
