@@ -14,7 +14,7 @@ interface PurchaseNonDayTypeProps {
   closeModal: () => void;
   isOpen: boolean;
   year: string;
-  contactId: string
+  contactId: string;
 }
 
 const PurchaseNonDayType = ({
@@ -22,10 +22,17 @@ const PurchaseNonDayType = ({
   closeModal,
   isOpen,
   year,
-  contactId
+  contactId,
 }: PurchaseNonDayTypeProps) => {
   const [options, setOptions] = useState<
-    Array<{ label: string | React.ReactNode ; value: string; checked: boolean, disabled: boolean }[]>
+    Array<
+      {
+        label: string | React.ReactNode;
+        value: string;
+        checked: boolean;
+        disabled: boolean;
+      }[]
+    >
   >(MONTHS.map(() => []));
   const purchaseStore = usePurchasesStore();
 
@@ -73,11 +80,11 @@ const PurchaseNonDayType = ({
   useEffect(() => {
     const fetchTakenSlots = async () => {
       if (!data) return;
-      const { adId, calendarId } = data; // Assuming these are provided
+      const { adId, calendarId } = data;
       if (!adId || !calendarId) {
         return;
       }
-      const takenSlots = await getTakenSlots(year, calendarId, contactId);
+      const takenSlots = await getTakenSlots(year, calendarId, contactId, adId);
       if (!takenSlots) return;
       setOptions((prevOptions) =>
         prevOptions.map((monthOpts, monthIndex) => {
@@ -85,10 +92,19 @@ const PurchaseNonDayType = ({
             const alreadyTaken = takenSlots.find(
               (slot) =>
                 slot.month === monthIndex + 1 && slot.slot === Number(opt.value)
-            ) ;
+            );
             return {
               ...opt,
-              label: alreadyTaken ? <div className={styles.taken}><span>{slotIndex + 1} - </span> <span className={styles.company}>{alreadyTaken?.contact?.contactContactInformation?.company}</span></div>: opt.label,
+              label: alreadyTaken ? (
+                <div className={styles.taken}>
+                  <span>{slotIndex + 1} - </span>{" "}
+                  <span className={styles.company}>
+                    {alreadyTaken?.contact?.contactContactInformation?.company}
+                  </span>
+                </div>
+              ) : (
+                opt.label
+              ),
               checked: !!alreadyTaken || opt.checked,
               disabled: !!alreadyTaken,
             };
@@ -156,7 +172,6 @@ const PurchaseNonDayType = ({
       closeModal();
       return;
     }
-
     const newData = {
       [adId]: {
         quantity:
@@ -180,7 +195,7 @@ const PurchaseNonDayType = ({
   const uncheckAll = () => {
     setOptions((prevOptions) =>
       prevOptions.map((monthOpts) =>
-        monthOpts.map((opt) => ({ ...opt, checked: false }))
+        monthOpts.map((opt) => ({ ...opt, checked: opt.disabled }))
       )
     );
   };

@@ -520,13 +520,14 @@ export const getPurchaseById = async (
   }
 };
 
-export const getTakenSlots = async (year: string, calendarId: string, contactId: string) => {
+export const getTakenSlots = async (year: string, calendarId: string, contactId: string, adId: string) => {
   try {
     const slots = await prisma.advertisementPurchaseSlot.findMany({
       where: {
         isDeleted: false,
         year: Number(year),
         calendarId,
+        advertisementId: adId,
         contactId: {
           not: contactId
         }
