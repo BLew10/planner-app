@@ -7,7 +7,7 @@ import { CalendarEdition } from "@prisma/client";
 import { usePurchasesStore } from "@/store/purchaseStore";
 import { PurchaseOverviewModel } from "@/lib/models/purchaseOverview";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
-import { FUTURE_YEARS } from "@/lib/constants";
+import { ALL_YEARS } from "@/lib/constants";
 import SelectInput from "@/app/(components)/form/SelectInput";
 interface SelectCalendarsProps {
   calendars: Partial<CalendarEdition>[];
@@ -44,7 +44,7 @@ const SelectCalendars = ({ calendars, onNext, purchase, onYearChange, year }: Se
           <h2 className={styles.title}>Select Year</h2>
             <SelectInput
               name="year"
-              options={FUTURE_YEARS}
+              options={ALL_YEARS}
               value={year}
               onChange={onYearChange}
             />

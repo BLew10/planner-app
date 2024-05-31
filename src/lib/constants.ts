@@ -572,7 +572,7 @@ function generateFutureYears() {
   const currentYear = new Date().getFullYear();
   const years = [];
 
-  for (let i = 0; i <= 5; i++) {
+  for (let i = 1; i <= 5; i++) {
     years.push({
       value: String(currentYear + i),
       label: String(currentYear + i),
