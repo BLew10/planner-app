@@ -141,9 +141,9 @@ const upserContact = async (contactData, addressBookID, userId) => {
             data: {
               extension: contactData.extension,
               phone: contactData.phone,
-              cellPhone: contactData.cell,
-              altPhone: contactData.altPhone,
+              cellPhone: contactData.altPhone,
               contactId: contact.id,
+              email: contactData.email,
             },
           });
 
