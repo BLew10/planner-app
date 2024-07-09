@@ -39,7 +39,7 @@ const Table = ({
   selectedCount,
   toggleSelectAll,
   allSelected,
-  selectActionDescription
+  selectActionDescription,
 }: TableProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState(data);
@@ -53,6 +53,7 @@ const Table = ({
         ? row[filteredColumn].toString().toLowerCase().includes(lowercasedQuery)
         : row.some((cell) => {
             if (
+              cell &&
               typeof cell == "object" &&
               cell.props &&
               cell.props["dataset-search"]
@@ -60,8 +61,8 @@ const Table = ({
               return cell.props["dataset-search"]
                 .toLowerCase()
                 .includes(lowercasedQuery);
-            }
-            return cell.toString().toLowerCase().includes(lowercasedQuery);
+            } 
+            return cell?.toString().toLowerCase().includes(lowercasedQuery);
           })
     );
     setFetchingData(false);
@@ -139,8 +140,11 @@ const Table = ({
             </p>
           )}
           {toggleSelectAll && (
-            <button className={styles.selectAllButton} onClick={toggleSelectAll}>
-             {allSelected ? `Deselect all` : `Select all`}
+            <button
+              className={styles.selectAllButton}
+              onClick={toggleSelectAll}
+            >
+              {allSelected ? `Deselect all` : `Select all`}
             </button>
           )}
         </div>
@@ -151,7 +155,10 @@ const Table = ({
             </Link>
           )}
           {selectedAction && (
-            <button className={`${selectActionDescription?.includes("Delete") ? styles.deleteButton : styles.selectAction}`} onClick={selectedAction}>
+            <button
+              className={`${selectActionDescription?.includes("Delete") ? styles.deleteButton : styles.selectAction}`}
+              onClick={selectedAction}
+            >
               {selectActionDescription} ({selectedCount})
             </button>
           )}

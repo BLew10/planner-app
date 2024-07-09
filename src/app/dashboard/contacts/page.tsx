@@ -109,10 +109,11 @@ const ContactsPage = () => {
 
   useEffect(() => {
     const newTableData = contacts?.map((c) => {
+      const name = `${c.contactContactInformation?.firstName} ${c.contactContactInformation?.lastName}`.trim();
       return [
         <div
           key={c.id}
-          dataset-search={`${c.contactContactInformation?.firstName} ${c.contactContactInformation?.lastName}`}
+          dataset-search={name}
         >
           <CheckboxInput
             name="contacts"
@@ -124,7 +125,7 @@ const ContactsPage = () => {
                 href={`/dashboard/contacts/${c.id}/overview`}
                 className={styles.contactLink}
                 key={c.id}
-              >{`${c.contactContactInformation?.firstName} ${c.contactContactInformation?.lastName}`}</Link>
+              >{name || "No Name"}</Link>
             }
           />
         </div>,

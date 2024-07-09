@@ -4,7 +4,7 @@ const csvParser = require("csv-parser");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-const sponsorsAndProspectsCSV = "./data/sponsorsAndProspects.csv";
+const sponsorsAndProspectsCSV = "./data/contacts.csv";
 
 async function seedContactsFromCSV() {
   // Read and parse the CSV file
@@ -22,13 +22,17 @@ async function seedContactsFromCSV() {
       const length = contacts.length;
       const user = await prisma.user.findFirst({
         where: {
-          firstName: "Joyce"
-        }
+          firstName: "Joyce",
+        },
       });
       for (const contact of contacts) {
         count++;
         console.log(`Processing contact ${count} of ${length}`);
-       await  upserContact(contact, addressBook.id, user.id);
+        if (!contact) {
+          console.log("Skipping empty contact");
+          continue;
+        }
+        await upserContact(contact, addressBook.id, user.id);
       }
 
       console.log("All contacts have been processed");
@@ -55,6 +59,9 @@ const mapKeys = (contact) => {
         case "Phone":
           mappedContact.phone = contact[key];
           break;
+        case "Alt Phone Number":
+          mappedContact.altPhone = contact[key];
+          break;
         case "Cell":
           mappedContact.cell = contact[key];
         case "Address":
@@ -63,7 +70,7 @@ const mapKeys = (contact) => {
         case "City":
           mappedContact.city = contact[key];
           break;
-        case "State":
+        case "State" || "StatePr":
           mappedContact.state = contact[key];
           break;
         case "ZipPC":
@@ -87,6 +94,10 @@ const mapKeys = (contact) => {
       }
     });
 
+    if ((!mappedContact.lastName || !mappedContact.firstName) && !mappedContact.company) {
+      return null;
+    }
+
     return mappedContact;
   } catch (error) {
     console.error(error);
@@ -97,67 +108,68 @@ const upserContact = async (contactData, addressBookID, userId) => {
   try {
     if (!contactData) return;
     let contact;
-    const result = await prisma.$transaction(async (prisma) => {
-      contact = await prisma.contact.create({
-        data: {
-          userId,
-          customerSince: contactData.customerSince,
-          notes: contactData.notes || null,
-          category: contactData.category,
-          webAddress: contactData.webAddress,
-          addressBooks: {
-            connect: [
-              {
-                id: addressBookID,
-              },
-            ],
-          },
-        },
-      });
-
-      if (contact && contact.id) {
-        await prisma.contactContactInformation.create({
+    const result = await prisma.$transaction(
+      async (prisma) => {
+        contact = await prisma.contact.create({
           data: {
-            firstName: contactData.firstName,
-            lastName: contactData.lastName,
-            company: contactData.company,
-            contactId: contact.id,
+            userId,
+            customerSince: contactData.customerSince,
+            notes: contactData.notes || null,
+            category: contactData.category,
+            webAddress: contactData.webAddress,
+            addressBooks: {
+              connect: [
+                {
+                  id: addressBookID,
+                },
+              ],
+            },
           },
         });
 
-        await prisma.contactTelecomInformation.create({
-          data: {
-            extension: contactData.extension,
-            phone: contactData.phone,
-            cellPhone: contactData.cell,
-            contactId: contact.id,
-          },
-        });
+        if (contact && contact.id) {
+          await prisma.contactContactInformation.create({
+            data: {
+              firstName: contactData.firstName,
+              lastName: contactData.lastName,
+              company: contactData.company,
+              contactId: contact.id,
+            },
+          });
 
-        await prisma.contactAddress.create({
-          data: {
-            address: contactData.address,
-            city: contactData.city,
-            state: contactData.state,
-            zip: contactData.zip,
-            country: "United States",
-            contactId: contact.id,
-          },
-        });
+          await prisma.contactTelecomInformation.create({
+            data: {
+              extension: contactData.extension,
+              phone: contactData.phone,
+              cellPhone: contactData.cell,
+              altPhone: contactData.altPhone,
+              contactId: contact.id,
+            },
+          });
 
-        await prisma.contactAddressBook.create({
-          data: {
-            addressBookId: addressBookID,
-            contactId: contact.id,
-          },
-        });
+          await prisma.contactAddress.create({
+            data: {
+              address: contactData.address,
+              city: contactData.city,
+              state: contactData.state,
+              zip: contactData.zip,
+              country: "United States",
+              contactId: contact.id,
+            },
+          });
+
+          await prisma.contactAddressBook.create({
+            data: {
+              addressBookId: addressBookID,
+              contactId: contact.id,
+            },
+          });
+        }
+      },
+      {
+        maxWait: 10000,
+        timeout: 10000,
       }
-    },
-    {
-      maxWait: 10000,
-      timeout: 10000,
-    }
-
     );
   } catch (error) {
     console.error("Error saving contact", error);
@@ -169,7 +181,8 @@ const createAddressBook = async () => {
   const userId = user.id;
   let addressBook = await prisma.addressBook.findFirst({
     where: {
-      name: "Sponsors and Prospects", userId
+      name: "Sponsors and Prospects",
+      userId,
     },
   });
 
@@ -191,11 +204,11 @@ const createAddressBook = async () => {
 const createCalendarEditions = async () => {
   const user = await prisma.user.findFirst({
     where: {
-      firstName: "Joyce"
-    }
+      firstName: "Joyce",
+    },
   });
   const userId = user.id;
-  const editionNames = ['Sacramento, Arden', 'Elk Grove', 'West Sacramento']
+  const editionNames = ["Sacramento, Arden", "Elk Grove", "West Sacramento"];
   for (const name of editionNames) {
     // const edition = await prisma.calendarEdition.findFirst({
     //   where: {
@@ -206,35 +219,35 @@ const createCalendarEditions = async () => {
     await prisma.calendarEdition.create({
       data: {
         name,
-        userId
-      }
-    })
+        userId,
+      },
+    });
   }
-}
+};
 
 const createAdvertismentTypes = async () => {
   const user = await prisma.user.findFirst({
     where: {
-      firstName: "Joyce"
-    }
+      firstName: "Joyce",
+    },
   });
   const userId = user.id;
-for (const type of ADVERTISEMENT_TYPES) {
-  // const existingType = await prisma.advertisement.findFirst({
-  //   where: {
-  //     name: type.name, userId
-  //   }
-  // })
-  await prisma.advertisement.create({
-    data: {
-      userId,
-      name: type.name,
-      perMonth: type.quantity,
-      isDayType: type.isDayType
-    }
-  })
-}
-}
+  for (const type of ADVERTISEMENT_TYPES) {
+    // const existingType = await prisma.advertisement.findFirst({
+    //   where: {
+    //     name: type.name, userId
+    //   }
+    // })
+    await prisma.advertisement.create({
+      data: {
+        userId,
+        name: type.name,
+        perMonth: type.quantity,
+        isDayType: type.isDayType,
+      },
+    });
+  }
+};
 const CATEGORIES = [
   { value: "0", label: "Please select" },
   { value: "1", label: "Accountants" },
@@ -496,46 +509,45 @@ const ADVERTISEMENT_TYPES = [
   {
     name: "Display",
     quantity: 4,
-    isDayType: false
+    isDayType: false,
   },
   {
     name: "Premium Display",
     quantity: 2,
-    isDayType: false
+    isDayType: false,
   },
   {
     name: "Billboard",
     quantity: 1,
-    isDayType: false
+    isDayType: false,
   },
   {
     name: "Monthly Photo",
     quantity: 1,
-    isDayType: false
+    isDayType: false,
   },
   {
     name: "Coupon",
     quantity: 8,
-    isDayType: false
+    isDayType: false,
   },
   {
     name: "Junior Coupon",
     quantity: 16,
-    isDayType: false
+    isDayType: false,
   },
   {
     name: "DateBlock",
     quantity: 35,
-    isDayType: true
+    isDayType: true,
   },
   {
     name: "Double DateBlock",
     quantity: 35,
-    isDayType: true
-  }
-
-]
-createCalendarEditions().catch(console.error);
-createAddressBook().catch(console.error);
-createAdvertismentTypes().catch(console.error);
+    isDayType: true,
+  },
+];
+// createCalendarEditions().catch(console.error);
+// createAddressBook().catch(console.error);
+// createAdvertismentTypes().catch(console.error);
 seedContactsFromCSV().catch(console.error);

@@ -27,4 +27,4 @@ async function deleteContacts() {
 // async function deleteAddressBooks() {
   
 // }
-deletePurchases()
+deleteContacts()
