@@ -54,6 +54,7 @@ const TextInput: React.FC<TextInputProps> = ({
       const validationError = validate(e.target.value);
       setError(validationError);
     }
+    setInputValue(e.target.value);
     if (onChange) {
       onChange(e);
     }

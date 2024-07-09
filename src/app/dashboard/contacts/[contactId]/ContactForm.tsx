@@ -115,7 +115,7 @@ const ContactForm = ({ id }: ContactProps) => {
       if (!mappedAddressBooks || mappedAddressBooks.length === 0) return;
       setAddressBooks(mappedAddressBooks);
     });
-  }, [formData]);
+  }, [formData?.addressBooksIds]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
