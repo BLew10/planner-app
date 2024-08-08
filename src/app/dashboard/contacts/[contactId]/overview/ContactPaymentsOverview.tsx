@@ -54,9 +54,9 @@ const ContactPaymentsOverview = ({
       let rowData: any[] = [
         `$${Number(p.amount).toFixed(2)}`,
         p.paymentDate,
-        p.paymentMethod,
-        p.checkNumber,
-        p.paymentOverview?.invoiceNumber,
+        p.paymentMethod || "",
+        p.checkNumber || "",
+        p.paymentOverview?.invoiceNumber || "",
         purchases || "",
       ];
 

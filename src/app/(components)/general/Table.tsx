@@ -48,23 +48,25 @@ const Table = ({
   useEffect(() => {
     if (!data) return;
     const lowercasedQuery = searchQuery.toLowerCase();
-    const filtered = data.filter((row) =>
-      filteredColumn != null
-        ? row[filteredColumn].toString().toLowerCase().includes(lowercasedQuery)
-        : row.some((cell) => {
-            if (
-              cell &&
-              typeof cell == "object" &&
-              cell.props &&
-              cell.props["dataset-search"]
-            ) {
-              return cell.props["dataset-search"]
-                .toLowerCase()
-                .includes(lowercasedQuery);
-            } 
-            return cell?.toString().toLowerCase().includes(lowercasedQuery);
-          })
-    );
+    const filtered = data.filter((row) => {
+      if (filteredColumn != null) {
+        const cell = row[filteredColumn];
+        return cell != null && cell.toString().toLowerCase().includes(lowercasedQuery);
+      }
+      return row.some((cell) => {
+        if (
+          cell &&
+          typeof cell == "object" &&
+          cell.props &&
+          cell.props["dataset-search"]
+        ) {
+          return cell.props["dataset-search"]
+            .toLowerCase()
+            .includes(lowercasedQuery);
+        } 
+        return cell != null && cell.toString().toLowerCase().includes(lowercasedQuery);
+      });
+    });
     setFetchingData(false);
     setFilteredData(filtered);
   }, [searchQuery, data, filteredColumn]);
