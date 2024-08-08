@@ -44,9 +44,9 @@ const columns = [
   },
 ];
 
-const currentYear = new Date().getFullYear();
+const nextYear = new Date().getFullYear() + 1;
 const defaultYear =
-  ALL_YEARS.find((year) => year.value === String(currentYear))?.value ||
+  ALL_YEARS.find((year) => year.value === String(nextYear))?.value ||
   ALL_YEARS[0].value;
 const PurchasesPage = () => {
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);

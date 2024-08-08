@@ -40,7 +40,7 @@ const columns = [
   },
 ];
 
-const currentYear = new Date().getFullYear().toString();
+const nextYear = String(new Date().getFullYear() + 1);
 const PaymentsPage = () => {
   const [showPaymentScheduleModal, setShowPaymentScheduleModal] =
     useState(false);
@@ -49,7 +49,7 @@ const PaymentsPage = () => {
     id: "",
     companyName: "",
   });
-  const [year, setYear] = useState(currentYear);
+  const [year, setYear] = useState(nextYear);
   const searchParams = useSearchParams();
   const successNotify = () => toast.success("Successfully Deleted");
   const errorNotify = () => toast.error("Something went wrong. Deletion failed");

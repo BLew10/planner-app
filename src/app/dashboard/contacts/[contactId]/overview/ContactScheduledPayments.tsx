@@ -11,7 +11,7 @@ import { ALL_YEARS } from "@/lib/constants";
 import { ScheduledPayment } from "@prisma/client";
 import { toast, ToastContainer } from "react-toastify";
 
-const currentYear = new Date().getFullYear().toString();
+const nextYear = String(new Date().getFullYear() + 1);
 
 interface ContactScheduledPaymentsProps {
   contactId: string;
@@ -19,7 +19,7 @@ interface ContactScheduledPaymentsProps {
 const ContactPurchasesOverview = ({
   contactId,
 }: ContactScheduledPaymentsProps) => {
-  const [selectedYear, setSelectedYear] = useState<string>(currentYear);
+  const [selectedYear, setSelectedYear] = useState<string>(nextYear);
   const [scheduledPayments, setScheduledPayments] = useState<
     ScheduledPayment[] | null
   >([]);
@@ -60,15 +60,15 @@ const ContactPurchasesOverview = ({
   };
 
   const onSubmit = async () => {
-      const result = await updateSchedulePaymentLateFeesByYear(
-        selectedPayments,
-        selectedYear
-      );
-      if (result) {
-        toast.success("Change successfully saved!");
-      } else {
-        toast.error("Failed to waive late fees! Please try again.");
-      }
+    const result = await updateSchedulePaymentLateFeesByYear(
+      selectedPayments,
+      selectedYear
+    );
+    if (result) {
+      toast.success("Change successfully saved!");
+    } else {
+      toast.error("Failed to waive late fees! Please try again.");
+    }
   };
 
   return (

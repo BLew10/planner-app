@@ -14,7 +14,7 @@ interface InvoiceSendingProps {
   onSendInvoices: () => void;
 }
 
-const currentYear = new Date().getFullYear();
+const nextYear = new Date().getFullYear() + 1;
 
 export default function InvoiceSending({
   paymentOverviews,

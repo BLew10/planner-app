@@ -16,9 +16,9 @@ import CalendarInventory from "./CalendarInventory";
 import { SlotInfo } from "@/lib/data/purchase";
 import CheckboxGroup from "../(components)/form/CheckboxGroup";
 
-const currentYear = new Date().getFullYear();
+const nextYear = new Date().getFullYear() + 1;
 const selectFirstYear =
-  ALL_YEARS.find((year) => year.value === String(currentYear)) || ALL_YEARS[0];
+  ALL_YEARS.find((year) => year.value === String(nextYear)) || ALL_YEARS[0];
 const Dashboard = () => {
   const [selectedYear, setSelectedYear] = useState(selectFirstYear.value);
   const [selectedCalendar, setSelectedCalendar] = useState("");
