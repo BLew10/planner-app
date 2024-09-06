@@ -4,7 +4,7 @@ const csvParser = require("csv-parser");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-const sponsorsAndProspectsCSV = "./data/contacts.csv";
+const sponsorsAndProspectsCSV = "./data/old-address-book.csv";
 
 async function seedContactsFromCSV() {
   // Read and parse the CSV file
@@ -38,7 +38,6 @@ async function seedContactsFromCSV() {
       console.log("All contacts have been processed");
     });
 }
-
 const mapKeys = (contact) => {
   try {
     let mappedContact = {};
@@ -94,7 +93,10 @@ const mapKeys = (contact) => {
       }
     });
 
-    if ((!mappedContact.lastName || !mappedContact.firstName) && !mappedContact.company) {
+    if (
+      (!mappedContact.lastName || !mappedContact.firstName) &&
+      !mappedContact.company
+    ) {
       return null;
     }
 
@@ -107,6 +109,33 @@ const mapKeys = (contact) => {
 const upserContact = async (contactData, addressBookID, userId) => {
   try {
     if (!contactData) return;
+
+    // Check if the company and email already exist in the database
+    const existingContact = await prisma.contactContactInformation.findFirst({
+      where: {
+        company: contactData.company,
+        contact: {
+          contactTelecomInformation: {
+            email: contactData.email,
+          },
+        },
+      },
+      include: {
+        contact: true,
+      },
+    });
+
+    if (existingContact) {
+      console.log(
+        `Contact with company ${contactData.company} and email ${contactData.email} already exists, skipping...`
+      );
+      return;
+    }
+
+    if (existingContact) {
+      console.log(`Company ${contactData.company} already exists, skipping...`);
+      return;
+    }
     let contact;
     const result = await prisma.$transaction(
       async (prisma) => {
@@ -181,24 +210,25 @@ const createAddressBook = async () => {
   const userId = user.id;
   let addressBook = await prisma.addressBook.findFirst({
     where: {
-      name: "Sponsors and Prospects",
+      id: "3735fa53-d59c-417a-9d73-dfed47fe8afb",
       userId,
     },
   });
 
-  // if (addressBook) {
-  //   return addressBook;
-  // }
+  if (addressBook) {
+    console.log("Address book already exists");
+    return addressBook;
+  }
 
-  addressBook = await prisma.addressBook.create({
-    data: {
-      name: "Sponsors and Prospects",
-      userId,
-      displayLevel: "Private",
-    },
-  });
+  // addressBook = await prisma.addressBook.create({
+  //   data: {
+  //     name: "Sponsors and Prospects",
+  //     userId,
+  //     displayLevel: "Private",
+  //   },
+  // });
 
-  return addressBook;
+  return null;
 };
 
 const createCalendarEditions = async () => {
@@ -547,7 +577,56 @@ const ADVERTISEMENT_TYPES = [
     isDayType: true,
   },
 ];
+
+async function addContactsToSponsors() {
+  // Ensure the "Sponsors" address book exists
+  const user = await prisma.user.findFirst();
+  const userId = user.id;
+
+  let addressBook = await prisma.addressBook.findFirst({
+    where: {
+      name: "sponsors",
+      userId,
+    },
+  });
+
+  if (!addressBook) {
+    console.log("Sponsors address book does not exist, creating...");
+    return;
+  }
+
+  const addressBookId = addressBook.id;
+
+  // Fetch all contacts
+  const contacts = await prisma.contact.findMany({
+    where: { userId },
+  });
+
+  // Connect each contact to the "Sponsors" address book
+  for (const contact of contacts) {
+    await prisma.contact.update({
+      where: {
+        id: contact.id,
+      },
+      data: {
+        addressBooks: {
+          connect: [{ id: addressBookId }],
+        },
+      },
+    });
+  }
+
+  console.log(
+    "All contacts have been connected to the 'Sponsors' address book."
+  );
+}
 // createCalendarEditions().catch(console.error);
 // createAddressBook().catch(console.error);
 // createAdvertismentTypes().catch(console.error);
-seedContactsFromCSV().catch(console.error);
+// seedContactsFromCSV().catch(console.error);
+
+addContactsToSponsors()
+  .catch((e) => console.error(e))
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
