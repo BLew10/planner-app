@@ -15,6 +15,7 @@ export interface PurchaseSlot {
 export interface PurchaseOverviewState {
   [calendarId: string]: {
     [adId: string]: {
+      perMonth: string;
       quantity: string;
       charge: string;
       slots?: { slot: number; month: number; date: string | null }[];
@@ -28,6 +29,7 @@ interface PurchasesStore {
   setPurchaseData: (
     data: {
       [adId: string]: {
+        perMonth: string;
         quantity: string;
         charge: string;
         slots?: { slot: number; month: number; date: string | null }[];
@@ -45,6 +47,7 @@ interface PurchasesStore {
     calendarId: string,
     adId: string
   ) => {
+    perMonth: string;
     quantity: string;
     charge: string;
     slots?: { slot: number; month: number; date: string | null }[];

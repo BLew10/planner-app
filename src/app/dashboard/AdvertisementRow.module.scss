@@ -45,3 +45,29 @@
         background-color: var(--row-even-color);
     }
 }
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3-column grid */
+    gap: 20px;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 20px;
+}
+
+.gridItem {
+    padding: 20px;
+    color: var(--text-color);
+}
+
+.label {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.gridItemText {
+    color: var(--text-color);
+    font-size: 0.8rem;
+}

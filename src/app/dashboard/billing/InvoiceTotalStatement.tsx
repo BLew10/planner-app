@@ -85,7 +85,7 @@ export const generateInvoiceTotalStatementPdf = (paymentOverview: Partial<Paymen
   // Contact Information
   doc.text("Tel: 916-217-0106", rightAlignedX, 25, { align: "right" });
   doc.text("Fax: ", rightAlignedX, 30, { align: "right" }); // Add actual fax number
-  doc.text("carter@metrotownplanner.com", rightAlignedX, 35, {
+  doc.text("joyce@metrocalendars.com", rightAlignedX, 35, {
     align: "right",
   });
 

@@ -147,6 +147,8 @@ const PurchaseDayType: React.FC<PurchaseDayTypeProps> = ({
     }
     let newData = {
       [adId]: {
+        perMonth:
+          purchaseStore.purchaseOverview?.[calendarId]?.[adId]?.perMonth || "",
         quantity:
           purchaseStore.purchaseOverview?.[calendarId]?.[adId]?.quantity || "",
         charge:

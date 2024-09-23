@@ -159,6 +159,8 @@ const PurchaseNonDayType = ({
       purchaseStore.setPurchaseData(
         {
           [adId]: {
+            perMonth:
+              purchaseStore.purchaseOverview?.[calendarId]?.[adId]?.perMonth || "",
             quantity:
               purchaseStore.purchaseOverview?.[calendarId]?.[adId]?.quantity ||
               "",
@@ -174,6 +176,8 @@ const PurchaseNonDayType = ({
     }
     const newData = {
       [adId]: {
+        perMonth:
+          purchaseStore.purchaseOverview?.[calendarId]?.[adId]?.perMonth || "",
         quantity:
           purchaseStore.purchaseOverview?.[calendarId]?.[adId]?.quantity || "",
         charge:
