@@ -105,7 +105,7 @@ export const usePurchasesStore = create<PurchasesStore>()(
           !purchaseOverview[calendarId] ||
           !purchaseOverview[calendarId][adId]
         ) {
-          return { quantity: "", charge: "", slots: [] };
+          return { perMonth: "", quantity: "", charge: "", slots: [] };
         } else {
           return purchaseOverview[calendarId][adId];
         }
