@@ -16,6 +16,7 @@ import CalendarInventory from "./CalendarInventory";
 import { SlotInfo } from "@/lib/data/purchase";
 import CheckboxGroup from "../(components)/form/CheckboxGroup";
 
+
 const nextYear = new Date().getFullYear() + 1;
 const selectFirstYear =
   ALL_YEARS.find((year) => year.value === String(nextYear)) || ALL_YEARS[0];
@@ -32,6 +33,7 @@ const Dashboard = () => {
   const [advertisementTypes, setAdvertisementTypes] = useState<
     Partial<Advertisement>[] | null
   >([]);
+
   const [calendarData, setCalendarData] = useState<
     Partial<CalendarEdition>[] | null
   >([]);
@@ -156,7 +158,7 @@ const Dashboard = () => {
                 advertisementTypes?.map((ad) => ({
                   label: ad.name,
                   value: ad.id,
-                  checked: true,
+                  checked: selectedAdtypes.some((selectedAd) => selectedAd.id === ad.id),
                 })) || []
               }
             />
