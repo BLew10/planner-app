@@ -136,6 +136,7 @@ const Purchase: React.FC<PurchaseProps> = ({
               date: null,
             },
           ];
+          continue;
         }
         
         if (quantity !== "" || charge !== "" || !slots || slots.length === 0) {
