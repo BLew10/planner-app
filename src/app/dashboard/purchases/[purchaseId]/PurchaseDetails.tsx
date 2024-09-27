@@ -93,7 +93,7 @@ const Purchase: React.FC<PurchaseProps> = ({
         purchaseStore.setPurchaseData(data, calendarId);
       }
     }
-  }, [purchase]);
+  }, [purchase, purchaseStore]);
 
   useEffect(() => {
     const filteredCalendars = calendars?.filter(
@@ -125,9 +125,9 @@ const Purchase: React.FC<PurchaseProps> = ({
         const adType = advertisementTypes.find((ad) => ad.id === adId);
         const adData = calendarData[adId];
         // If perMonth is 0, we don't need to check for slots (Extra Cases is the ad type)
-        const { slots, quantity, charge } = adData;
+        let { slots, quantity, charge } = adData;
 
-        if (!adType?.perMonth || adType?.perMonth === 0) {
+        if (!adType?.perMonth == null || adType?.perMonth === undefined || adType?.perMonth === 0) {
           // Extra Cases is the ad type and am using quantity as the slot number to set the quantity to easily implement it on Dashboard
           adData.slots = [
             {
@@ -136,10 +136,10 @@ const Purchase: React.FC<PurchaseProps> = ({
               date: null,
             },
           ];
-          continue;
+          slots = adData.slots;
         }
         
-        if (quantity !== "" || charge !== "" || !slots || slots.length === 0) {
+        if ((quantity !== "" || charge !== "") && (!slots || slots.length === 0)) {
           const ad = advertisementTypes.find((ad) => ad.id === adId);
           const calendar = calendars.find(
             (calendar) => calendar.id === calendarId
@@ -253,7 +253,7 @@ const Purchase: React.FC<PurchaseProps> = ({
                               pattern="[0-9]*"
                               placeholder="Quantity"
                               min="0"
-                              isRequired={data.slots && data.slots.length > 0}
+                              isRequired={(data.perMonth != null || data.perMonth != undefined) && (data.slots && data.slots.length > 0)}
                               value={data.quantity}
                               onChange={(e) =>
                                 handleInputChange(
@@ -270,7 +270,7 @@ const Purchase: React.FC<PurchaseProps> = ({
                               type="text"
                               pattern="[0-9.]*"
                               min="0"
-                              isRequired={data.slots && data.slots.length > 0}
+                              isRequired={(data.perMonth != null || data.perMonth != undefined) && (data.slots && data.slots.length > 0)}
                               placeholder="Charge"
                               value={data.charge}
                               onChange={(e) =>
