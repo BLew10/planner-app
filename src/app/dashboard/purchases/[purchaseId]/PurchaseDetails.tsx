@@ -93,7 +93,7 @@ const Purchase: React.FC<PurchaseProps> = ({
         purchaseStore.setPurchaseData(data, calendarId);
       }
     }
-  }, [purchase, purchaseStore]);
+  }, [purchase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const filteredCalendars = calendars?.filter(
