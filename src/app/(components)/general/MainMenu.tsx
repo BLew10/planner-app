@@ -1,144 +1,128 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Image from "next/image";
+import React from "react";
 import Link from "next/link";
-import {
-  MdDashboard,
-  MdContacts,
-  MdDateRange,
-  MdMenuBook,
-  MdLogout,
-  MdOutlineTopic,
-  MdAttachMoney,
-  MdOutlinePayments,
-  MdOutlineArrowCircleLeft,
-  MdOutlineArrowCircleRight,
-  MdMoney,
-} from "react-icons/md";
-
-import styles from "./MainMenu.module.scss";
-import menuItemStyles from "./MenuItem.module.scss";
-import menuGroupStyles from "./MenuGroup.module.scss";
+import { useThemeStore } from "@/store/themeStore";
 import { logout } from "@/actions/user/logout";
-import { MenuItem } from "./MenuItem";
-import { MenuGroup } from "./MenuGroup";
-import { MdDarkMode, MdLightMode } from "react-icons/md";
-import useDarkMode from "@/hooks/useDarkMode";
-import AnimateWrapper from "./AnimateWrapper";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import {
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarFooter,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/ui/sidebar";
+import {
+  LayoutDashboard,
+  Users,
+  Calendar,
+  BookOpen,
+  LogOut,
+  FileText,
+  DollarSign,
+  CreditCard,
+  Sun,
+  Moon,
+} from "lucide-react";
 
-const MainMenu = () => {
-  const [isOpen, setIsOpen] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useDarkMode();
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
+const menuItems = [
+  { icon: LayoutDashboard, label: "Dashboard", urlPath: "/dashboard" },
+  { icon: DollarSign, label: "Billing", urlPath: "/dashboard/billing" },
+  { icon: CreditCard, label: "Purchases", urlPath: "/dashboard/purchases" },
+  { icon: CreditCard, label: "Payments", urlPath: "/dashboard/payments" },
+  {
+    icon: BookOpen,
+    label: "Address Books",
+    urlPath: "/dashboard/address-books",
+  },
+  { icon: Users, label: "Contacts", urlPath: "/dashboard/contacts" },
+  {
+    icon: FileText,
+    label: "Advertisement Types",
+    urlPath: "/dashboard/advertisement-types",
+  },
+  {
+    icon: Calendar,
+    label: "Calendar Editions",
+    urlPath: "/dashboard/calendar-editions",
+  },
+];
+
+const MainMenu: React.FC = () => {
+  const { theme, setTheme } = useThemeStore();
+  const { open } = useSidebar();
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light");
   };
 
   return (
-      <nav
-        className={`${styles.mainNav} ${isOpen ? styles.open : styles.closed}`}
-      >
-        <div className={styles.nameContainer}>
-          {isOpen && (
-            <Link href="/" className={styles.name}>
-              Calendar Planner
-            </Link>
-          )}
-          <Image
-            src="/images/logo.png"
-            alt="Calendar Planner Logo"
-            width={50}
-            height={50}
-          />
-          {isOpen ? (
-            <MdOutlineArrowCircleLeft
-              className={styles.arrow}
-              onClick={() => setIsOpen(false)}
-            />
-          ) : (
-            <MdOutlineArrowCircleRight
-              className={styles.arrow}
-              onClick={() => setIsOpen(true)}
-            />
-          )}
+    <Sidebar collapsible="icon">
+      {!open && (
+        <div className="mx-auto my-[50px]">
+          <SidebarTrigger />
         </div>
-        {isOpen && (
-          <ul className={styles.navList}>
-            <li>
-              <MenuGroup title="Pages">
-                <MenuItem
-                  icon={MdDashboard}
-                  label="Dashboard"
-                  urlPath="/dashboard"
-                />
-                <MenuItem
-                  icon={MdMoney}
-                  label="Billing"
-                  urlPath="/dashboard/billing"
-                />
-                <MenuItem
-                  icon={MdAttachMoney}
-                  label="Purchases"
-                  urlPath="/dashboard/purchases"
-                />
-                <MenuItem
-                  icon={MdOutlinePayments}
-                  label="Payments"
-                  urlPath="/dashboard/payments"
-                />
-                <MenuItem
-                  icon={MdMenuBook}
-                  label="Address Books"
-                  urlPath="/dashboard/address-books"
-                />
-                <MenuItem
-                  icon={MdContacts}
-                  label="Contacts"
-                  urlPath="/dashboard/contacts"
-                />
-                <MenuItem
-                  icon={MdOutlineTopic}
-                  label="Advertisement Types"
-                  urlPath="/dashboard/advertisement-types"
-                />
-                <MenuItem
-                  icon={MdDateRange}
-                  label="Calendar Editions"
-                  urlPath="/dashboard/calendar-editions"
-                />
-              </MenuGroup>
-            </li>
-            <li>
-              <MenuGroup title="User">
-                <form className={menuGroupStyles.menuGroup} action={logout}>
-                  <button
-                    type="submit"
-                    className={`${menuItemStyles.label} ${styles.logoutButton}`}
-                  >
-                    <div className={menuItemStyles.item}>
-                      <p className={menuItemStyles.icon}>
-                        <MdLogout />
-                      </p>
-                      <span className={menuItemStyles.label}>Sign Out</span>
-                    </div>
-                  </button>
-                </form>
-              </MenuGroup>
-            </li>
-          </ul>
-        )}
+      )}
 
-        <button
-          className={`${styles.darkModeButton} ${
-            isDarkMode ? styles.dark : styles.light
-          }`}
-          onClick={toggleDarkMode}
-        >
-          <div className={styles.slider}>
-            {!isDarkMode ? <MdLightMode /> : <MdDarkMode />}
+      {open && (
+        <SidebarHeader>
+          <div className="flex items-center justify-between p-4">
+            <div className="text-xl font-bold overflow-hidden">
+              Calendar Planner
+            </div>
+            <SidebarTrigger />
           </div>
-        </button>
-      </nav>
+        </SidebarHeader>
+      )}
+      <SidebarContent>
+        <SidebarMenu>
+          {menuItems.map((item) => (
+            <SidebarMenuItem key={item.label}>
+              <SidebarMenuButton asChild>
+                <Link href={item.urlPath} className="mx-auto">
+                  <item.icon />
+                  <span>{item.label}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarContent>
+      {open && (
+        <SidebarFooter>
+          <div className="flex flex-col space-y-4 p-4">
+            <form action={logout}>
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                type="submit"
+              >
+                <LogOut className="mr-2 h-5 w-5" />
+                Sign Out
+              </Button>
+            </form>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Dark Mode</span>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={theme === "dark"}
+                  onCheckedChange={toggleTheme}
+                />
+                {theme === "dark" ? (
+                  <Moon className="h-4 w-4" />
+                ) : (
+                  <Sun className="h-4 w-4" />
+                )}
+              </div>
+            </div>
+          </div>
+        </SidebarFooter>
+      )}
+    </Sidebar>
   );
 };
 

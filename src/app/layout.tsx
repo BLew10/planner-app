@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "@/styles/globals.scss";
-import "react-toastify/dist/ReactToastify.css";
 
 export const metadata: Metadata = {
   title: "Planner",

@@ -26,17 +26,21 @@ export const getScheduledPaymentsByContactIdAndYear = async (
 };
 
 export const updateSchedulePaymentLateFeesByYear = async (
-  paymentIdsToWaive: string[],
-  year: string
+  paymentUpdates: { id: string; waived: boolean }[],
 ) => {
   try {
+    const paymentsToWaive = paymentUpdates
+      .filter((update) => update.waived)
+      .map((update) => update.id);
+
+    const paymentsToUnwaive = paymentUpdates
+      .filter((update) => !update.waived)
+      .map((update) => update.id);
+
     await prisma.scheduledPayment.updateMany({
       where: {
         id: {
-          in: paymentIdsToWaive,
-        },
-        paymentOverview: {
-          year: Number(year),
+          in: paymentsToWaive,
         },
       },
       data: {
@@ -44,7 +48,7 @@ export const updateSchedulePaymentLateFeesByYear = async (
       },
     });
 
-    for (const paymentId of paymentIdsToWaive) {
+    for (const paymentId of paymentsToWaive) {
       const payment = await prisma.scheduledPayment.findUnique({
         where: {
           id: paymentId,
@@ -77,9 +81,8 @@ export const updateSchedulePaymentLateFeesByYear = async (
 
     const notWaived = await prisma.scheduledPayment.findMany({
       where: {
-        year: Number(year),
         id: {
-          notIn: paymentIdsToWaive,
+          in: paymentsToUnwaive,
         },
       },
     });
@@ -92,7 +95,8 @@ export const updateSchedulePaymentLateFeesByYear = async (
         data: {
           lateFeeWaived: false,
         },
-      })
+      });
+
       if (!payment.lateFeeAddedToNet && payment.isLate) {
         await prisma.scheduledPayment.update({
           where: {
@@ -102,7 +106,7 @@ export const updateSchedulePaymentLateFeesByYear = async (
             lateFeeAddedToNet: true,
           },
         });
-  
+
         await prisma.paymentOverview.update({
           where: {
             id: payment.paymentOverviewId,

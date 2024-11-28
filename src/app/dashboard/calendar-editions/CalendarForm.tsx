@@ -10,10 +10,8 @@ import { getCalendarById } from "@/lib/data/calendarEdition";
 import upsertCalendarEdition, {
   CalendarEditionFormData,
 } from "@/actions/calendar-editions/upsertCalendarEdition";
-import { CalendarEdition } from "@prisma/client";
 import { useRouter } from "next/navigation";
-import { toast, ToastContainer } from "react-toastify";
-
+import { useToast } from "@/hooks/shadcn/use-toast";
 interface CalendarFormProps {
   id: string | null;
 }
@@ -25,9 +23,13 @@ const CalendarForm = ({ id }: CalendarFormProps) => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
 
   const notifyError = () =>
-    toast.error("Something went wrong. Please try again.");
+    toast({
+      title: "Something went wrong. Please try again.",
+      variant: "destructive",
+    });
 
   useEffect(() => {
     const fetchCalendar = async () => {

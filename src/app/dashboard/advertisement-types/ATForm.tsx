@@ -11,7 +11,7 @@ import upsertAdvertisementType, {
   AdvertisementTypeFormData,
 } from "@/actions/advertisement-types/upsertAdvertismentType";
 import CheckboxInput from "@/app/(components)/form/CheckboxInput";
-import { toast, ToastContainer } from "react-toastify";
+import { useToast } from "@/hooks/shadcn/use-toast";
 
 interface ATProps {
   id: string | null;
@@ -25,8 +25,12 @@ const ATForm = ({ id }: ATProps) => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
   const notifyError = () =>
-    toast.error("Something went wrong. Please try again.");
+    toast({
+      title: "Something went wrong. Please try again.",
+      variant: "destructive",
+    });
 
   useEffect(() => {
     const fetchAdvertisement = async () => {
@@ -90,7 +94,6 @@ const ATForm = ({ id }: ATProps) => {
 
   return (
     <AnimateWrapper>
-      <ToastContainer />
       <form onSubmit={handleSubmit} className={styles.form}>
         <h2 className={styles.heading}>
           {id ? "Edit" : "Add"} Advertisement Type

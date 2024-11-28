@@ -5,7 +5,7 @@ import { MONTHS } from "@/lib/constants";
 import CheckboxInput from "@/app/(components)/form/CheckboxInput";
 import MoneyInput from "@/app/(components)/form/MoneyInput";
 import { ScheduledPayment } from "@/store/paymentOverviewStore";
-import { toast } from "react-toastify";
+import { useToast } from "@/hooks/shadcn/use-toast";
 
 const currentYear = new Date().getFullYear();
 let upcomingYears = [currentYear, currentYear + 1, currentYear + 2];
@@ -17,6 +17,7 @@ interface PaymentScheduleProps {
 
 const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
   const paymentStore = usePaymentOverviewStore();
+  const { toast } = useToast();
   const [paymentYears, setPaymentYears] = useState<number[] | null>(null);
   const [splitPaymentsEqually, setSplitPaymentsEqually] = useState<boolean>(
     !paymentStore.paymentOverview.splitPaymentsEqually ? false : true
@@ -97,7 +98,10 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
     if (splitPaymentsEqually) {
       const checkedScheduledPayments = paymentStore.paymentOverview.scheduledPayments?.filter(p => p.checked)
       if (!checkedScheduledPayments) {
-        return toast.error("Please select at least one payment");
+        return toast({
+          title: "Please select at least one payment",
+          variant: "destructive",
+        });
       }
 
       const equalAmount =Math.round((totalNet / checkedScheduledPayments?.length) * 100) / 100;
@@ -115,7 +119,10 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
     }
 
     if (!payments) {
-      toast.error("Please enter a valid amount for each payment");
+      toast({
+        title: "Please enter a valid amount for each payment",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -137,7 +144,10 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
       paymentStore.updateKeyValue("scheduledPayments", payments);
       onNext();
     } else {
-      toast.error("Total payments do not match the net amount");
+      toast({
+        title: "Total payments do not match the net amount",
+        variant: "destructive",
+      });
     }
   };
 

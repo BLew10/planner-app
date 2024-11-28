@@ -9,7 +9,7 @@ import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import deleteCalendar from "@/actions/calendar-editions/deleteCalendarEdition";
 import { CalendarEdition } from "@prisma/client";
 import DeleteButton from "@/app/(components)/general/DeleteButton";
-import { toast, ToastContainer } from "react-toastify";
+import { useToast } from "@/hooks/shadcn/use-toast";
 
 const columns = [
   {
@@ -30,9 +30,16 @@ const CalendarsPage = () => {
   const [calendars, setCalendars] = useState<Partial<CalendarEdition>[] | null>(
     []
   );
-  const successNotify = () => toast.success("Successfully Deleted");
+  const { toast } = useToast();
+  const successNotify = () => toast({
+    title: "Successfully Deleted",
+    variant: "default",
+  });
   const errorNotify = () =>
-    toast.error("Something went wrong. Deletion failed");
+    toast({
+      title: "Something went wrong. Deletion failed",
+      variant: "destructive",
+    });
 
   const fetchCalendars = async () => {
     const calendars = await getAllCalendars();
@@ -76,7 +83,6 @@ const CalendarsPage = () => {
   return (
     <AnimateWrapper>
       <section className={styles.container}>
-        <ToastContainer />
         <Table
           tableName="Calendar Editions"
           columns={columns}

@@ -23,9 +23,11 @@ export interface ContactTableData extends Contact {
 }
 
 export const getContactsByAddressBook = async (
-  addressBookId: string
-): Promise<Partial<ContactTableData>[] | null> => {
-  "use server";
+  addressBookId: string,
+  page: number,
+  itemsPerPage: number,
+  searchQuery: string
+): Promise<{ contacts: Partial<ContactTableData>[]; total: number }> => {
   const session = await auth();
   const userId = session?.user?.id;
   if (!addressBookId) {
@@ -34,33 +36,47 @@ export const getContactsByAddressBook = async (
   }
 
   try {
-    const contacts = await prisma.contact.findMany({
-      where: {
-        userId,
-        isDeleted: false,
-        ...(addressBookId !== "-1" && {
-          addressBooks: {
-            some: {
-              id: addressBookId,
-            },
+    const where = {
+      userId,
+      isDeleted: false,
+      ...(addressBookId !== "-1" && {
+        addressBooks: {
+          some: {
+            id: addressBookId,
           },
-        }),
-      },
-      select: {
-        id: true,
-        customerSince: true,
-        notes: true,
-        category: true,
-        webAddress: true,
-        contactContactInformation: true,
-        contactTelecomInformation: true,
-        contactAddress: true,
-      },
-    });
+        },
+      }),
+      OR: [
+        { contactContactInformation: { firstName: { contains: searchQuery, mode: 'insensitive' as const } } },
+        { contactContactInformation: { lastName: { contains: searchQuery, mode: 'insensitive' as const } } },
+        { contactContactInformation: { company: { contains: searchQuery, mode: 'insensitive' as const } } },
+        { contactTelecomInformation: { email: { contains: searchQuery, mode: 'insensitive' as const } } },
+      ],
+    };
 
-    return contacts;
-  } catch {
-    return null;
+    const [contacts, total] = await Promise.all([
+      prisma.contact.findMany({
+        where,
+        select: {
+          id: true,
+          customerSince: true,
+          notes: true,
+          category: true,
+          webAddress: true,
+          contactContactInformation: true,
+          contactTelecomInformation: true,
+          contactAddress: true,
+        },
+        skip: (page - 1) * itemsPerPage,
+        take: itemsPerPage,
+      }),
+      prisma.contact.count({ where }),
+    ]);
+
+    return { contacts, total };
+  } catch (error) {
+    console.error("Error fetching contacts:", error);
+    return { contacts: [], total: 0 };
   }
 };
 

@@ -10,7 +10,7 @@ import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import { MdCheck } from "react-icons/md";
 import DeleteButton from "@/app/(components)/general/DeleteButton";
 import { Advertisement } from "@prisma/client";
-import { toast, ToastContainer } from 'react-toastify';
+import { useToast } from "@/hooks/shadcn/use-toast";
 
 const AdvertisementsPage = () => {
   const [advertisementTypes, setAdvertisementTypes] = useState<
@@ -20,8 +20,15 @@ const AdvertisementsPage = () => {
     const advertisements = await getAllAdvertisementTypes();
     setAdvertisementTypes(advertisements);
   };
-  const successNotify = () => toast.success("Successfully Deleted");
-  const errorNotify = () => toast.error("Something went wrong. Deletion failed");
+  const { toast } = useToast();
+  const successNotify = () => toast({
+    title: "Successfully Deleted",
+    variant: "default",
+  });
+  const errorNotify = () => toast({
+    title: "Something went wrong. Deletion failed",
+    variant: "destructive",
+  });
 
   useEffect(() => {
     fetchAdvertisementTypes();
@@ -80,7 +87,6 @@ const AdvertisementsPage = () => {
   return (
     <AnimateWrapper>
       <section className={styles.container}>
-      <ToastContainer />
         <Table tableName="Advertisement Types" columns={columns} data={data} addPath={'/dashboard/advertisement-types/add'} />
       </section>
     </AnimateWrapper>

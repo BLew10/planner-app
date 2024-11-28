@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, } from "react";
 import Link from "next/link";
 import styles from "./Table.module.scss";
 import TextInput from "../form/TextInput";
 import SelectInput from "../form/SelectInput";
 import LoadingSpinner from "./LoadingSpinner";
-import { type } from "os";
 
 interface TableProps {
   tableName: string;

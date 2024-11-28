@@ -12,7 +12,6 @@ import { ScheduledPayment } from "@prisma/client";
 import SimpleModal from "@/app/(components)/general/SimpleModal";
 import SelectInput from "@/app/(components)/form/SelectInput";
 import PaymentScheduleModal from "./PaymentScheduleModal";
-import { ToastContainer } from "react-toastify";
 
 const columns = [
   {
@@ -207,7 +206,6 @@ const BillingPage = () => {
 
   return (
     <div className={styles.container}>
-      <ToastContainer />
       <SimpleModal
         isOpen={openModal}
         closeModal={() => setOpenModal(false)}

@@ -118,7 +118,7 @@ const Dashboard = () => {
   };
 
   return (
-    <AnimateWrapper>
+    <div>
       <div className={styles.container}>
         <div className={styles.printWrapper}>
           <a
@@ -175,7 +175,7 @@ const Dashboard = () => {
           advertisementTypes={selectedAdtypes}
         />
       </div>
-    </AnimateWrapper>
+    </div>
   );
 };
 

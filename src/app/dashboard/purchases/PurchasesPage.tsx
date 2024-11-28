@@ -11,8 +11,7 @@ import deletePurchase from "@/actions/purchases/deletePurchase";
 import PurchaseDetailsModal from "./PurchaseDetailsModal";
 import DeleteButton from "@/app/(components)/general/DeleteButton";
 import { ALL_YEARS } from "@/lib/constants";
-import { toast, ToastContainer } from "react-toastify";
-import { formatDateToString } from "@/lib/helpers/formatDateToString";
+import { useToast } from "@/hooks/shadcn/use-toast";
 const columns = [
   {
     name: "Company Name",
@@ -54,10 +53,17 @@ const PurchasesPage = () => {
   const [purchaseId, setPurchaseId] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [year, setYear] = useState(defaultYear);
+  const { toast } = useToast();
   const searchParams = useSearchParams();
-  const successNotify = () => toast.success("Successfully Deleted");
+  const successNotify = () => toast({
+    title: "Successfully Deleted",
+    variant: "default",
+    });
   const errorNotify = () =>
-    toast.error("Something went wrong. Deletion failed");
+    toast({
+      title: "Something went wrong. Deletion failed",
+      variant: "destructive",
+    });
 
   useEffect(() => {
     const yearParam = searchParams.get("year");
@@ -158,7 +164,6 @@ const PurchasesPage = () => {
 
       <AnimateWrapper>
         <section className={styles.container}>
-          <ToastContainer />
           <Table
             tableName="Purchases"
             columns={columns}

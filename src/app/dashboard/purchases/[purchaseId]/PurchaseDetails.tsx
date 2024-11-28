@@ -9,9 +9,8 @@ import styles from "./PurchaseDetails.module.scss";
 import { usePurchasesStore } from "@/store/purchaseStore";
 import { PurchaseOverviewModel } from "@/lib/models/purchaseOverview";
 import { CalendarEdition } from "@prisma/client";
-import { toast } from "react-toastify";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
-
+import { useToast } from "@/hooks/shadcn/use-toast";
 interface PurchaseProps {
   advertisementTypes: Partial<Advertisement>[];
   calendars: Partial<CalendarEdition>[];
@@ -40,6 +39,7 @@ const Purchase: React.FC<PurchaseProps> = ({
   contactId,
 }) => {
   const purchaseStore = usePurchasesStore();
+  const { toast } = useToast();
   const [selectedCalendars, setSelectedCalendars] = useState<
     Partial<CalendarEdition>[]
   >([]);
@@ -150,14 +150,10 @@ const Purchase: React.FC<PurchaseProps> = ({
           );
           errorAd?.scrollIntoView({ behavior: "smooth", block: "center" });
           placeErrorButton?.classList.add(styles.pulse);
-          toast.error(
-            `Please select at least one slot in the calendar ${calendar?.name} for the advertisement ${ad?.name}.`,
-            {
-              position: "top-right",
-              autoClose: 5000,
-              hideProgressBar: false,
-            }
-          );
+          toast({
+            title: `Please select at least one slot in the calendar ${calendar?.name} for the advertisement ${ad?.name}.`,
+            variant: "destructive",
+          });
           return;
         }
       }

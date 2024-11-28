@@ -16,13 +16,12 @@ import SelectCalendars from "./SelectCalendars";
 import PurchaseDetails from "./PurchaseDetails";
 import PurchaseOverview from "./PurchaseOverview";
 import { FUTURE_YEARS } from "@/lib/constants";
-import { ToastContainer, toast } from "react-toastify";
 import { upsertPurchase } from "@/actions/purchases/upsertPurchase";
 import LoadingSpinner from "@/app/(components)/general/LoadingSpinner";
 import PaymentOverview from "./PaymentOverview";
 import PaymentDetails from "./PaymentDetails";
 import PaymentSchedule from "./PaymentSchedule";
-
+import { toast, useToast } from "@/hooks/shadcn/use-toast";
 interface PurchaseProps {
   advertisementTypes: Partial<Advertisement>[];
   calendars: Partial<CalendarEdition>[];
@@ -126,16 +125,17 @@ const Purchase: React.FC<PurchaseProps> = ({
     if (success) {
       router.push(`/dashboard?year=${year}`);
     } else {
-      toast.error(
-        "Something went wrong. Purchase could not be saved. Contact may already have a purchase for this year."
-      );
+      toast({
+        title:
+          "Something went wrong. Purchase could not be saved. Contact may already have a purchase for this year.",
+        variant: "destructive",
+      });
     }
   };
 
   if (isFetching) {
     return (
       <section className={styles.container}>
-        <ToastContainer />
         <LoadingSpinner />
       </section>
     );
@@ -143,7 +143,6 @@ const Purchase: React.FC<PurchaseProps> = ({
 
   return (
     <section className={styles.container}>
-      <ToastContainer />
       <h2 className={styles.title}>
         Purchase from{" "}
         <span className={styles.companyName}>{contact?.companyName}</span> for

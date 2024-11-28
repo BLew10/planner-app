@@ -17,7 +17,7 @@ import { PaymentOverviewModel } from "@/lib/models/paymentOverview";
 import { PurchaseOverviewModel } from "@/lib/models/purchaseOverview";
 import { useSearchParams, useRouter } from "next/navigation";
 import { formatDateToString } from "@/lib/helpers/formatDateToString";
-import { ToastContainer, toast } from "react-toastify";
+import { useToast } from "@/hooks/shadcn/use-toast";
 
 interface PaymentFormProps {
   payment: Partial<PaymentModel> | null;
@@ -25,6 +25,7 @@ interface PaymentFormProps {
 const PaymentDetails = ({ payment }: PaymentFormProps) => {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { toast } = useToast();
   const [formData, setFormData] = useState<Partial<PaymentModel> | null>(
     payment
   );
@@ -84,10 +85,16 @@ const PaymentDetails = ({ payment }: PaymentFormProps) => {
       setIsSubmitting(true);
       const success = await upsertPayment(data);
       if (success) {
-        toast.success("Payment updated successfully");
+        toast({
+          title: "Payment updated successfully",
+          variant: "default",
+        });
         router.push("/dashboard/payments");
       } else {
-        toast.error("Something went wrong. Please try again.");
+        toast({
+          title: "Something went wrong. Please try again.",
+          variant: "destructive",
+        });
       }
       setIsSubmitting(false);
     }

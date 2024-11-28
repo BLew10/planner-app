@@ -12,7 +12,8 @@ import PaymentScheduleModal from "../billing/PaymentScheduleModal";
 import DeleteButton from "@/app/(components)/general/DeleteButton";
 import { PaymentModel } from "@/lib/models/payment";
 import { ALL_YEARS } from "@/lib/constants";
-import { toast, ToastContainer } from "react-toastify";
+import { useToast } from "@/hooks/shadcn/use-toast";
+
 const columns = [
   {
     name: "Company Name",
@@ -51,8 +52,15 @@ const PaymentsPage = () => {
   });
   const [year, setYear] = useState(nextYear);
   const searchParams = useSearchParams();
-  const successNotify = () => toast.success("Successfully Deleted");
-  const errorNotify = () => toast.error("Something went wrong. Deletion failed");
+  const { toast } = useToast();
+  const successNotify = () => toast({
+    title: "Successfully Deleted",
+    variant: "default",
+  });
+  const errorNotify = () => toast({
+    title: "Something went wrong. Deletion failed",
+    variant: "destructive",
+  });
 
   useEffect(() => {
     const yearParam = searchParams.get("year");
@@ -146,7 +154,6 @@ const PaymentsPage = () => {
 
         <AnimateWrapper>
           <section className={styles.container}>
-            <ToastContainer />
             <Table
               tableName="Payments"
               columns={columns}
