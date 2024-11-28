@@ -3,7 +3,7 @@
 import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
 import { PaymentOverviewModel } from "../models/paymentOverview";
-import { isLate } from "../helpers/isLate";
+import { isLate, serializeReturn } from "../helpers";
 
 export const getPaymentOverviewById = async (
   id: string
@@ -19,7 +19,7 @@ export const getPaymentOverviewById = async (
         payments: true,
       },
     });
-    return payment;
+    return serializeReturn(payment);
   } catch (e) {
     return null;
   }
@@ -80,7 +80,7 @@ export const getOwedPayments = async (year: string) => {
       ],
     });
 
-    return payments;
+    return serializeReturn(payments);
   } catch (e) {
     console.error("Error getting owed payments", e);
     return null;
@@ -124,7 +124,9 @@ export const flagLatePayments = async (userId: string) => {
             },
             data: {
               net: {
-                increment: payment.lateFeeWaived ? 0 : Number(payment.lateFee || 0),
+                increment: payment.lateFeeWaived
+                  ? 0
+                  : Number(payment.lateFee || 0),
               },
             },
           });

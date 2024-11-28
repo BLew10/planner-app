@@ -11,7 +11,7 @@ import { auth } from "@/auth";
 import { PurchaseOverviewModel } from "../models/purchaseOverview";
 import { AdvertisementPurchaseSlotModel } from "../models/advertisementPurchaseSlots";
 import { flagLatePayments } from "./paymentOverview";
-import { formatDateToString } from "../helpers/formatDateToString";
+import { formatDateToString, serializeReturn } from "../helpers";
 
 export interface Purchase {
   id: string;
@@ -165,7 +165,7 @@ export const getPurchaseTableData = async (
     };
   });
 
-  return allPurchases;
+  return serializeReturn(allPurchases);
 };
 
 export interface PurchaseByMonth {

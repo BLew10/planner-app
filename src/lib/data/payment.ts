@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma/prisma";
 import { PaymentModel } from "../models/payment";
 import { flagLatePayments } from "./paymentOverview";
 import { auth } from "@/auth";
-
+import { serializeReturn } from "../helpers";
 export const getPaymentById = async (
   id: string
 ): Promise<Partial<PaymentModel> | null> => {
@@ -19,15 +19,13 @@ export const getPaymentById = async (
         paymentOverview: true,
       },
     });
-    return payment;
+    return serializeReturn(payment);
   } catch (e) {
     return null;
   }
 };
 
-export const getPaymentsByYear = async (
-  year: String
-) => {
+export const getPaymentsByYear = async (year: String) => {
   try {
     const session = await auth();
     const userId = session?.user?.id;
@@ -37,7 +35,7 @@ export const getPaymentsByYear = async (
         userId,
         purchase: {
           year: Number(year),
-        }
+        },
       },
       include: {
         contact: {
@@ -47,14 +45,14 @@ export const getPaymentsByYear = async (
         },
       },
     });
-    return payments;
+    return serializeReturn(payments);
   } catch (e) {
     return null;
   }
-}
+};
 
 export const getPaymentsByContactIdAndYear = async (
-  contactId: string, 
+  contactId: string,
   year: String
 ) => {
   try {
@@ -63,7 +61,7 @@ export const getPaymentsByContactIdAndYear = async (
         contactId,
         purchase: {
           year: Number(year),
-        }
+        },
       },
       include: {
         paymentOverview: true,
@@ -72,11 +70,11 @@ export const getPaymentsByContactIdAndYear = async (
             calendarEditions: true,
           },
         },
-      },  
+      },
     });
-    return payments;
+    return serializeReturn(payments);
   } catch (e) {
-    console.error('Error getting payments for contact:', e);
+    console.error("Error getting payments for contact:", e);
     return null;
   }
-}
+};
