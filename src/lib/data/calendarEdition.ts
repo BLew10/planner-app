@@ -79,8 +79,6 @@ export const getAllCalendars = async (
       prisma.calendarEdition.count({ where })
     ]);
 
-    console.log("calendars", calendars);
-
     return {
       data: calendars,
       totalItems: total

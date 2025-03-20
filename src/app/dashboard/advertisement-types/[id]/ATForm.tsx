@@ -39,7 +39,6 @@ interface ATFormProps {
 
 export default function ATForm({ id }: ATFormProps) {
   const { saveAdType, isLoading, adType } = useAdType({ id: id || "" });
-  console.log(id);
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: DEFAULT_VALUES,
@@ -93,8 +92,8 @@ export default function ATForm({ id }: ATFormProps) {
           Use this form to either add a new advertisement type or edit an existing one.
         </p>
         <p className="text-sm text-muted-foreground mt-1">
-          The "Quantity per Month" field indicates the total number of this advertisement type that can be used each month.
-          For "Day Type" advertisements, this quantity is automatically set to 35 and cannot be altered, reflecting the fixed availability of day-specific slots within a month.
+          The &quot;Quantity per Month&quot; field indicates the total number of this advertisement type that can be used each month.
+          For &quot;Day Type&quot; advertisements, this quantity is automatically set to 35 and cannot be altered, reflecting the fixed availability of day-specific slots within a month.
         </p>
       </CardHeader>
       <CardContent>

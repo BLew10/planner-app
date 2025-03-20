@@ -56,7 +56,6 @@ const deleteContact = async (contactId: string) => {
         },
       });
     });
-    console.log("Contact deleted", contactId);
     return true;
   } catch (error: any) {
     // Handle any potential errors here

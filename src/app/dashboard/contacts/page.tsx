@@ -31,8 +31,6 @@ const ContactsPage = () => {
     addressBookId,
   });
 
-  console.log(selectedRows);
-
   const handleAddressBookChange = (value: string) => {
     setAddressBookId(value);
     setCurrentPage(1);

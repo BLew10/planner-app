@@ -1,11 +1,26 @@
-import { Dialog, Transition } from "@headlessui/react";
-import { Fragment, useEffect, useState } from "react";
-import styles from "./PaymentScheduleModal.module.scss";
+import { useEffect, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { getPaymentOverviewById } from "@/lib/data/paymentOverview";
 import LoadingSpinner from "@/app/(components)/general/LoadingSpinner";
 import { ScheduledPayment } from "@prisma/client";
 import { PaymentOverviewModel } from "@/lib/models/paymentOverview";
 import { PaymentModel } from "@/lib/models/payment";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface PaymentScheduleModalProps {
   isOpen: boolean;
@@ -23,8 +38,12 @@ export default function PaymentScheduleModal({
   const [paymentOverview, setPaymentOverviewData] =
     useState<Partial<PaymentOverviewModel> | null>(null);
   const [isFetching, setIsFetching] = useState(false);
-  const [scheduledPayments, setScheduledPayments] = useState<ScheduledPayment[] | null>(null);
-  const [paymentsMade, setPaymentsMade] = useState<Partial<PaymentModel>[] | null>(null);
+  const [scheduledPayments, setScheduledPayments] = useState<
+    ScheduledPayment[] | null
+  >(null);
+  const [paymentsMade, setPaymentsMade] = useState<
+    Partial<PaymentModel>[] | null
+  >(null);
 
   const sortByDateScheduledPayments = (payments: ScheduledPayment[] | null) => {
     if (payments) {
@@ -36,196 +55,146 @@ export default function PaymentScheduleModal({
       });
     }
     return [];
-  }
+  };
 
   const sortByDatePaymentsMade = (payments: Partial<PaymentModel>[] | null) => {
     if (payments) {
       return payments.sort((a, b) => {
         if (a.paymentDate && b.paymentDate) {
-          return new Date(a.paymentDate).getTime() - new Date(b.paymentDate).getTime();
+          return (
+            new Date(a.paymentDate).getTime() -
+            new Date(b.paymentDate).getTime()
+          );
         }
         return 0;
       });
     }
     return [];
-  }
+  };
   useEffect(() => {
     const fetchData = async () => {
       setIsFetching(true);
       const data = await getPaymentOverviewById(paymentId);
       setPaymentOverviewData(data || null);
       if (data) {
-        setScheduledPayments(sortByDateScheduledPayments(paymentOverview?.scheduledPayments || null));
-        setPaymentsMade(sortByDatePaymentsMade(paymentOverview?.payments || null));
+        setScheduledPayments(
+          sortByDateScheduledPayments(
+            paymentOverview?.scheduledPayments || null
+          )
+        );
+        setPaymentsMade(
+          sortByDatePaymentsMade(paymentOverview?.payments || null)
+        );
       }
       setIsFetching(false);
     };
     fetchData();
   }, [paymentId]);
-  
+
   return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-10" onClose={closeModal}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black/25" />
-        </Transition.Child>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && closeModal()}>
+      <DialogContent className="sm:max-w-[650px]">
+        {title && (
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+          </DialogHeader>
+        )}
 
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <Dialog.Panel
-                className={`w-full max-w-md transform overflow-hidden rounded-2xl p-6 text-left align-middle shadow-xl transition-all ${styles.modal}`}
-              >
-                {title && (
-                  <Dialog.Title
-                    as="h3"
-                    className={`text-lg font-medium leading-6 text-gray-900 ${styles.title}`}
-                  >
-                    {title}
-                  </Dialog.Title>
-                )}
-                {isFetching ? (
-                  <LoadingSpinner className={styles.spinner} />
+        {isFetching ? (
+          <div className="flex justify-center py-8">
+            <LoadingSpinner />
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Payment Schedule</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {paymentOverview?.scheduledPayments &&
+                paymentOverview?.scheduledPayments.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Due Date</TableHead>
+                        <TableHead>Amount Owed</TableHead>
+                        <TableHead>Payment Date</TableHead>
+                        <TableHead>Amount Paid</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {sortByDateScheduledPayments(
+                        paymentOverview?.scheduledPayments || null
+                      ).map((payment) => (
+                        <TableRow key={payment.id}>
+                          <TableCell>{payment.dueDate}</TableCell>
+                          <TableCell>
+                            ${Number(payment.amount).toFixed(2)}
+                          </TableCell>
+                          <TableCell>{payment.paymentDate}</TableCell>
+                          <TableCell>
+                            ${Number(payment.amountPaid).toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 ) : (
-                  <div className="mt-2">
-                        <p className="font-bold">Payment Schedule</p>
-                    {paymentOverview?.scheduledPayments &&
-                    paymentOverview?.scheduledPayments.length > 0 ? (
-                      <>
-                        <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                          <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                            <tr>
-                              <th scope="col" className="px-6 py-3">
-                                Due Date
-                              </th>
-                              <th scope="col" className="px-6 py-3">
-                                Amount Owed
-                              </th>
-                              <th scope="col" className="px-6 py-3">
-                                Payment Date
-                              </th>
-                              <th scope="col" className="px-6 py-3">
-                                Amount Paid
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {sortByDateScheduledPayments(paymentOverview?.scheduledPayments || null).map(
-                              (payment) => (
-                                <tr
-                                  className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
-                                  key={payment.id}
-                                >
-                                  <td className="px-6 py-4">
-                                    {payment.dueDate}
-                                  </td>
-                                  <td className="px-6 py-4">
-                                    ${Number(payment.amount).toFixed(2)}
-                                  </td>
-                                  <td className="px-6 py-4">
-                                    {payment.paymentDate}
-                                  </td>
-                                  <td className="px-6 py-4">
-                                    ${Number(payment.amountPaid).toFixed(2)}
-                                  </td>
-                                </tr>
-                              )
-                            )}
-                          </tbody>
-                        </table>
-                      </>
-                    ) : (
-                      <div className="text-center">
-                        No Payment Schedule found
-                      </div>
-                    )}
-                    <div className="mt-10">
-                    <p className="font-bold">Payment History</p>
-
-                      {paymentOverview?.payments &&
-                      paymentOverview?.payments.length > 0 ? (
-                        <>
-                          <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                            <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                              <tr>
-                                <th scope="col" className="px-6 py-3">
-                                  Payment Date
-                                </th>
-                                <th scope="col" className="px-6 py-3">
-                                  Payment Method
-                                </th>
-                                <th scope="col" className="px-6 py-3">
-                                  Check Number
-                                </th>
-
-                                <th scope="col" className="px-6 py-3">
-                                  Amount
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {sortByDatePaymentsMade(paymentOverview?.payments || null).map((payment) => (
-                                <tr
-                                  className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
-                                  key={payment.id}
-                                >
-                                  <td className="px-6 py-4">
-                                    {payment.paymentDate}
-                                  </td>
-                                  <td className="px-6 py-4">
-                                    {payment.paymentMethod || "Deposit"} {payment.wasPrepaid && "- Prepayment"}
-                                  </td>
-                                  <td className="px-6 py-4">
-                                    {payment.checkNumber}
-                                  </td>
-
-                                  <td className="px-6 py-4">
-                                    ${Number(payment.amount).toFixed(2)}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </>
-                      ) : (
-                        <div className="text-center">
-                          No Payments have been made
-                        </div>
-                      )}
-                    </div>
+                  <div className="text-center py-3 text-muted-foreground">
+                    No Payment Schedule found
                   </div>
                 )}
+              </CardContent>
+            </Card>
 
-                <div className="mt-4">
-                  <button
-                    type="button"
-                    className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                    onClick={closeModal}
-                  >
-                    Close
-                  </button>
-                </div>
-              </Dialog.Panel>
-            </Transition.Child>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Payment History</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {paymentOverview?.payments &&
+                paymentOverview?.payments.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Payment Date</TableHead>
+                        <TableHead>Payment Method</TableHead>
+                        <TableHead>Check Number</TableHead>
+                        <TableHead>Amount</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {sortByDatePaymentsMade(
+                        paymentOverview?.payments || null
+                      ).map((payment) => (
+                        <TableRow key={payment.id}>
+                          <TableCell>{payment.paymentDate}</TableCell>
+                          <TableCell>
+                            {payment.paymentMethod || "Deposit"}{" "}
+                            {payment.wasPrepaid && "- Prepayment"}
+                          </TableCell>
+                          <TableCell>{payment.checkNumber}</TableCell>
+                          <TableCell>
+                            ${Number(payment.amount).toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-3 text-muted-foreground">
+                    No Payments have been made
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
-        </div>
-      </Dialog>
-    </Transition>
+        )}
+
+        <DialogFooter>
+          <Button onClick={closeModal}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

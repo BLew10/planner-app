@@ -12,12 +12,12 @@ import {
 import { Button } from "@/components/ui/button"
 
 interface ActionModalProps {
-  isOpen: boolean
-  closeModal: () => void
-  onAction: () => void
-  title? string
-  text?: string
-  actionText?: string
+  isOpen: boolean;
+  closeModal: () => void;
+  onAction: () => void;
+  title?: string;
+  text?: string;
+  actionText?: string;
 }
 
 export function ActionModalComponent({

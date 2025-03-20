@@ -51,9 +51,9 @@ const AddressBooksPage = () => {
             Edit
           </Link>
           <DeleteButton
-            title="Delete Address Book"
             onDelete={() =>  onAddressBookDelete(addressBook.id)}
-            text={`Are you sure you want to delete ${addressBook.name}?`}
+            itemType="addressBook"
+            itemName={addressBook.name || ""}
           />
         </div>,
       ];

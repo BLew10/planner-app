@@ -28,7 +28,6 @@ export const getAdvertisementTypeById = async (
       },
     });
 
-    console.log(advertisementType);
     return advertisementType;
   } catch {
     return null;

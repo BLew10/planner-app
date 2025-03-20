@@ -27,7 +27,6 @@ export function useAdType({ id }: UseAdTypeProps) {
       setIsLoading(true);
       try {
         const data = await getAdvertisementTypeById(id);
-        console.log(data);
         if (data) {
           setAdType({
             name: data.name || "",

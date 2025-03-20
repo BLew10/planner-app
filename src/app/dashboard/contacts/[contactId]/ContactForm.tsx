@@ -98,7 +98,6 @@ const mapContactToFormValues = (
 ): ContactFormValues => {
   if (!contact) return DEFAULT_FORM_VALUES;
 
-  console.log(contact.category);
   return {
     customerSince: contact.customerSince || "",
     notes: contact.notes || "",

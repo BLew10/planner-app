@@ -10,7 +10,6 @@ export const useAdTypes = ({
   const [adTypes, setAdTypes] = useState<Partial<Advertisement>[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
-  console.log(selectedRows);
   const [totalItems, setTotalItems] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -70,7 +69,6 @@ export const useAdTypes = ({
     try {
       const results = [];
       for (const id of selectedRows) {
-        console.log(id);
         try {
           const result = await deleteAdvertisementType(id);
           results.push(result);

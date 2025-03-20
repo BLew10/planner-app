@@ -53,7 +53,6 @@ const generateStatementTable = (
     Number(prePayment?.amount || 0) -
     (latePaymentCount?.length || 0) * lateFee;
   const tableData = [];
-  console.log(paymentOverview?.purchase?.createdAt);
   const firstRow = [
     formatDateToString(paymentOverview?.purchase?.createdAt as Date),
     `${paymentOverview?.year} TOWN PLANNER`,

@@ -135,7 +135,7 @@ export const getContactById = async (id: string) => {
       });
     return contact;
   } catch (e) {
-    console.log("Error getting contact", e);
+    console.error("Error getting contact", e);
     return null;
   }
 };
@@ -171,7 +171,7 @@ export const deleteManyContacts = async (contactIds: string[]) => {
 
     return true;
   } catch (e) {
-    console.log("Error deleting contacts", e);
+    console.error("Error deleting contacts", e);
     return false;
   }
 };
