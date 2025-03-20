@@ -1,130 +1,144 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { getPurchasesByContactId } from "@/lib/data/purchase";
 import styles from "./ContactPurchasesOverview.module.scss";
 import { Purchase } from "@/lib/data/purchase";
 import { MONTHS } from "@/lib/constants";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useContactPurchases, PurchaseSlots } from "@/hooks/contact/useContactPurchases";
 
 interface ContactPurchasesOverviewProps {
   contactId: string;
 }
 
-interface GroupedPurchases {
-  [key: string]: {
-    calendarEdition: string; // Assuming calendarEdition is a string; adjust if it's an object or another type
-    year: number;
-    purchases: {
-      id: string;
-      advertisement: {
-        name: string;
-        id: string;
-      };
-      calendarEdition: string;
-      year: number;
-      quantity: number;
-      charge: number;
-      slots: PurchaseSlots[];
-    }[];
-  };
-}
+const groupSlotsByMonth = (slots: PurchaseSlots[]) => {
+  return slots.reduce((acc, slot) => {
+    const { month } = slot;
+    const key = `${month}`;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(slot);
+    return acc;
+  }, {} as { [key: string]: PurchaseSlots[] });
+};
 
-interface PurchaseSlots {
-  id: string;
-  slot: number | null;
-  month: number;
-  date: Date | null;
-}
 const ContactPurchasesOverview = ({
   contactId,
 }: ContactPurchasesOverviewProps) => {
-  const [groupedPurchases, setGroupedPurchases] =
-    useState<GroupedPurchases | null>(null);
-  useEffect(() => {
-    const fetchContactPurchases = async (contactId: string) => {
-      const contactPurchases = await getPurchasesByContactId(contactId);
-      if (contactPurchases) {
-        const groupedData = groupPurchasesByCalendarAndYear(contactPurchases);
-        if (!groupedData || Object.keys(groupedData).length === 0) return;
-        setGroupedPurchases(groupedData);
-      }
-    };
-    fetchContactPurchases(contactId);
-  }, []);
-
-  const groupPurchasesByCalendarAndYear = (
-    purchases: Partial<Purchase>[][] | null
-  ) => {
-    return (
-      purchases?.reduce((acc: { [key: string]: any }, purchaseOverviews) => {
-        purchaseOverviews.forEach((purchase) => {
-          const { calendarEdition, year } = purchase;
-          const key = `${calendarEdition}-${year}`;
-
-          if (!acc[key]) {
-            acc[key] = {
-              calendarEdition,
-              year,
-              purchases: [],
-            };
-          }
-          acc[key].purchases.push(purchase);
-        });
-
-        return acc;
-      }, {} as GroupedPurchases) || {}
-    );
-  };
-
-  const groupSlotsByMonth = (slots: PurchaseSlots[]) => {
-    return slots.reduce((acc, slot) => {
-      const { month } = slot;
-      const key = `${month}`;
-      if (!acc[key]) acc[key] = [];
-      acc[key].push(slot);
-      return acc;
-    }, {} as { [key: string]: PurchaseSlots[] });
-  };
+  const { groupedPurchases, isLoading } = useContactPurchases({ contactId });
 
   return (
-    <div className={styles.contactPurchases}>
-      <h2 className={styles.groupHeader}>Purchases</h2>
-      {groupedPurchases ? (
-        Object.entries(groupedPurchases).map(([key, value]) => (
-          <div key={key}>
-            <h3
-              className={styles.calendarAndYear}
-            >{`${value.calendarEdition} - ${value.year}`}</h3>
-            <div className={styles.purchases}>
-            {value.purchases.map((purchase) => {
-              const monthSlots = purchase.slots
-                ? groupSlotsByMonth(purchase.slots)
-                : null;
-              return (
-                <div key={purchase.id} className={styles.purchase}>
-                  <div className={styles.purchaseHeading}>
-                    <p className={styles.adType}>{purchase.advertisement.name}</p>
-                    <p className={styles.adCharge}>Total: ${purchase.charge.toFixed(2)}</p>
-                  </div>
-                  <div key={purchase.id} className={styles.purchaseContent}>
-                    {monthSlots && Object.keys(monthSlots).map((month, i) => (
-                      <div key={month} className={styles.slot}>
-                        <p className={styles.slotMonth}>{MONTHS[i]}:
-                        {monthSlots[month].map((slot, i) => (
-                          <span key={slot.id} className={styles.slotText}> {slot.date ? slot.date?.toLocaleDateString() : `Slot - ${slot.slot}`}{ i < monthSlots[month].length - 1 && ', '}</span>
-                        ))}
-                        </p>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Purchases</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <ScrollArea className="h-[600px] pr-4">
+            <div className="space-y-8">
+              {[...Array(2)].map((_, yearIndex) => (
+                <div key={yearIndex} className="space-y-4">
+                  <Skeleton className="h-7 w-20" />
+                  <div className="space-y-4">
+                    {[...Array(3)].map((_, purchaseIndex) => (
+                      <div
+                        key={purchaseIndex}
+                        className="rounded-lg border p-4 space-y-4"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-2">
+                            <Skeleton className="h-5 w-40" />
+                            <Skeleton className="h-6 w-32" />
+                          </div>
+                          <Skeleton className="h-5 w-24" />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                          {[...Array(6)].map((_, monthIndex) => (
+                            <Skeleton
+                              key={monthIndex}
+                              className="h-14 w-full rounded-md"
+                            />
+                          ))}
+                        </div>
                       </div>
                     ))}
                   </div>
+                  <Separator className="my-4" />
                 </div>
-              );
-            })}
+              ))}
             </div>
-          </div>
-        ))
-      ) : (
-        <p className={styles.noPurchases}>No purchases found</p>
-      )}
-    </div>
+          </ScrollArea>
+        ) : groupedPurchases ? (
+          <ScrollArea className="h-[600px] pr-4">
+            <div className="space-y-8">
+              {Object.entries(groupedPurchases).map(([key, value]) => (
+                <div key={key} className="space-y-4">
+                  <h3 className="text-lg font-semibold">{value.year}</h3>
+                  <div className="space-y-4">
+                    {value.purchases.map((purchase) => {
+                      const monthSlots = purchase.slots
+                        ? groupSlotsByMonth(purchase.slots)
+                        : null;
+                      return (
+                        <div
+                          key={purchase.id}
+                          className="rounded-lg border p-4 space-y-4"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                              <p className="font-medium">
+                                {purchase.calendarName}
+                              </p>
+                              <p className="text-sm px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full inline-flex items-center font-medium border border-blue-200">
+                                {purchase.advertisement.name}
+                              </p>
+                            </div>
+                            <p className="font-medium">
+                              Total: ${purchase.charge.toFixed(2)}
+                            </p>
+                          </div>
+                          {monthSlots && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                              {Object.keys(monthSlots).map((month, i) => (
+                                <div
+                                  key={month}
+                                  className="text-sm bg-muted/50 rounded-md p-2"
+                                >
+                                  <span className="font-medium">
+                                    {MONTHS[i]}:{" "}
+                                  </span>
+                                  <span className="text-muted-foreground">
+                                    {monthSlots[month].map((slot, i) => (
+                                      <span key={slot.id}>
+                                        {slot.date
+                                          ? slot.date.toString()
+                                          : `Slot ${slot.slot}`}
+                                        {i < monthSlots[month].length - 1 &&
+                                          ", "}
+                                      </span>
+                                    ))}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <Separator className="my-4" />
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        ) : (
+          <p className="text-muted-foreground text-center py-4">
+            No purchases found
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

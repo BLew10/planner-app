@@ -1,0 +1,68 @@
+.container {
+  width: 100%;
+  padding: 50px;
+}
+
+.yearWrapper {
+  width: 100px;
+  margin-bottom: 20px;
+}
+
+.title {
+  color: var(--text-color);
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+}
+
+.mainTitle {
+  color: var(--text-color);
+  font-weight: bold;
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+}
+
+.calendarsWrapper,
+.adsWrapper {
+  margin-bottom: 20px;
+}
+
+.button {
+  background-color: var(--primary-blue);
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--primary-blue-dark);
+  }
+
+  &:disabled {
+    background-color: darkgray;
+    cursor: not-allowed;
+    color: white;
+  }
+}
+
+.toggleAllButton {
+  margin-bottom: 20px;
+  background-color: var(--primary-green);
+  color: white;
+  border: none;
+  padding: 5px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: .8rem;
+
+  &:hover {
+    background-color: var(--primary-green-dark);
+  }
+}
+
+.header {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}

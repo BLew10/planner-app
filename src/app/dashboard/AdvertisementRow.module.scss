@@ -1,0 +1,73 @@
+.adRow {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    align-items: center;
+}
+
+.adTitle {
+    color: var(--primary-blue-dark);
+    font-size: 1.2rem;
+    width: 100%;
+    text-align: center;
+    font-weight: bold;
+
+}
+
+.monthsContainer {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    margin-bottom: 50px;
+}
+
+.monthName {
+    color: var(--text-color);
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 5px;
+    font-weight: bold;
+    padding: 5px;
+}
+
+.month {
+    padding: 10px 20px;
+    &:nth-child(even) {
+        background-color: var(--row-odd-color);
+    }
+
+    &:nth-child(odd) {
+        background-color: var(--row-even-color);
+    }
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3-column grid */
+    gap: 20px;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 20px;
+}
+
+.gridItem {
+    padding: 20px;
+    color: var(--text-color);
+}
+
+.label {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.gridItemText {
+    color: var(--text-color);
+    font-size: 0.8rem;
+}

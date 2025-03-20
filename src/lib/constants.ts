@@ -235,7 +235,6 @@ const countryList = [
   "United Arab Emirates (the)",
   "United Kingdom of Great Britain and Northern Ireland (the)",
   "United States Minor Outlying Islands (the)",
-  "United States",
   "Uruguay",
   "Uzbekistan",
   "Vanuatu",
@@ -572,7 +571,7 @@ function generateFutureYears() {
   const currentYear = new Date().getFullYear();
   const years = [];
 
-  for (let i = 0; i <= 5; i++) {
+  for (let i = 1; i <= 5; i++) {
     years.push({
       value: String(currentYear + i),
       label: String(currentYear + i),
@@ -588,7 +587,7 @@ function allYears() {
   const difference = currentYear - startYear;
   const years = [];
 
-  for (let i = 0; i <= (difference + 5); i++) {
+  for (let i = 0; i <= difference + 5; i++) {
     years.push({
       value: String(2024 + i),
       label: String(2024 + i),
@@ -599,7 +598,7 @@ function allYears() {
 
 export const FUTURE_YEARS = generateFutureYears();
 
-export const ALL_YEARS = allYears()
+export const ALL_YEARS = allYears();
 
 export const MONTHS = [
   "January",
@@ -616,44 +615,21 @@ export const MONTHS = [
   "December",
 ];
 
-export type PaymentFrequencyType = "Daily" | "Weekly" | "Monthly" | "Annually";
-export const PAYMENT_FREQUENCIES: { value: PaymentFrequencyType, label: string }[] = [
-  {
-    value: "Daily",
-    label: "Daily",
-  },
-  {
-    value: "Weekly",
-    label: "Weekly",
-  },
-  {
-    value: "Monthly",
-    label: "Monthly",
-  },
-  {
-    value: "Annually",
-    label: "Annually",
-  },
-]
+const nextYear = new Date().getFullYear() + 1;
 
-export type PaymentStatusType = 'Pending' | 'Completed' | 'Cancelled' | 'In Progress';
-export type InvoiceStatusType = 'Pending' | 'Paid' | 'Late' | 'Refunded' | 'Failed' | 'Voided' | 'In Progress' | 'Cancelled' | 'Uncollectible';
+export const DEFAULT_YEAR =
+  ALL_YEARS.find((year) => year.value === String(nextYear))?.value ||
+  ALL_YEARS[0].value;
 
-export const PAYMENT_STATUSES: { value: PaymentStatusType, label: string }[] = [
+export type InvoiceType = "invoiceTotalSale" | "statements";
+
+export const INVOICE_TYPES: { value: InvoiceType; label: string }[] = [
   {
-    value: "Pending",
-    label: "Pending",
+    value: "invoiceTotalSale",
+    label: "Invoice Total Sale",
   },
   {
-    value: "In Progress",
-    label: "In Progress",
+    value: "statements",
+    label: "Statements",
   },
-  {
-    value: "Completed",
-    label: "Completed",
-  },
-  {
-    value: "Cancelled",
-    label: "Cancelled",
-  }
-]
+];

@@ -1,0 +1,21 @@
+.title {
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.button {
+    margin-top: 20px;
+    width: 100%;
+    background-color: var(--primary-blue);
+    color: var(--text-secondary);
+    border: none;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.year {
+    width: 120px;
+    margin-bottom: 20px;
+}

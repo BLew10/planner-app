@@ -1,18 +1,13 @@
 import ContactForm from "./ContactForm";
-import styles from "./page.module.scss";
 
-const UpdateContactPage = async ({
+const UpsertContactPage = async ({
   params,
 }: {
   params: { contactId: string };
 }) => {
-  let  { contactId } = params;
+  const { contactId } = params;
 
-  return (
-    <section className={styles.container}>
-      <ContactForm id={contactId === 'add' ? null : contactId} />
-    </section>
-  );
+  return <ContactForm id={contactId === "add" ? null : contactId} />;
 };
 
-export default UpdateContactPage;
+export default UpsertContactPage;

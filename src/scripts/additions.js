@@ -4,7 +4,7 @@ const csvParser = require("csv-parser");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-const sponsorsAndProspectsCSV = "./data/sponsorsAndProspects.csv";
+const sponsorsAndProspectsCSV = "./data/old-address-book.csv";
 
 async function seedContactsFromCSV() {
   // Read and parse the CSV file
@@ -22,19 +22,23 @@ async function seedContactsFromCSV() {
       const length = contacts.length;
       const user = await prisma.user.findFirst({
         where: {
-          firstName: "Joyce"
-        }
+          firstName: "Brandon",
+        },
       });
       for (const contact of contacts) {
+        if (count > 30) break;
         count++;
         console.log(`Processing contact ${count} of ${length}`);
-       await  upserContact(contact, addressBook.id, user.id);
+        if (!contact) {
+          console.log("Skipping empty contact");
+          continue;
+        }
+        await upserContact(contact, addressBook?.id, user.id);
       }
 
       console.log("All contacts have been processed");
     });
 }
-
 const mapKeys = (contact) => {
   try {
     let mappedContact = {};
@@ -55,6 +59,9 @@ const mapKeys = (contact) => {
         case "Phone":
           mappedContact.phone = contact[key];
           break;
+        case "Alt Phone Number":
+          mappedContact.altPhone = contact[key];
+          break;
         case "Cell":
           mappedContact.cell = contact[key];
         case "Address":
@@ -63,7 +70,7 @@ const mapKeys = (contact) => {
         case "City":
           mappedContact.city = contact[key];
           break;
-        case "State":
+        case "State" || "StatePr":
           mappedContact.state = contact[key];
           break;
         case "ZipPC":
@@ -87,6 +94,13 @@ const mapKeys = (contact) => {
       }
     });
 
+    if (
+      (!mappedContact.lastName || !mappedContact.firstName) &&
+      !mappedContact.company
+    ) {
+      return null;
+    }
+
     return mappedContact;
   } catch (error) {
     console.error(error);
@@ -96,68 +110,97 @@ const mapKeys = (contact) => {
 const upserContact = async (contactData, addressBookID, userId) => {
   try {
     if (!contactData) return;
-    let contact;
-    const result = await prisma.$transaction(async (prisma) => {
-      contact = await prisma.contact.create({
-        data: {
+
+    // Check if the company and email already exist in the database
+    const existingContact = await prisma.contactContactInformation.findFirst({
+      where: {
+        company: contactData.company,
+        contact: {
           userId,
-          customerSince: contactData.customerSince,
-          notes: contactData.notes || null,
-          category: contactData.category,
-          webAddress: contactData.webAddress,
-          addressBooks: {
-            connect: [
-              {
-                id: addressBookID,
-              },
-            ],
+          contactTelecomInformation: {
+            email: contactData.email,
           },
         },
-      });
+      },
+      include: {
+        contact: true,
+      },
+    });
 
-      if (contact && contact.id) {
-        await prisma.contactContactInformation.create({
-          data: {
-            firstName: contactData.firstName,
-            lastName: contactData.lastName,
-            company: contactData.company,
-            contactId: contact.id,
-          },
-        });
-
-        await prisma.contactTelecomInformation.create({
-          data: {
-            extension: contactData.extension,
-            phone: contactData.phone,
-            cellPhone: contactData.cell,
-            contactId: contact.id,
-          },
-        });
-
-        await prisma.contactAddress.create({
-          data: {
-            address: contactData.address,
-            city: contactData.city,
-            state: contactData.state,
-            zip: contactData.zip,
-            country: "United States",
-            contactId: contact.id,
-          },
-        });
-
-        await prisma.contactAddressBook.create({
-          data: {
-            addressBookId: addressBookID,
-            contactId: contact.id,
-          },
-        });
-      }
-    },
-    {
-      maxWait: 10000,
-      timeout: 10000,
+    if (existingContact) {
+      console.log(
+        `Contact with company ${contactData.company} and email ${contactData.email} already exists, skipping...`
+      );
+      return;
     }
 
+    if (existingContact) {
+      console.log(`Company ${contactData.company} already exists, skipping...`);
+      return;
+    }
+    let contact;
+    const result = await prisma.$transaction(
+      async (prisma) => {
+        contact = await prisma.contact.create({
+          data: {
+            userId,
+            customerSince: contactData.customerSince,
+            notes: contactData.notes || null,
+            category: contactData.category,
+            webAddress: contactData.webAddress,
+            addressBooks: {
+              connect: [
+                {
+                  id: addressBookID,
+                },
+              ],
+            },
+          },
+        });
+
+        if (contact && contact.id) {
+          await prisma.contactContactInformation.create({
+            data: {
+              firstName: contactData.firstName,
+              lastName: contactData.lastName,
+              company: contactData.company,
+              contactId: contact.id,
+            },
+          });
+
+          await prisma.contactTelecomInformation.create({
+            data: {
+              extension: contactData.extension,
+              phone: contactData.phone,
+              cellPhone: contactData.altPhone,
+              contactId: contact.id,
+              email: contactData.email,
+            },
+          });
+
+          await prisma.contactAddress.create({
+            data: {
+              address: contactData.address,
+              city: contactData.city,
+              state: contactData.state,
+              zip: contactData.zip,
+              country: "United States",
+              contactId: contact.id,
+            },
+          });
+
+          await prisma.contactAddressBook.create({
+            data: {
+              addressBookId: addressBookID,
+              contactId: contact.id,
+            },
+          });
+        }
+      },
+      {
+        maxWait: 10000,
+        timeout: 10000,
+      }
     );
   } catch (error) {
     console.error("Error saving contact", error);
@@ -165,37 +208,43 @@ const upserContact = async (contactData, addressBookID, userId) => {
 };
 
 const createAddressBook = async () => {
-  const user = await prisma.user.findFirst();
+  const user = await prisma.user.findFirst({
+    where: {
+      firstName: "Brandon",
+    },
+  });
   const userId = user.id;
   let addressBook = await prisma.addressBook.findFirst({
     where: {
-      name: "Sponsors and Prospects", userId
+      id: "3735fa53-d59c-417a-9d73-dfed47fe8afb",
+      userId,
     },
   });
 
-  // if (addressBook) {
-  //   return addressBook;
-  // }
+  if (addressBook) {
+    console.log("Address book already exists");
+    return addressBook;
+  }
 
   addressBook = await prisma.addressBook.create({
     data: {
-      name: "Sponsors and Prospects",
+      name: "test",
       userId,
       displayLevel: "Private",
     },
   });
 
-  return addressBook;
+  return null;
 };
 
 const createCalendarEditions = async () => {
   const user = await prisma.user.findFirst({
     where: {
-      firstName: "Joyce"
-    }
+      firstName: "Brandon",
+    },
   });
   const userId = user.id;
-  const editionNames = ['Sacramento, Arden', 'Elk Grove', 'West Sacramento']
+  const editionNames = ["Sacramento, Arden", "Elk Grove", "West Sacramento"];
   for (const name of editionNames) {
     // const edition = await prisma.calendarEdition.findFirst({
     //   where: {
@@ -206,35 +255,35 @@ const createCalendarEditions = async () => {
     await prisma.calendarEdition.create({
       data: {
         name,
-        userId
-      }
-    })
+        userId,
+      },
+    });
   }
-}
+};
 
 const createAdvertismentTypes = async () => {
   const user = await prisma.user.findFirst({
     where: {
-      firstName: "Joyce"
-    }
+      firstName: "Brandon",
+    },
   });
   const userId = user.id;
-for (const type of ADVERTISEMENT_TYPES) {
-  // const existingType = await prisma.advertisement.findFirst({
-  //   where: {
-  //     name: type.name, userId
-  //   }
-  // })
-  await prisma.advertisement.create({
-    data: {
-      userId,
-      name: type.name,
-      perMonth: type.quantity,
-      isDayType: type.isDayType
-    }
-  })
-}
-}
+  for (const type of ADVERTISEMENT_TYPES) {
+    // const existingType = await prisma.advertisement.findFirst({
+    //   where: {
+    //     name: type.name, userId
+    //   }
+    // })
+    await prisma.advertisement.create({
+      data: {
+        userId,
+        name: type.name,
+        perMonth: type.quantity,
+        isDayType: type.isDayType,
+      },
+    });
+  }
+};
 const CATEGORIES = [
   { value: "0", label: "Please select" },
   { value: "1", label: "Accountants" },
@@ -496,45 +545,87 @@ const ADVERTISEMENT_TYPES = [
   {
     name: "Display",
     quantity: 4,
-    isDayType: false
+    isDayType: false,
   },
   {
     name: "Premium Display",
     quantity: 2,
-    isDayType: false
+    isDayType: false,
   },
   {
     name: "Billboard",
     quantity: 1,
-    isDayType: false
+    isDayType: false,
   },
   {
     name: "Monthly Photo",
     quantity: 1,
-    isDayType: false
+    isDayType: false,
   },
   {
     name: "Coupon",
     quantity: 8,
-    isDayType: false
+    isDayType: false,
   },
   {
     name: "Junior Coupon",
     quantity: 16,
-    isDayType: false
+    isDayType: false,
   },
   {
     name: "DateBlock",
     quantity: 35,
-    isDayType: true
+    isDayType: true,
   },
   {
     name: "Double DateBlock",
     quantity: 35,
-    isDayType: true
+    isDayType: true,
+  },
+];
+
+async function addContactsToSponsors() {
+  // Ensure the "Sponsors" address book exists
+  const user = await prisma.user.findFirst();
+  const userId = user.id;
+
+  let addressBook = await prisma.addressBook.findFirst({
+    where: {
+      name: "sponsors",
+      userId,
+    },
+  });
+
+  if (!addressBook) {
+    console.log("Sponsors address book does not exist, creating...");
+    return;
   }
 
-]
+  const addressBookId = addressBook.id;
+
+  // Fetch all contacts
+  const contacts = await prisma.contact.findMany({
+    where: { userId },
+  });
+
+  // Connect each contact to the "Sponsors" address book
+  for (const contact of contacts) {
+    await prisma.contact.update({
+      where: {
+        id: contact.id,
+      },
+      data: {
+        addressBooks: {
+          connect: [{ id: addressBookId }],
+        },
+      },
+    });
+  }
+
+  console.log(
+    "All contacts have been connected to the 'Sponsors' address book."
+  );
+}
 createCalendarEditions().catch(console.error);
 createAddressBook().catch(console.error);
 createAdvertismentTypes().catch(console.error);

@@ -5,15 +5,19 @@ import styles from "./SimpleModal.module.scss";
 interface SimpleModalProps {
   isOpen: boolean;
   closeModal: () => void;
+  onAction?: () => void;
   title?: string;
-  text?: string;
+  text?: string | React.ReactNode;
+  actionText?: string;
 }
 
 export default function SimpleModal({
   isOpen,
   closeModal,
+  onAction,
   title,
   text,
+  actionText = "Confirm",
 }: SimpleModalProps) {
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -56,7 +60,16 @@ export default function SimpleModal({
                   <p className={`${styles.text}`}>{text}</p>
                 </div>
 
-                <div className="mt-4">
+                <div className="mt-4 flex justify-between">
+                  {onAction && (
+                    <button
+                      onClick={onAction}
+                      type="button"
+                    className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                      >
+                        {actionText}
+                      </button>
+                  )}
                   <button
                     type="button"
                     className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"

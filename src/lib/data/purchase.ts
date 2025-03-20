@@ -2,24 +2,25 @@
 
 import prisma from "@/lib/prisma/prisma";
 import {
-  AddressBook,
   Contact,
   PurchaseOverview,
   ContactContactInformation,
   CalendarEdition,
 } from "@prisma/client";
 import { auth } from "@/auth";
-import { formatDateToString } from "@/lib/helpers/formatDateToString";
 import { PurchaseOverviewModel } from "../models/purchaseOverview";
+import { AdvertisementPurchaseSlotModel } from "../models/advertisementPurchaseSlots";
+import { flagLatePayments } from "./paymentOverview";
+import { formatDateToString, serializeReturn } from "../helpers";
 
 export interface Purchase {
   id: string;
   year: number;
-  calendarEdition: string
   adPurchases: {
     id: string;
     charge: number;
     quantity: number;
+    calendarName: string;
     advertisement: {
       id: string;
       name: string;
@@ -33,8 +34,9 @@ export interface Purchase {
   }[];
 }
 
-export const getPurchaseById = async (
-  purchaseId: string | undefined = "-1"
+export const getPurchaseByContactIdAndYear = async (
+  contactId: string | undefined = "-1",
+  year: string
 ): Promise<Partial<PurchaseOverviewModel> | null> => {
   const session = await auth();
   if (!session) {
@@ -42,24 +44,36 @@ export const getPurchaseById = async (
   }
 
   const userId = session.user.id;
-
+  await flagLatePayments(userId);
   const purchase = await prisma.purchaseOverview.findFirst({
     where: {
-      id: purchaseId,
+      contactId: contactId,
       userId,
+      year: Number(year),
       isDeleted: false,
     },
     select: {
       id: true,
+      paymentOverviewId: true,
+      calendarEditions: true,
+      adPurchaseSlots: {
+        include: {
+          advertisementPurchase: true,
+        },
+      },
       adPurchases: {
         include: {
           advertisement: true,
-          adPurchaseSlots: true,
-        }
+        },
+      },
+      paymentOverview: {
+        include: {
+          scheduledPayments: true,
+          payments: true,
+        },
       },
     },
   });
-
   if (!purchase) {
     return null;
   }
@@ -69,16 +83,19 @@ export const getPurchaseById = async (
 
 export interface PurchaseTableData {
   id: string;
-  paymentScheduled: boolean;
+  paymentOverviewId: string | null;
   amountOwed: number;
   contactId: string;
   companyName: string;
   year: number;
-  calendarEdition: string;
+  calendarEditions: string;
+  purchasedOn: string;
+  total: number;
+  amountPaid: number;
 }
-export const getPurchaseTableData = async (calendarId: string, year: string): Promise<
-  PurchaseTableData[] | null
-> => {
+export const getPurchaseTableData = async (
+  year: string
+): Promise<PurchaseTableData[] | null> => {
   const session = await auth();
   if (!session) {
     return null;
@@ -89,18 +106,31 @@ export const getPurchaseTableData = async (calendarId: string, year: string): Pr
   const purchases = await prisma.purchaseOverview.findMany({
     where: {
       userId,
-      editionId: calendarId,
       year: Number(year),
       isDeleted: false,
     },
     select: {
       id: true,
       amountOwed: true,
+      createdAt: true,
       year: true,
-      paymentId: true,
-      calendarEdition: {
+      paymentOverviewId: true,
+      paymentOverview: {
         select: {
-          name: true,
+          amountPaid: true,
+          net: true,
+          scheduledPayments: {
+            where: {
+              isLate: true,
+              lateFeeWaived: false,
+              lateFeeAddedToNet: true,
+            },
+          },
+        },
+      },
+      calendarEditions: {
+        select: {
+          code: true,
         },
       },
       contact: {
@@ -117,25 +147,25 @@ export const getPurchaseTableData = async (calendarId: string, year: string): Pr
   });
 
   const allPurchases: PurchaseTableData[] = purchases.map((purchase) => {
+    const calendarsEditions = purchase.calendarEditions
+      .map((e) => e.code)
+      .join(", ");
+
     return {
       id: purchase.id,
-      paymentScheduled: purchase.paymentId ? true : false,
+      paymentOverviewId: purchase.paymentOverviewId || null,
       amountOwed: parseFloat(purchase.amountOwed.toString()) || 0,
       contactId: purchase.contact.id,
       companyName: purchase.contact?.contactContactInformation?.company || "",
       year: purchase.year,
-      calendarEdition: purchase.calendarEdition?.name || "",
+      calendarEditions: calendarsEditions,
+      purchasedOn: formatDateToString(purchase.createdAt),
+      total: Number(purchase.paymentOverview?.net || 0),
+      amountPaid: Number(purchase.paymentOverview?.amountPaid || 0),
     };
   });
 
-  return allPurchases;
-};
-
-export const getAdvertisementPurchasesByContactId = async (
-  contactId: string
-): Promise<Partial<AddressBook>[] | null> => {
-  const session = await auth();
-  return null;
+  return serializeReturn(allPurchases);
 };
 
 export interface PurchaseByMonth {
@@ -152,53 +182,6 @@ export interface PurchaseSlotDetails {
     };
   };
 }
-
-export const getAdvertisementPurchasesByYearAndCalendarId = async (
-  calendarId: string,
-  year: string
-): Promise<PurchaseByMonth | null> => {
-
-  const session = await auth();
-  if (!session || !session.user || !calendarId || !year) {
-    return null;
-  }
-
-  const userId = session.user.id;
-  const purchases = await prisma.advertisementPurchaseSlot.findMany({
-    where: {
-      isDeleted: false,
-      purchaseOverview: {
-        year: Number(year),
-        editionId: calendarId,
-        userId,
-      },
-    },
-    select: {
-      id: true,
-      month: true,
-      slot: true,
-      advertisementPurchase: {
-        select: {
-          advertisement: {
-            select: {
-              name: true,
-              id: true,
-            },
-          },
-        },
-      },
-    },
-  });
-  const purchasesByMonth = purchases.reduce((acc, curr) => {
-    const month = curr.month;
-    if (!acc[month]) {
-      acc[month] = [];
-    }
-    acc[month].push(curr);
-    return acc;
-  }, {} as { [key: number]: { month: number; slot: number; advertisementPurchase: { advertisement: { name: string; id: string } } }[] });
-  return purchasesByMonth;
-};
 
 export interface PurchaseSlot {
   id?: string | null;
@@ -228,7 +211,6 @@ export const getPurchasesByMonthCalendarIdAndYear = async (
       purchaseOverview: {
         userId,
         year: Number(year),
-        editionId: calendarId,
       },
     },
     select: {
@@ -248,7 +230,6 @@ export const getPurchasesByMonthCalendarIdAndYear = async (
       purchaseOverview: {
         select: {
           year: true,
-          editionId: true,
           contact: {
             select: {
               id: true,
@@ -265,7 +246,6 @@ export const getPurchasesByMonthCalendarIdAndYear = async (
   });
 
   const monthData: PurchaseSlot[] = purchases.map((purchase) => {
-    console.log(purchase.date);
     return {
       id: purchase.id,
       slot: purchase.slot,
@@ -286,37 +266,8 @@ export interface ContactInfo extends Contact {
 }
 
 export interface PurchaseInfo extends PurchaseOverview {
-  calendarEdition: CalendarEdition;
+  calendarEditions: CalendarEdition[] | null;
 }
-
-export const getPurchasesWithoutPayment = async (
-  contactId: string
-): Promise<PurchaseInfo[] | null> => {
-  const session = await auth();
-  if (!session) {
-    return null;
-  }
-  const userId = session.user.id;
-
-  const purchasesWithoutPayment: PurchaseInfo[] =
-    await prisma.purchaseOverview.findMany({
-      where: {
-        paymentId: null,
-        userId,
-        contactId,
-        isDeleted: false,
-      },
-      include: {
-        calendarEdition: true,
-      },
-    });
-
-  if (!purchasesWithoutPayment || purchasesWithoutPayment.length === 0) {
-    return null;
-  }
-
-  return purchasesWithoutPayment;
-};
 
 export const getPurchasesByContactId = async (
   contactId: string | undefined = "-1"
@@ -335,13 +286,14 @@ export const getPurchasesByContactId = async (
     },
     select: {
       id: true,
-      calendarEdition: true,
+      calendarEditions: true,
       year: true,
       adPurchases: {
         select: {
           id: true,
           charge: true,
           quantity: true,
+          calendar: true,
           adPurchaseSlots: {
             select: {
               id: true,
@@ -364,22 +316,245 @@ export const getPurchasesByContactId = async (
   if (!purchases) {
     return null;
   }
-  const purchasesData: Partial<Purchase>[][] | null = purchases.map(
-    (p) => {
-      return p.adPurchases.map((purchase) => ({
-        id: purchase.id,
-        year: p.year,
-        calendarEdition: p.calendarEdition.name,
-        charge: parseFloat(purchase.charge.toString()),
-        quantity: purchase.quantity,
-        advertisement: {
-          id: purchase.advertisement.id,
-          name: purchase.advertisement.name,
-        },
-        slots: purchase.adPurchaseSlots,
-      }));
-    }
-  );
+  const purchasesData: Partial<Purchase>[][] | null = purchases.map((p) => {
+    return p.adPurchases.map((purchase) => ({
+      id: purchase.id,
+      year: p.year,
+      calendarName: purchase.calendar.name,
+      charge: parseFloat(purchase.charge.toString()),
+      quantity: purchase.quantity,
+      advertisement: {
+        id: purchase.advertisement.id,
+        name: purchase.advertisement.name,
+      },
+      slots: purchase.adPurchaseSlots,
+    }));
+  });
 
   return purchasesData;
+};
+
+export interface SlotInfo {
+  id?: string;
+  month: number;
+  slot: number | null;
+  date?: string;
+  contactCompany?: string;
+  added?: boolean;
+  advertisementId?: string;
+}
+
+export const getAllSlotsByYearAndCalendarId = async (
+  calendarId: string,
+  year: string,
+  adTypeIds: (string | undefined)[]
+): Promise<Record<string, SlotInfo[]> | null> => {
+  const session = await auth();
+  if (!session || !calendarId || !year || !adTypeIds.length) {
+    return null;
+  }
+  const filteredAdTypeIds = adTypeIds.filter((id): id is string => !!id);
+  try {
+    const slots = await prisma.advertisementPurchaseSlot.findMany({
+      where: {
+        isDeleted: false,
+        calendarId,
+        year: Number(year),
+        advertisementId: { in: filteredAdTypeIds },
+      },
+      include: {
+        contact: {
+          select: {
+            contactContactInformation: {
+              select: {
+                company: true,
+              },
+            },
+          },
+        },
+        advertisementPurchase: {
+          include: {
+            advertisement: true,
+          },
+        },
+      },
+    });
+
+    // Group slots by advertisementId
+    const groupedSlots: Record<string, SlotInfo[]> = {};
+    slots.forEach((slot: Partial<AdvertisementPurchaseSlotModel>) => {
+      const adId = slot?.advertisementId;
+      if (adId) {
+        if (!groupedSlots[adId]) {
+          groupedSlots[adId] = [];
+        }
+        groupedSlots[adId].push({
+          id: slot.id || "",
+          month: slot.month || 0,
+          slot: slot.slot || 0,
+          date: slot.date || "",
+          contactCompany:
+            slot.contact?.contactContactInformation?.company || "",
+        });
+      }
+    });
+    return groupedSlots;
+  } catch (error) {
+    console.error(
+      `Error getting slots for calendar ${calendarId} and year ${year}: ${error}`
+    );
+    return null;
+  }
+};
+
+interface AdvertisementSlots {
+  name: string;
+  slots: SlotInfo[];
+}
+
+export interface CalendarSlots {
+  name: string;
+  ads: Record<string, AdvertisementSlots>;
+}
+export const getAllSlotsFromPurchase = async (
+  purchaseId: string
+): Promise<Record<string, CalendarSlots> | null> => {
+  const session = await auth();
+  if (!session || !purchaseId) {
+    return null;
+  }
+  try {
+    const slots = await prisma.advertisementPurchaseSlot.findMany({
+      where: {
+        isDeleted: false,
+        purchaseId,
+      },
+      include: {
+        calendar: true,
+        contact: {
+          select: {
+            contactContactInformation: {
+              select: {
+                company: true,
+              },
+            },
+          },
+        },
+        advertisementPurchase: {
+          include: {
+            advertisement: true,
+          },
+        },
+      },
+    });
+
+    const groupedSlots: Record<string, CalendarSlots> = {};
+
+    slots.forEach((slot) => {
+      const calendarId = slot.calendar?.id;
+      const calendarName = slot.calendar?.name;
+      const adId = slot.advertisementPurchase?.advertisementId;
+      const adName = slot.advertisementPurchase?.advertisement.name;
+      const companyName = slot.contact?.contactContactInformation?.company;
+
+      if (calendarId && adId) {
+        if (!groupedSlots[calendarId]) {
+          groupedSlots[calendarId] = {
+            name: calendarName || "",
+            ads: {},
+          };
+        }
+        if (!groupedSlots[calendarId].ads[adId]) {
+          groupedSlots[calendarId].ads[adId] = {
+            name: adName || "",
+            slots: [],
+          };
+        }
+        groupedSlots[calendarId].ads[adId].slots.push({
+          month: slot.month || 0,
+          slot: slot.slot || 0,
+          date: slot.date || "",
+          contactCompany: companyName || "",
+          advertisementId: slot.advertisementPurchase?.advertisementId || "",
+        });
+      }
+    });
+
+    return groupedSlots;
+  } catch (error) {
+    console.error(`Error getting slots for purchase ${purchaseId}: ${error}`);
+    return null;
+  }
+};
+
+export const getPurchaseById = async (
+  id: string
+): Promise<Partial<PurchaseOverviewModel> | null> => {
+  const session = await auth();
+  if (!session) {
+    return null;
+  }
+
+  try {
+    const purchase = await prisma.purchaseOverview.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        contact: {
+          include: {
+            contactContactInformation: true,
+          },
+        },
+      },
+    });
+
+    if (!purchase) {
+      return null;
+    }
+
+    return purchase;
+  } catch (error) {
+    console.error(`Error getting purchase ${id}: ${error}`);
+    return null;
+  }
+};
+
+export const getTakenSlots = async (year: string, calendarId: string, contactId: string, adId: string) => {
+  try {
+    const slots = await prisma.advertisementPurchaseSlot.findMany({
+      where: {
+        isDeleted: false,
+        year: Number(year),
+        calendarId,
+        advertisementId: adId,
+        contactId: {
+          not: contactId
+        }
+      },
+      select: {
+        id: true,
+        slot: true,
+        date: true,
+        month: true,
+        contact: {
+          select: {
+            id: true,
+            contactContactInformation: {
+              select: {
+                company: true,
+              },
+            },
+          },
+        }
+      },
+    });
+
+    return slots;
+  } catch (error) {
+    console.error(
+      `Error getting slots for calendar ${calendarId} and year ${year}: ${error}`
+    );
+    return null;
+  }
 };

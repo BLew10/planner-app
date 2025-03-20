@@ -1,22 +1,27 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, } from "react";
 import Link from "next/link";
 import styles from "./Table.module.scss";
 import TextInput from "../form/TextInput";
 import SelectInput from "../form/SelectInput";
 import LoadingSpinner from "./LoadingSpinner";
-import { type } from "os";
 
 interface TableProps {
   tableName: string;
   columns: { name: string; size: string; wrap?: boolean }[];
   data?: any[][];
   addPath?: string;
+  filterValue?: string;
   filterOptions?: { value: string; label: string }[];
   handleFilterChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   filterOptionsTwo?: { value: string; label: string }[];
   handleFilterChangeTwo?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  selectedAction?: () => void;
+  selectActionDescription?: string;
+  selectedCount?: number;
+  toggleSelectAll?: () => void;
+  allSelected?: boolean;
 }
 
 const Table = ({
@@ -24,10 +29,16 @@ const Table = ({
   columns,
   data,
   addPath,
+  filterValue,
   filterOptions,
   handleFilterChange,
   filterOptionsTwo,
   handleFilterChangeTwo,
+  selectedAction,
+  selectedCount,
+  toggleSelectAll,
+  allSelected,
+  selectActionDescription,
 }: TableProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState(data);
@@ -36,16 +47,25 @@ const Table = ({
   useEffect(() => {
     if (!data) return;
     const lowercasedQuery = searchQuery.toLowerCase();
-    const filtered = data.filter((row) =>
-      filteredColumn != null
-        ? row[filteredColumn].toString().toLowerCase().includes(lowercasedQuery)
-        : row.some((cell) => {
-            if (typeof cell == "object" && cell.props && cell.props['dataset-search']) {
-              return cell.props['dataset-search'].toLowerCase().includes(lowercasedQuery);
-            }
-            return cell.toString().toLowerCase().includes(lowercasedQuery);
-          })
-    );
+    const filtered = data.filter((row) => {
+      if (filteredColumn != null) {
+        const cell = row[filteredColumn];
+        return cell != null && cell.toString().toLowerCase().includes(lowercasedQuery);
+      }
+      return row.some((cell) => {
+        if (
+          cell &&
+          typeof cell == "object" &&
+          cell.props &&
+          cell.props["dataset-search"]
+        ) {
+          return cell.props["dataset-search"]
+            .toLowerCase()
+            .includes(lowercasedQuery);
+        } 
+        return cell != null && cell.toString().toLowerCase().includes(lowercasedQuery);
+      });
+    });
     setFetchingData(false);
     setFilteredData(filtered);
   }, [searchQuery, data, filteredColumn]);
@@ -88,6 +108,7 @@ const Table = ({
               <SelectInput
                 name="filter"
                 label="Filter"
+                value={filterValue}
                 options={filterOptions}
                 onChange={handleFilterChange}
               />
@@ -119,12 +140,30 @@ const Table = ({
               Search the entire table or click a column to filter by it.
             </p>
           )}
+          {toggleSelectAll && (
+            <button
+              className={styles.selectAllButton}
+              onClick={toggleSelectAll}
+            >
+              {allSelected ? `Deselect all` : `Select all`}
+            </button>
+          )}
         </div>
-        {addPath && (
-          <Link href={addPath} className={styles.addButton}>
-            Add
-          </Link>
-        )}
+        <div className={styles.addDeleteWrapper}>
+          {addPath && (
+            <Link href={addPath} className={styles.addButton}>
+              Add
+            </Link>
+          )}
+          {selectedAction && (
+            <button
+              className={`${selectActionDescription?.includes("Delete") ? styles.deleteButton : styles.selectAction}`}
+              onClick={selectedAction}
+            >
+              {selectActionDescription} ({selectedCount})
+            </button>
+          )}
+        </div>
       </div>
       {fetchingData ? (
         <LoadingSpinner />

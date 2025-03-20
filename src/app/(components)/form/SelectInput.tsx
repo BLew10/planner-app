@@ -6,7 +6,7 @@ import styles from "./SelectInput.module.scss";
 interface SelectInputProps {
   name: string;
   value?: string | null;
-  label: string;
+  label?: string;
   onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   validate?: (value: string) => string | null;
   options: { label: string | undefined; value: string | undefined }[];
@@ -43,7 +43,7 @@ const SelectInput: React.FC<SelectInputProps> = ({
 
   return (
     <div className={styles.inputWrapper}>
-      <label className={styles.label}>{label}</label>
+     {label && <label className={styles.label}>{label}</label>}
       <select
         className={styles.select}
         name={name}

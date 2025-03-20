@@ -1,37 +1,70 @@
 @use "../../../styles/mixins.scss" as *;
 
+.container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.modWrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.overviewAction {
+  @include overview-link;
+  padding: 0.25rem;
+}
+
+.paymentAction {
+  color: var(--primary-blue);
+  padding: 0.25rem;
+  font-weight: 700;
+}
+
 .deleteAction {
-    @include delete-link;
-    padding: 0.25rem;
-  }
-  
-  .editAction {
-    @include edit-link;
-    padding: 0.25rem;
-  }
+  @include delete-link;
+  padding: 0.25rem;
+}
 
-  .paymentAction, .invoicesButton {
-    color: var(--primary-blue);
-    padding: 0.25rem;
-    font-weight: 700;
-    cursor: pointer;
-  }
+.editAction {
+  @include edit-link;
+  padding: 0.25rem;
+}
 
-  .stripeSubscription {
-    color: var(--stripe-color);
-    padding: 0.25rem;
-    font-weight: 700;
-    cursor: pointer;
-  }
+.paymentScheduled {
+  color: var(--primary-green);
+}
 
-  .modWrapper {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-  
+.paymentPending {
+  color: var(--primary-blue-dark);
+}
 
-  .headCell {
-    color: var(--text-secondary);
-    font-weight: 700;
-  }
+.paymentWrapper {
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.companyName {
+  font-weight: bold;
+  color: var(--primary-blue-dark);
+  text-decoration: underline;
+}
+
+
+.makePaymentAction {
+  color: var(--primary-purple);
+  font-weight: bold;
+  padding: 0.25rem;
+}
+
+.prepayment {
+  color: var(--primary-purple);
+  font-weight: bold;
+  font-size: 0.6rem;
+}

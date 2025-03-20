@@ -1,0 +1,38 @@
+@use "/src/styles/mixins" as *;
+ 
+.container {
+  padding: 30px;
+  width: 50%;
+  margin: 0 auto;
+}
+
+.title {
+  color: var(--text-color);
+  font-weight: 600;
+  margin-bottom: 20px;
+  font-size: 1.2rem;
+}
+
+.subTitle {
+  color: var(--primary-blue);
+  font-weight: 600;
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.submitButton {
+    @include submit-button;
+    margin-top: 20px;
+    width: 100%;
+}
+
+
+.dateInput {
+  @include input;
+}

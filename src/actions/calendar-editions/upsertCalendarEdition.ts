@@ -5,9 +5,13 @@ import { auth } from "@/auth";
 
 export interface CalendarEditionFormData {
   name: string;
+  code: string;
 }
 
-const upsertCalendarEdition = async (formData: CalendarEditionFormData, id?: string | null) => {
+const upsertCalendarEdition = async (
+  formData: CalendarEditionFormData,
+  id?: string | null
+) => {
   try {
     const session = await auth();
     const userId = session?.user?.id;
@@ -15,7 +19,7 @@ const upsertCalendarEdition = async (formData: CalendarEditionFormData, id?: str
     const data = {
       ...formData,
       userId,
-    }
+    };
 
     if (!data || !userId) return false;
 
@@ -25,14 +29,13 @@ const upsertCalendarEdition = async (formData: CalendarEditionFormData, id?: str
       },
       update: data,
       create: data,
-    })
+    });
 
-    return true
+    return true;
   } catch (error: any) {
     console.error("Error upserting advertisement type", error);
-    return false
+    return false;
   }
-}
-
+};
 
 export default upsertCalendarEdition;

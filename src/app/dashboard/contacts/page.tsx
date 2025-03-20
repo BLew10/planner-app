@@ -1,207 +1,73 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
-import styles from "./page.module.scss";
-import Table from "@/app/(components)/general/Table";
-import { getContactsByAddressBook, ContactTableData } from "@/lib/data/contact";
-import { getAllAddressBooks } from "@/lib/data/addressBook";
-import deleteConact from "@/actions/contact/deleteContact";
-import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
+import React, { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import SimpleModal from "@/app/(components)/general/SimpleModal";
-import { CATEGORIES } from "@/lib/constants";
-import { AddressBook } from "@prisma/client";
-import DeleteButton from "@/app/(components)/general/DeleteButton";
-import { toast, ToastContainer } from 'react-toastify';
+import { ContactTableData } from "@/lib/data/contact";
+import { useContacts } from "@/hooks/contact/useContacts";
+import { useAddressBooks } from "@/hooks/address-book/useAddressBooks";
+import { ContactsTable } from "./ContactsTable";
 
-const firstOptionAddressBook: Partial<AddressBook> = {
-  id: "-1",
-  name: "All Address Books",
-  displayLevel: "",
-};
+const ITEMS_PER_PAGE = 10;
 
 const ContactsPage = () => {
-  const [contacts, setContacts] = useState<
-    Partial<ContactTableData>[] | null
-  >();
-  const [addressBookId, setAddressBookId] = useState<string>(
-    firstOptionAddressBook.id || "-1"
-  );
-  const [addressBooks, setAddressBooks] = useState<
-    Partial<AddressBook>[] | null
-  >([firstOptionAddressBook]);
-
+  const router = useRouter();
   const [openEmailModal, setOpenEmailModal] = useState(false);
-  const successNotify = () => toast.success("Successfully Deleted");
-  const errorNotify = () => toast.error("Something went wrong. Deletion failed");
+  const { addressBookId, setAddressBookId, addressBooks } = useAddressBooks({ includeAllOption: true });
 
-
-  const fetchContacts = async (addressBookId: string) => {
-    const contacts = await getContactsByAddressBook(addressBookId);
-    setContacts(contacts);
-  };
-
-  useEffect(() => {
-    fetchAddressBooks();
-  }, []);
-
-  useEffect(() => {
-    fetchContacts(addressBookId);
-  }, [addressBookId]);
-
-  const fetchAddressBooks = async () => {
-    let userAddressBooks = await getAllAddressBooks();
-    userAddressBooks?.unshift(firstOptionAddressBook);
-    setAddressBooks(userAddressBooks);
-  };
-
-  const onContactDelete = async (contactId?: string) => {
-    const deleted = await deleteConact(contactId || "-1");
-    const newContacts = await getContactsByAddressBook(addressBookId);
-    setContacts(newContacts);
-    if (deleted) {
-      successNotify();
-    } else {
-      errorNotify();
-    }
-    return deleted;
-  };
-
-  const handleAddressBookChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setAddressBookId(e.target.value);
-  };
-
-  const columns = [
-    {
-      name: "Name",
-      size: "default",
-    },
-    {
-      name: "Company",
-      size: "default",
-    },
-    {
-      name: "Phone",
-      size: "default",
-    },
-    {
-      name: "Cell",
-      size: "default",
-    },
-    {
-      name: "Email",
-      size: "default",
-    },
-    {
-      name: "Web Address",
-      size: "default",
-    },
-    {
-      name: "Category",
-      size: "default",
-    },
-    {
-      name: "Actions",
-      size: "default",
-    },
-  ];
-
-  const addressBooksOptions = addressBooks?.map((ab) => {
-    return {
-      value: ab.id || "",
-      label: ab.name || "",
-    };
+  const {
+    contacts,
+    selectedRows,
+    setSelectedRows,
+    currentPage,
+    setCurrentPage,
+    totalItems,
+    setSearchQuery,
+    isLoading,
+    deleteSelectedContacts,
+    onContactDelete,
+  } = useContacts({
+    itemsPerPage: ITEMS_PER_PAGE,
+    addressBookId,
   });
 
-  const data = contacts?.map((c) => {
-    return [
-      <Link
-        href={`/dashboard/contacts/${c.id}/overview`}
-        className={styles.contactLink}
-        key={c.id}
-        dataset-search={`${c.contactContactInformation?.firstName} ${c.contactContactInformation?.lastName}`}
-      >{`${c.contactContactInformation?.firstName} ${c.contactContactInformation?.lastName}`}</Link>,
-      c.contactContactInformation?.company,
-      c.contactTelecomInformation?.phone,
-      c.contactTelecomInformation?.cellPhone,
-      <Link
-        href={`mailto:${c.contactTelecomInformation?.email}`}
-        key={c.id}
-        dataset-search={`${c.contactTelecomInformation?.email}`}
-      >
-        {c.contactTelecomInformation?.email}
-      </Link>,
-      <a
-        rel="noopener noreferrer"
-        href={`${c.webAddress}`}
-        key={c.id}
-        dataset-search={`${c.webAddress}`}
-      >
-        {c.webAddress}
-      </a>,
-      c.category != "0" && c.category
-        ? CATEGORIES[parseInt(c.category || "0")].label
-        : "",
-      <div className={styles.modWrapper} key={c.id}>
-        <Link
-          href={`/dashboard/purchases/add?contactId=${c.id}`}
-          className={styles.purchaseAction}
-        >
-          Add Purchase
-        </Link>
-        <Link
-          href={`/dashboard/payments/add?contactId=${c.id}`}
-          className={styles.paymentAction}
-          onClick={(e) => {
-            if (!c.contactTelecomInformation?.email) {
-              e.preventDefault();
-              e.stopPropagation();
-              setOpenEmailModal(true);
-            } else {
-              setOpenEmailModal(false);
-            }
-          }}
-        >
-          Add Payment
-        </Link>
-        <Link
-          href={`/dashboard/contacts/${c.id}`}
-          className={styles.editAction}
-        >
-          Edit
-        </Link>
-        <DeleteButton
-          title="Delete Contact"
-          onDelete={() => onContactDelete(c.id)}
-          text={`Are you sure you want to delete ${c.contactContactInformation?.company}?`}
-        />
-      </div>,
-    ];
-  });
+  const handleAddressBookChange = (value: string) => {
+    setAddressBookId(value);
+    setCurrentPage(1);
+  };
 
   return (
     <>
-      {openEmailModal && (
-        <SimpleModal
-          isOpen={openEmailModal}
-          closeModal={() => setOpenEmailModal(false)}
-          title="Invalid Email"
-          text="A valid email is needed to create a payment. Please add an email and try again."
+      <SimpleModal
+        isOpen={openEmailModal}
+        closeModal={() => setOpenEmailModal(false)}
+        title="Invalid Email"
+        text="A valid email is needed to create a payment. Please add an email and try again."
+      />
+      <section className="container mx-auto px-4 w-full mt-10">
+        <ContactsTable
+          contacts={contacts || []}
+          isLoading={isLoading}
+          addressBooks={addressBooks?.map((book) => ({
+            label: book.name || "",
+            value: book.id || "",
+          })) || []}
+          onFilterChange={handleAddressBookChange}
+          onSearch={(query) => {
+            setSearchQuery(query);
+            setCurrentPage(1);
+          }}
+          onContactDelete={onContactDelete}
+          selectedRows={selectedRows}
+          onSelectedRowsChange={setSelectedRows}
+          onDeleteSelected={deleteSelectedContacts}
+          itemsPerPage={ITEMS_PER_PAGE}
+          totalItems={totalItems}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          onAdd={() => router.push("/dashboard/contacts/add")}
         />
-      )}
-      <AnimateWrapper>
-        <section className={styles.container}>
-        <ToastContainer />
-          <Table
-            tableName="Contacts"
-            columns={columns}
-            data={data}
-            addPath="/dashboard/contacts/add"
-            filterOptions={addressBooksOptions}
-            handleFilterChange={handleAddressBookChange}
-          />
-        </section>
-      </AnimateWrapper>
+      </section>
     </>
   );
 };

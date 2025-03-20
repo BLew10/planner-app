@@ -28,7 +28,6 @@ const signUp = async (formData: FormData) => {
         OR: [{ username: lowerCaseUsername }, { email: lowerCaseEmail }],
       },
     });
-    console.log("existingUser", existingUser);
     if (existingUser) {
       return {
         status: 400,
@@ -48,7 +47,6 @@ const signUp = async (formData: FormData) => {
         lastName,
       },
     });
-    console.log("User created", user);
     const data: LoginData = {
       username,
       password

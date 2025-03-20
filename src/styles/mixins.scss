@@ -112,7 +112,7 @@
   }
 
   &:disabled {
-    background-color: var(--primary-yellow-dark);
+    background-color: darkgrey;
     cursor: not-allowed;
     
   }
@@ -175,8 +175,33 @@
   }
 }
 
+@mixin grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+
 @mixin grid3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
+}
+
+@mixin grid4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+@mixin back-button {
+  background-color: var(--primary-yellow);
+  color: var(--text-secondary);
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  &:hover {
+    background-color: var(--primary-yellow-dark);
+  }
 }

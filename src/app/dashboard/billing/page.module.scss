@@ -1,0 +1,60 @@
+@use "/src/styles/mixins" as *;
+
+.container {
+  height: 100%;
+  width: 100%;
+  padding: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.title {
+  text-align: center;
+}
+
+.backButton {
+  @include back-button;
+  width: 80px;
+}
+
+.latePayment {
+  color: var(--primary-red-dark);
+}
+
+.paymentScheduleButton {
+  color: var(--primary-blue-dark);
+}
+
+.contactName,
+.email {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+
+.contactNameNoEmail {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-left: 20px;
+  gap: 10px;
+}
+
+.contactName, .contactNameNoEmail {
+  color: var(--primary-blue-dark);
+  text-decoration: underline;
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.email, .noEmail {
+    margin-top: 14px;
+}
+.noEmail {
+  color: var(--primary-red-dark);
+  font-size: 0.8rem;
+  font-weight: 600;
+}

@@ -1,18 +1,18 @@
 "use client";
 
-import styles from "./layout.module.scss";
-import dynamic from "next/dynamic";
-
-const MainMenu = dynamic(() => import("./MainMenu"), { ssr: false });
+import MainMenu from "../(components)/general/MainMenu";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { Toaster } from "@/app/(components)/general/Toaster";
 export default function DashboardLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-      <div className={styles.container}>
-        <MainMenu />
-        {children}
-      </div>
+    <SidebarProvider>
+      <MainMenu />
+      <Toaster />
+      {children}
+    </SidebarProvider>
   );
 }

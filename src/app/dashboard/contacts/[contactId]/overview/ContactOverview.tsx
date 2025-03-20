@@ -1,112 +1,114 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState } from "react";
 import Link from "next/link";
-import { getContactById } from "@/lib/data/contact";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Pencil } from "lucide-react";
 import { ContactModel } from "@/lib/models/contact";
-import styles from "./ContactOverview.module.scss";
+import { useContact } from "@/hooks/contact/useContact";
 import ContactInfoOverview from "./ContactInfoOverview";
 import ContactPurchasesOverview from "./ContactPurchasesOverview";
 import ContactPaymentsOverview from "./ContactPaymentsOverview";
-import LoadingSpinner from "@/app/(components)/general/LoadingSpinner";
+import ContactScheduledPayments from "./ContactScheduledPayments";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useRouter } from "next/navigation";
 
 interface ContactOverviewProps {
   contactId: string;
 }
 
-const isTesting = process.env.VERCEL_ENV === 'preview' || process.env.NEXT_PUBLIC_IS_TESTING === 'true';
+type TabValue = "info" | "purchases" | "payments" | "paymentSchedules";
 
-type ContactOverviewTabs = "info" | "purchases" | "payments";
-const ContactOverview = ({ contactId }: ContactOverviewProps) => {
+export default function ContactOverview({ contactId }: ContactOverviewProps) {
+  const { contact, isLoading } = useContact({ id: contactId });
+  const [activeTab, setActiveTab] = useState<TabValue>("info");
   const router = useRouter();
-  const [requesting, setRequesting] = useState(false);
-  const [contact, setContact] = useState<Partial<ContactModel>>();
-  const [activeTab, setActiveTab] = useState<ContactOverviewTabs>("info");
-  useEffect(() => {
-    const fetchContact = async (id: string) => {
-      setRequesting(true);
-      const contactData = await getContactById(id);
-      if (!contactData) {
-        router.push("/dashboard/contacts");
-        return;
-      }
-      setRequesting(false);
-      setContact(contactData);
-    };
-    fetchContact(contactId);
-  }, [contactId, router]);
-  if (requesting) return <LoadingSpinner />;
+
+  const contactName = contact
+    ? contact.contactContactInformation?.company ||
+      `${contact.contactContactInformation?.firstName} ${contact.contactContactInformation?.lastName}`
+    : "No Contact Found";
+
+  if (isLoading) {
+    return (
+      <Card className="w-full max-w-7xl mx-auto my-10">
+        <CardHeader className="space-y-1">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-2xl font-bold">
+              <Skeleton className="h-8 w-[200px]" />
+            </CardTitle>
+            <Skeleton className="h-9 w-[120px]" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div className="border rounded-lg p-1">
+              <div className="grid w-full grid-cols-4 gap-4">
+                {[...Array(4)].map((_, i) => (
+                  <Skeleton key={i} className="h-10" />
+                ))}
+              </div>
+            </div>
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="space-y-3">
+                  <Skeleton className="h-4 w-[140px]" />
+                  <div className="grid grid-cols-3 gap-4">
+                    {[...Array(3)].map((_, j) => (
+                      <Skeleton key={j} className="h-12" />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!isLoading && !contact) {
+    router.push("/dashboard/contacts");
+    return null;
+  }
 
   return (
-    <div className={styles.wrapper}>
-      <div className={styles.header}>
-        <div className={styles.contactHeader}>
-          <h1 className={styles.heading}>
-            {contact
-              ? contact?.contactContactInformation?.company ||
-                contact?.contactContactInformation?.firstName +
-                  " " +
-                  contact?.contactContactInformation?.lastName
-              : ""}
-          </h1>
-          <Link
-            href={`/dashboard/contacts/${contact?.id}`}
-            className={styles.edit}
-          >
-            Edit
-          </Link>
+    <Card className="w-full max-w-7xl mx-auto my-10">
+      <CardHeader className="space-y-1">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-2xl font-bold">{contactName}</CardTitle>
+          <Button asChild variant="edit" size="sm">
+            <Link href={`/dashboard/contacts/${contact?.id}`}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit Contact
+            </Link>
+          </Button>
         </div>
-        {contact?.stripeCustomerId && (
-          <a
-            href={`https://dashboard.stripe.com/${
-              isTesting ? "test/" : ""
-            }customers/${contact?.stripeCustomerId}`}
-            className={styles.stripeLink}
-            rel="noreferrer noopener"
-            target="_blank"
-          >
-            Stripe Profile
-          </a>
-        )}
-      </div>
-      <div className={styles.contactTabs}>
-        <button
-          className={`${styles.tab} ${
-            activeTab === "info" ? styles.active : ""
-          }`}
-          onClick={() => setActiveTab("info")}
-        >
-          Contact Info
-        </button>
-        <button
-          className={`${styles.tab} ${
-            activeTab === "purchases" ? styles.active : ""
-          }`}
-          onClick={() => setActiveTab("purchases")}
-        >
-          Purchases
-        </button>
-        <button
-          className={`${styles.tab} ${
-            activeTab === "payments" ? styles.active : ""
-          }`}
-          onClick={() => setActiveTab("payments")}
-        >
-          Payments
-        </button>
-      </div>
-      {activeTab === "info" && (
-        <ContactInfoOverview contact={contact as ContactModel} />
-      )}
-      {activeTab === "purchases" && (
-        <ContactPurchasesOverview contactId={contactId} />
-      )}
-      {activeTab === "payments" && (
-        <ContactPaymentsOverview contactId={contactId} />
-      )}
-    </div>
+      </CardHeader>
+      <CardContent>
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabValue)}>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="info">Contact Info</TabsTrigger>
+            <TabsTrigger value="purchases">Purchases</TabsTrigger>
+            <TabsTrigger value="payments">Payments Made</TabsTrigger>
+            <TabsTrigger value="paymentSchedules">Payment Schedules</TabsTrigger>
+          </TabsList>
+          <TabsContent value="info">
+            <ContactInfoOverview contact={contact as ContactModel} />
+          </TabsContent>
+          <TabsContent value="purchases">
+            <ContactPurchasesOverview contactId={contactId} />
+          </TabsContent>
+          <TabsContent value="payments">
+            <ContactPaymentsOverview contactId={contactId} />
+          </TabsContent>
+          <TabsContent value="paymentSchedules">
+            <ContactScheduledPayments contactId={contactId} />
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
   );
-};
-
-export default ContactOverview;
+}

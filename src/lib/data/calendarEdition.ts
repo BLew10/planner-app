@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma/prisma";
-import { CalendarEdition } from "@prisma/client";
+import { CalendarEdition, Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 
 /**
@@ -19,10 +19,11 @@ export const getCalendarById = async (
 
   try {
     const calendar = await prisma.calendarEdition.findFirst({
-      where: { id: calendarId, userId: userId, isDeleted: false},
+      where: { id: calendarId, userId: userId, isDeleted: false },
       select: {
         id: true,
         name: true,
+        code: true,
       },
     });
 
@@ -37,30 +38,59 @@ export const getCalendarById = async (
  * @param id The id of the address book to retrieve
  * @returns id, name, and displayLevel of the address book
  */
-export const getAllCalendars = async (): Promise<
-  Partial<CalendarEdition>[] | null
-> => {
+export const getAllCalendars = async (
+  page: number | null = null,
+  pageSize: number | null = null,
+  search: string | null = null
+): Promise<{
+  data: Partial<CalendarEdition>[] | null;
+  totalItems: number;
+}> => {
   const session = await auth();
   const userId = session?.user?.id;
 
   try {
-    const calendars = await prisma.calendarEdition.findMany({
-      where: {
-        userId,
-        isDeleted: false
-      },
-      select: {
-        id: true,
-        name: true,
-      },
-    });
+    const skip = page && pageSize ? (page - 1) * pageSize : undefined;
+    const where = {
+      userId,
+      isDeleted: false,
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          { code: { contains: search, mode: Prisma.QueryMode.insensitive } },
+        ],
+      }),
+    };
 
-    return calendars;
-  } catch {
-    return null;
+    const [calendars, total] = await Promise.all([
+      prisma.calendarEdition.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          code: true
+        },
+        ...(skip !== undefined && { skip }),
+        ...(pageSize && { take: pageSize }),
+        orderBy: {
+          name: 'asc'
+        }
+      }),
+      prisma.calendarEdition.count({ where })
+    ]);
+
+    return {
+      data: calendars,
+      totalItems: total
+    };
+  } catch (error) {
+    console.error('Error fetching calendars:', error);
+    return {
+      data: null,
+      totalItems: 0
+    };
   }
 };
-
 /**
  * Parses the given FormData object to construct an Calendar object. This function
  * iterates through the FormData entries, assigning the values to the corresponding
@@ -106,3 +136,29 @@ export const parseForm = (
     return null;
   }
 };
+
+
+export const getManyCalendars = async (
+  ids: string[]
+): Promise<Partial<CalendarEdition>[] | null> => {
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  try {
+    const calendars = await prisma.calendarEdition.findMany({
+      where: {
+        userId,
+        id: { in: ids },
+        isDeleted: false
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    return calendars;
+  } catch {
+    return null;
+  }
+}

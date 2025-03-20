@@ -20,6 +20,7 @@ interface TextInputProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   validate?: (value: string) => string | null;
   children?: React.ReactNode;
+  maxLength?: number;
 }
 
 const TextInput: React.FC<TextInputProps> = ({
@@ -39,6 +40,7 @@ const TextInput: React.FC<TextInputProps> = ({
   validate,
   children,
   min,
+  maxLength
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState<string>(value || "");
@@ -52,6 +54,7 @@ const TextInput: React.FC<TextInputProps> = ({
       const validationError = validate(e.target.value);
       setError(validationError);
     }
+    setInputValue(e.target.value);
     if (onChange) {
       onChange(e);
     }
@@ -77,6 +80,7 @@ const TextInput: React.FC<TextInputProps> = ({
         readOnly={isReadOnly}
         value={inputValue}
         required={isRequired}
+        maxLength={maxLength}
         title={title}
         min={min}
         onChange={

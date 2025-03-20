@@ -1,0 +1,47 @@
+@use "../../../styles/mixins.scss" as *;
+
+.label {
+  @include label;
+}
+
+.input {
+  @include input;
+}
+
+.error {
+  color: red;
+}
+
+.required {
+  color: var(--primary-red-dark)
+}
+
+.wrapper {
+  flex: 1
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  button {
+    position: absolute;
+    right: 10px;
+    top: calc(50% - 12px);
+  } 
+}
+
+
+
+.readOnly {
+  color: dimgrey;
+  opacity: 0.3 ;
+  color: var(--color-text);
+  cursor: not-allowed;
+}
+
+
+.subLabel {
+  color: var(--primary-blue);
+  font-size: 0.6rem;
+}

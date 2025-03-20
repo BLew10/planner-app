@@ -1,0 +1,35 @@
+@use "/src/styles/mixins.scss" as *;
+
+.container {
+  margin: 100px auto;
+  padding: 0 50px;
+}
+
+.advertisementName {
+  margin-bottom: 20px;
+  color: var(--text-secondary);
+}
+
+.title {
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.companyName,.year {
+  color: var(--primary-blue);
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+}
+
+.back {
+  background-color: var(--primary-yellow);
+  color: var(--text-secondary);
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  &:hover {
+    background-color: var(--primary-yellow-dark);
+  }
+}

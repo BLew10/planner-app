@@ -1,4 +1,4 @@
-"use server"
+"use server";
 
 import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
@@ -23,9 +23,11 @@ export interface ContactTableData extends Contact {
 }
 
 export const getContactsByAddressBook = async (
-  addressBookId: string
-): Promise<Partial<ContactTableData>[] | null> => {
-  "use server"
+  addressBookId: string,
+  page: number,
+  itemsPerPage: number,
+  searchQuery: string
+): Promise<{ contacts: Partial<ContactTableData>[]; total: number }> => {
   const session = await auth();
   const userId = session?.user?.id;
   if (!addressBookId) {
@@ -34,33 +36,47 @@ export const getContactsByAddressBook = async (
   }
 
   try {
-    const contacts = await prisma.contact.findMany({
-      where: {
-        userId,
-        isDeleted: false,
-        ...(addressBookId !== "-1" && {
-          addressBooks: {
-            some: {
-              id: addressBookId,
-            },
+    const where = {
+      userId,
+      isDeleted: false,
+      ...(addressBookId !== "-1" && {
+        addressBooks: {
+          some: {
+            id: addressBookId,
           },
-        }),
-      },
-      select: {
-        id: true,
-        customerSince: true,
-        notes: true,
-        category: true,
-        webAddress: true,
-        contactContactInformation: true,
-        contactTelecomInformation: true,
-        contactAddress: true,
-      },
-    });
+        },
+      }),
+      OR: [
+        { contactContactInformation: { firstName: { contains: searchQuery, mode: 'insensitive' as const } } },
+        { contactContactInformation: { lastName: { contains: searchQuery, mode: 'insensitive' as const } } },
+        { contactContactInformation: { company: { contains: searchQuery, mode: 'insensitive' as const } } },
+        { contactTelecomInformation: { email: { contains: searchQuery, mode: 'insensitive' as const } } },
+      ],
+    };
 
-    return contacts;
-  } catch {
-    return null;
+    const [contacts, total] = await Promise.all([
+      prisma.contact.findMany({
+        where,
+        select: {
+          id: true,
+          customerSince: true,
+          notes: true,
+          category: true,
+          webAddress: true,
+          contactContactInformation: true,
+          contactTelecomInformation: true,
+          contactAddress: true,
+        },
+        skip: (page - 1) * itemsPerPage,
+        take: itemsPerPage,
+      }),
+      prisma.contact.count({ where }),
+    ]);
+
+    return { contacts, total };
+  } catch (error) {
+    console.error("Error fetching contacts:", error);
+    return { contacts: [], total: 0 };
   }
 };
 
@@ -85,57 +101,78 @@ export const getContactsByAddressBook = async (
  */
 
 export const getContactById = async (id: string) => {
-
   if (!id) {
     return null;
   }
   const session = await auth();
   const contactId = id;
   const userId = session?.user?.id;
-console.log("contactId", contactId, userId);
   try {
-    const contact: Partial<ContactModel> | null = await prisma.contact.findFirst({
-      where: { id: contactId, userId: userId,  isDeleted: false},
-      select: {
-        id: true,
-        customerSince: true,
-        notes: true,
-        category: true,
-        webAddress: true,
-        contactContactInformation: true,
-        contactTelecomInformation: true,
-        contactAddress: true,
-        addressBooks: true,
-        stripeCustomerId: true,
-        purchases: {
-          include: {
-            adPurchases: {
-              include: {
-                adPurchaseSlots: true
-              }
+    const contact: Partial<ContactModel> | null =
+      await prisma.contact.findFirst({
+        where: { id: contactId, userId: userId, isDeleted: false },
+        select: {
+          id: true,
+          customerSince: true,
+          notes: true,
+          category: true,
+          webAddress: true,
+          contactContactInformation: true,
+          contactTelecomInformation: true,
+          contactAddress: true,
+          addressBooks: true,
+          purchases: {
+            include: {
+              adPurchases: {
+                include: {
+                  adPurchaseSlots: true,
+                },
+              },
             },
-          }
+          },
+          payments: true,
         },
-        payments: true,
-      },
-    });
-    console.log(contact);
+      });
     return contact;
   } catch (e) {
-    console.log("Error getting contact", e);
+    console.error("Error getting contact", e);
     return null;
   }
-}
-
-export const removeContactStripeCustomerId = async (stripeCustomerId: string) => {
+};
+export const deleteManyContacts = async (contactIds: string[]) => {
   try {
-    const contact = await prisma.contact.update({
-      where: { stripeCustomerId },
-      data: { stripeCustomerId: null },
+    const result = await prisma.$transaction(async (prisma) => {
+      const contacts = await prisma.contact.findMany({
+        where: {
+          id: { in: contactIds },
+        },
+        select: {
+          id: true,
+          payments: true,
+        },
+      });
+
+      const updates = contacts.map(async (contact) => {
+        if (contact.payments && contact.payments.length > 0) {
+          return prisma.contact.update({
+            where: { id: contact.id },
+            data: { isDeleted: true },
+          });
+        } else {
+          return prisma.contact.delete({
+            where: { id: contact.id },
+          });
+        }
+      });
+
+      // Resolve all update/delete promises
+      return Promise.all(updates);
     });
-    return contact;
+
+    return true;
   } catch (e) {
-    console.log("Error removing contact stripe customer id", e);
-    return null;
+    console.error("Error deleting contacts", e);
+    return false;
   }
-}
+};
+
