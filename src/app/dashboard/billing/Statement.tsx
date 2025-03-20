@@ -4,7 +4,6 @@ import autoTable from "jspdf-autotable";
 import styles from "./Statement.module.scss";
 import { PaymentOverviewModel } from "@/lib/models/paymentOverview";
 import { ScheduledPayment } from "@prisma/client";
-import { formatDateToString } from "@/lib/helpers/formatDateToString";
 import { generateDaySuffix } from "@/lib/helpers/generateDaySuffix";
 
 interface StatementProps {
@@ -16,19 +15,45 @@ interface NextPayment {
   amount: number;
 }
 
+const formatDateToString = (dateInput: string | Date | null | undefined): string => {
+  if (!dateInput) return "";
+  
+  try {
+    const date = new Date(dateInput);
+    if (isNaN(date.getTime())) return "";
+    
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    
+    return `${month}-${day}-${year}`;
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return "";
+  }
+};
+
 const generateStatementTable = (
   paymentOverview: Partial<PaymentOverviewModel> | null
 ) => {
-  const prePayment = paymentOverview?.payments?.find((payment) => payment.wasPrepaid);
+  const prePayment = paymentOverview?.payments?.find(
+    (payment) => payment.wasPrepaid
+  );
   let lateFee = 0;
   if (paymentOverview?.lateFee || paymentOverview?.lateFeePercent) {
-    lateFee = calculateLateFee(paymentOverview) || 0
+    lateFee = calculateLateFee(paymentOverview) || 0;
   }
 
-  const latePaymentCount = paymentOverview?.scheduledPayments?.filter((payment) => payment.isLate && !payment.lateFeeWaived);
+  const latePaymentCount = paymentOverview?.scheduledPayments?.filter(
+    (payment) => payment.isLate && !payment.lateFeeWaived
+  );
 
-  let balance = Number(paymentOverview?.net || 0) + Number(prePayment?.amount || 0) - (latePaymentCount?.length || 0) * lateFee;
+  let balance =
+    Number(paymentOverview?.net || 0) +
+    Number(prePayment?.amount || 0) -
+    (latePaymentCount?.length || 0) * lateFee;
   const tableData = [];
+  console.log(paymentOverview?.purchase?.createdAt);
   const firstRow = [
     formatDateToString(paymentOverview?.purchase?.createdAt as Date),
     `${paymentOverview?.year} TOWN PLANNER`,
@@ -36,6 +61,7 @@ const generateStatementTable = (
     `$${balance.toFixed(2)}`,
   ];
   tableData.push(firstRow);
+
   const combinedPayments = [
     ...(paymentOverview?.payments?.map((payment) => ({
       date: payment.paymentDate as string,
@@ -119,14 +145,14 @@ const getPastDueAmount = (
       (scheduled: ScheduledPayment) => scheduled.isLate && !scheduled.isPaid
     )
     .forEach((scheduled: ScheduledPayment) => {
-      pastDueAmount += Number(scheduled.amount) - Number(scheduled.amountPaid) || 0;
+      pastDueAmount +=
+        Number(scheduled.amount) - Number(scheduled.amountPaid) || 0;
       if (
         !scheduled.lateFeeWaived &&
         scheduled.lateFee &&
         scheduled.lateFeeAddedToNet
       ) {
         pastDueAmount += Number(scheduled.lateFee || 0);
-      
       }
     });
 
@@ -160,25 +186,19 @@ export const generateStatementPdf = async (
   const doc = new jsPDF();
   doc.setFont("Times", "normal", "400");
   doc.setFontSize(12);
-  doc.text("Town Planner", leftAlignedX, 25);
+  doc.text("Publishing Concepts LLC", leftAlignedX, 25);
   doc.text("P.O. Box 188", leftAlignedX, 30);
   doc.text("Elk Grove, CA 95759", leftAlignedX, 35);
 
   // Contact Information
   doc.text("Tel: 916-217-0106", rightAlignedX, 25, { align: "right" });
-  doc.text("Fax: ", rightAlignedX, 30, { align: "right" }); // Add actual fax number
-  doc.text("carter@metrotownplanner.com", rightAlignedX, 35, {
+  doc.text("joyce@metrocalendars.com", rightAlignedX, 30, {
     align: "right",
   });
   doc.setFont("Times", "normal", "700");
-  doc.text(
-    `Your Town Planner Representative: Joyce Nazabal`,
-    rightAlignedX,
-    45,
-    {
-      align: "right",
-    }
-  );
+  doc.text(`Joyce Nazabal`, rightAlignedX, 45, {
+    align: "right",
+  });
   doc.text(`${paymentOverview?.year} TOWN PLANNER`, rightAlignedX, 50, {
     align: "right",
   });
@@ -236,6 +256,8 @@ export const generateStatementPdf = async (
     doc.text(sponsorCityStateZip, leftAlignedX, (currentY += 5));
   }
 
+  currentY += 5;
+
   doc.setFont("Times", "normal", "700");
   doc.setFontSize(16);
   doc.text(
@@ -246,10 +268,66 @@ export const generateStatementPdf = async (
       align: "center",
     }
   );
+
+  currentY += 10; // Add space after statement header
+  let statementHeight = 0;
+
+  doc.setFontSize(10);
+  doc.setFont("Times", "normal", "400");
+  doc.text(
+    `Amount Due this Statement for Invoice #${
+      paymentOverview?.invoiceNumber || ""
+    }`,
+    rightAlignedX,
+    currentY + statementHeight,
+    {
+      align: "right",
+    }
+  );
+  statementHeight += 8;
+
+  const pastDue = getPastDueAmount(paymentOverview);
+  const nextPayment = getNextPayment(paymentOverview);
+  doc.text(
+    `PAST DUE AMOUNT: $${pastDue.toFixed(2)}`,
+    rightAlignedX,
+    currentY + statementHeight,
+    {
+      align: "right",
+    }
+  );
+  statementHeight += 8;
+
+  doc.text(
+    `PLUS CURRENT AMOUNT DUE IF PAID BY ${
+      nextPayment.dueDate
+    }: $${nextPayment.amount.toFixed(2)}`,
+    rightAlignedX,
+    currentY + statementHeight,
+    {
+      align: "right",
+    }
+  );
+  statementHeight += 8;
+  doc.setFont("Times", "normal", "700");
+  doc.text(
+    `TOTAL AMOUNT DUE IF PAID BY ${nextPayment.dueDate}: $${(
+      nextPayment.amount + pastDue
+    ).toFixed(2)}`,
+    rightAlignedX,
+    currentY + statementHeight,
+    {
+      align: "right",
+    }
+  );
+
+  currentY += statementHeight + 10; // Add space before table
+
   const tableData = generateStatementTable(paymentOverview);
 
   currentY += 3; // Adjust space to account for text height
   doc.line(15, currentY, 195, currentY);
+  doc.setFontSize(16);
   doc.setFont("Times", "normal", "400");
   // Itemized Breakdown
   autoTable(doc, {
@@ -298,7 +376,7 @@ export const generateStatementPdf = async (
   const pageHeight = doc.internal.pageSize.getHeight();
   const bottomMargin = 10; // Margin from the bottom of the page
   const footerPositionY = pageHeight - bottomMargin;
-  let footerHeight = 74;
+  let footerHeight = 94;
   if (doc.internal.pageSize.height - (currentY + 30) < footerHeight) {
     // Check if there's enough space for the footer; if not, add a new page
     doc.addPage();
@@ -306,6 +384,7 @@ export const generateStatementPdf = async (
   } else {
     currentY += 20; // Add some space after the previous content
   }
+
   const dueDay = generateDaySuffix(Number(paymentOverview?.paymentDueOn));
   const firstPaymentDate =
     paymentOverview?.scheduledPayments?.[0]?.dueDate ?? null;
@@ -331,71 +410,24 @@ export const generateStatementPdf = async (
       align: "center",
     }
   );
-  doc.setFont("Times", "normal", "400");
-  footerHeight -= 10;
-  let difference = footerHeight;
-  if (sponsorName) {
-    doc.text(sponsorName, leftAlignedX, footerPositionY - difference);
-    difference -= 5;
-  }
-  if (sponsorAddress) {
-    doc.text(sponsorAddress, leftAlignedX, footerPositionY - difference);
-    difference -= 5;
-  }
+  // doc.setFont("Times", "normal", "400");
+  // footerHeight -= 10;
+  // let difference = footerHeight;
+  // if (sponsorName) {
+  //   doc.text(sponsorName, leftAlignedX, footerPositionY - difference);
+  //   difference -= 5;
+  // }
+  // if (sponsorAddress) {
+  //   doc.text(sponsorAddress, leftAlignedX, footerPositionY - difference);
+  //   difference -= 5;
+  // }
 
-  if (sponsorCityStateZip) {
-    doc.text(sponsorCityStateZip, leftAlignedX, footerPositionY - difference);
-  }
-
-  doc.text(
-    `Amount Due this Statement for Invoice #${
-      paymentOverview?.invoiceNumber || "" // TODO Add invoice number
-    }`,
-    rightAlignedX,
-    footerPositionY - footerHeight,
-    {
-      align: "right",
-    }
-  );
-  footerHeight -= 8;
-
-  const pastDue = getPastDueAmount(paymentOverview);
-  const nextPayment = getNextPayment(paymentOverview);
-  doc.text(
-    `PAST DUE AMOUNT: $${pastDue.toFixed(2)}`,
-    rightAlignedX,
-    footerPositionY - footerHeight,
-    {
-      align: "right",
-    }
-  );
-
-  footerHeight -= 8;
-
-  doc.text(
-    `PLUS CURRENT AMOUNT DUE IF PAID BY ${
-      nextPayment.dueDate
-    }: $${nextPayment.amount.toFixed(2)}`,
-    rightAlignedX,
-    footerPositionY - footerHeight,
-    {
-      align: "right",
-    }
-  );
-  footerHeight -= 8;
-  doc.setFont("Times", "normal", "700");
-  doc.text(
-    `TOTAL AMOUNT DUE IF PAID BY ${nextPayment.dueDate}: $${(
-      nextPayment.amount + pastDue
-    ).toFixed(2)}`,
-    rightAlignedX,
-    footerPositionY - footerHeight,
-    {
-      align: "right",
-    }
-  );
+  // if (sponsorCityStateZip) {
+  //   doc.text(sponsorCityStateZip, leftAlignedX, footerPositionY - difference);
+  // }
 
   footerHeight -= 10;
+
   doc.setFont("Times", "normal", "700");
   doc.setFontSize(10);
   let remitYDiff = footerHeight;
@@ -403,7 +435,11 @@ export const generateStatementPdf = async (
   doc.text("Please remit to:", leftAlignedX, footerPositionY - remitYDiff);
   remitYDiff -= 10;
   doc.setFont("Times", "normal", "400");
-  doc.text("Town Planner", leftAlignedX, footerPositionY - remitYDiff);
+  doc.text(
+    "Publishing Concepts LLC",
+    leftAlignedX,
+    footerPositionY - remitYDiff
+  );
   remitYDiff -= 5;
   doc.text("P.O. Box 188", leftAlignedX, footerPositionY - remitYDiff);
   remitYDiff -= 5;
@@ -443,10 +479,11 @@ export const generateStatementPdf = async (
     footerPositionY - ccDiff
   );
 
+  ccDiff -= 5;
   doc.text(
     "Billing Zip/PC: __________  Amt. Paid: $______________",
     rightAlignedX - 90,
-    footerPositionY
+    footerPositionY - ccDiff
   );
   // Save the PDF
   return doc.output("blob");
