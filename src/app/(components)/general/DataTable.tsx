@@ -74,6 +74,8 @@ interface DataTableProps<TData> {
   currentPage?: number;
   onPageChange?: (page: number) => void;
   onRowClick?: (row: TData) => void;
+  searchDebounceMs?: number;
+  searchQuery?: string;
 }
 
 export function DataTable<TData extends { id?: string }>({
@@ -96,6 +98,8 @@ export function DataTable<TData extends { id?: string }>({
   currentPage = 1,
   onPageChange,
   onRowClick,
+  searchDebounceMs = 500,
+  searchQuery: externalSearchQuery,
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -104,7 +108,15 @@ export function DataTable<TData extends { id?: string }>({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  const [searchQuery, setSearchQuery] = React.useState("");
+  const [internalSearchQuery, setInternalSearchQuery] = React.useState("");
+  const searchTimeoutRef = React.useRef<NodeJS.Timeout>();
+
+  // Sync internal search state with external search query if provided
+  React.useEffect(() => {
+    if (externalSearchQuery !== undefined) {
+      setInternalSearchQuery(externalSearchQuery);
+    }
+  }, [externalSearchQuery]);
 
   // Reset row selection when data changes
   React.useEffect(() => {
@@ -141,9 +153,39 @@ export function DataTable<TData extends { id?: string }>({
 
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
+  // Handle debounced search
+  const handleSearchChange = (value: string) => {
+    setInternalSearchQuery(value);
+    
+    // Clear any existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Set new timeout for debounced search
+    searchTimeoutRef.current = setTimeout(() => {
+      onSearch?.(value);
+    }, searchDebounceMs);
+  };
+
+  // Cleanup timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Reset search
+  const handleReset = () => {
+    setInternalSearchQuery("");
+    onSearch?.("");
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch?.(searchQuery);
+    onSearch?.(internalSearchQuery);
   };
 
   return (
@@ -168,19 +210,16 @@ export function DataTable<TData extends { id?: string }>({
             <div className="relative flex-1 max-w-sm">
               <Input
                 placeholder={searchPlaceholder}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={externalSearchQuery !== undefined ? externalSearchQuery : internalSearchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="pr-8"
               />
-              {searchQuery && (
+              {(externalSearchQuery || internalSearchQuery) && (
                 <Button
                   type="button"
                   variant="ghost"
                   className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                  onClick={() => {
-                    setSearchQuery("");
-                    onSearch?.("");
-                  }}
+                  onClick={handleReset}
                 >
                   <X className="h-4 w-4" />
                 </Button>

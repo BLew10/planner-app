@@ -28,7 +28,7 @@ export const getPaymentOverviewById = async (
   }
 };
 
-export const getOwedPayments = async (year: string) => {
+export const getOwedPayments = async (year: string, search?: string) => {
   const session = await auth();
   const userId = session?.user?.id;
 
@@ -44,6 +44,56 @@ export const getOwedPayments = async (year: string) => {
         userId,
         year: Number(year),
         isPaid: false,
+        OR: search
+          ? [
+              {
+                contact: {
+                  contactContactInformation: {
+                    firstName: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                },
+              },
+              {
+                contact: {
+                  contactContactInformation: {
+                    lastName: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                },
+              },
+              {
+                contact: {
+                  contactContactInformation: {
+                    company: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                },
+              },
+              {
+                contact: {
+                  contactTelecomInformation: {
+                    email: {
+                      contains: search,
+                      mode: "insensitive",
+                    },
+                  },
+                },
+              },
+              {
+                invoiceNumber: {
+                  contains: search,
+                  mode: "insensitive",
+                },
+              },
+            ]
+          : undefined,
       },
       include: {
         contact: {
@@ -78,7 +128,7 @@ export const getOwedPayments = async (year: string) => {
           },
         },
         {
-          year: "asc", // Assuming the `PaymentOverview` model has a `year` field
+          year: "asc",
         },
       ],
     });

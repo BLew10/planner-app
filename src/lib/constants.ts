@@ -615,6 +615,12 @@ export const MONTHS = [
   "December",
 ];
 
+const nextYear = new Date().getFullYear() + 1;
+
+export const DEFAULT_YEAR =
+  ALL_YEARS.find((year) => year.value === String(nextYear))?.value ||
+  ALL_YEARS[0].value;
+
 export type InvoiceType = "invoiceTotalSale" | "statements";
 
 export const INVOICE_TYPES: { value: InvoiceType; label: string }[] = [
