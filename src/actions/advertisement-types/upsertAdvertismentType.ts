@@ -25,6 +25,7 @@ const upsertAdvertisementType = async (formData: AdvertisementTypeFormData, id?:
     const advertisement = await prisma.advertisement.upsert({
       where: {
         id: id || "-1",
+        userId
       },
       update: data,
       create: data,

@@ -1,5 +1,4 @@
-import ATForm from "../ATForm";
-import styles from "./page.module.scss";
+import ATForm from "./ATForm";
 
 const AddAddressBookPage = ({
   params,
@@ -9,7 +8,7 @@ const AddAddressBookPage = ({
   };
 }) => {
   return (
-    <section className={styles.container}>
+    <section className="container mx-auto my-10 w-full">
       <ATForm id={params.id === "add" ? null : params.id} />
     </section>
   );

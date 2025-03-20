@@ -41,10 +41,10 @@ const Dashboard = () => {
   const searchParams = useSearchParams();
   useEffect(() => {
     const fetchFilterData = async () => {
-      const calendars = await getAllCalendars();
+      const {data: calendars} = await getAllCalendars();
       setSelectedCalendar(calendars?.[0]?.id || "");
       setCalendarData(calendars || []);
-      const ads = await getAllAdvertisementTypes();
+      const { data: ads } = await getAllAdvertisementTypes();
       setAdvertisementTypes(ads || []);
       setSelectedAdtypes(ads || []);
     };

@@ -14,7 +14,7 @@ const PurchaseOverviewPage = async ({
   const { purchaseId } = params;
 
   const advertisementTypes = await getAllAdvertisementTypes();
-  const calendars = await getAllCalendars();
+  const { data: calendars } = await getAllCalendars();
 
   if (!advertisementTypes || advertisementTypes.length === 0) {
     redirect("/dashboard/advertisement-types");

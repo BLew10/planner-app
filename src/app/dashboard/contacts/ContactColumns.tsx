@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
+import { Edit, Trash2 } from "lucide-react";
 import { ContactTableData } from "@/lib/data/contact";
 import { CATEGORIES } from "@/lib/constants";
-import ActionButtonWithModal from "@/app/(components)/general/ActionButtonWithModal";
+import DeleteButton from "@/app/(components)/general/DeleteButton";
 
 export const getContactColumns = (
   onContactDelete: (id: string) => void
@@ -45,30 +46,30 @@ export const getContactColumns = (
       </Link>
     ),
   },
-  {
-    accessorKey: "webAddress",
-    header: "Web Address",
-    cell: ({ row }) => (
-      <a
-        href={row.original.webAddress || "#"}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="hover:underline"
-      >
-        {row.original.webAddress}
-      </a>
-    ),
-  },
-  {
-    accessorKey: "category",
-    header: "Category",
-    cell: ({ row }) => {
-      const category = row.original.category;
-      return category !== "0" && category
-        ? CATEGORIES[parseInt(category)].label
-        : "";
-    },
-  },
+  // {
+  //   accessorKey: "webAddress",
+  //   header: "Web Address",
+  //   cell: ({ row }) => (
+  //     <a
+  //       href={row.original.webAddress || "#"}
+  //       target="_blank"
+  //       rel="noopener noreferrer"
+  //       className="hover:underline"
+  //     >
+  //       {row.original.webAddress}
+  //     </a>
+  //   ),
+  // },
+  // {
+  //   accessorKey: "category",
+  //   header: "Category",
+  //   cell: ({ row }) => {
+  //     const category = row.original.category;
+  //     return category !== "0" && category
+  //       ? CATEGORIES[parseInt(category)].label
+  //       : "";
+  //   },
+  // },
   {
     id: "actions",
     cell: ({ row }) => {
@@ -80,19 +81,21 @@ export const getContactColumns = (
               Add Purchase
             </Button>
           </Link>
-          <Link href={`/dashboard/contacts/${contact.id}`}>
-            <Button variant="edit" size="sm">
-              Edit
+
+          <Link href={`/dashboard/contacts/${contact.id}/overview`}>
+            <Button variant="secondary" size="sm">
+              Contact Details
             </Button>
           </Link>
-          <ActionButtonWithModal
-            triggerText="Delete"
-            modalTitle="Confirm Delete"
-            modalText="Are you sure you want to delete this contact? This action cannot be undone."
-            actionText="Delete"
-            onAction={() => onContactDelete(contact.id || "")}
-            variant="destructive"
-            size="sm"
+          <Link href={`/dashboard/contacts/${contact.id}`}>
+            <Button variant="ghost" size="icon">
+              <Edit className="h-4 w-4" />
+            </Button>
+          </Link>
+          <DeleteButton
+            itemType="Contact"
+            itemName={contact.contactContactInformation?.company || ""}
+            onDelete={() => onContactDelete(contact.id || "")}
           />
         </div>
       );

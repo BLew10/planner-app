@@ -8,9 +8,9 @@ interface ContactsTableProps {
   addressBooks: { label: string; value: string }[];
   onFilterChange: (value: string) => void;
   onSearch: (query: string) => void;
-  onRowClick: (row: Partial<ContactTableData>) => void;
   onContactDelete: (id: string) => void;
   onSelectedRowsChange: (rows: string[]) => void;
+  selectedRows: string[];
   onDeleteSelected: () => void;
   itemsPerPage: number;
   totalItems: number;
@@ -25,9 +25,9 @@ export function ContactsTable({
   addressBooks,
   onFilterChange,
   onSearch,
-  onRowClick,
   onContactDelete,
   onSelectedRowsChange,
+  selectedRows,
   onDeleteSelected,
   itemsPerPage,
   totalItems,
@@ -47,10 +47,10 @@ export function ContactsTable({
       onFilterChange={onFilterChange}
       searchPlaceholder="Search contacts..."
       onSearch={onSearch}
-      onRowClick={onRowClick}
       onAdd={onAdd}
       addButtonLabel="Add Contact"
       onSelectedRowsChange={onSelectedRowsChange}
+      selectedRows={selectedRows}
       onDeleteSelected={onDeleteSelected}
       itemsPerPage={itemsPerPage}
       totalItems={totalItems}

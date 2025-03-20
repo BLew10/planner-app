@@ -1,37 +1,56 @@
-import React, { useEffect, useState } from "react";
-import styles from "./DeleteButton.module.scss";
-import ActionModal from "./ActionModal";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import React, { useState } from "react";
 
 interface DeleteButtonProps {
-  title: string;
-  text: string;
-  deleteText?: string;
+  itemType: string;
+  itemName: string;
   onDelete: () => void;
 }
 
-const DeleteButton = ({ title, text, onDelete, deleteText = "Delete" }: DeleteButtonProps) => {
+const DeleteButton = ({
+  itemType,
+  itemName,
+  onDelete,
+}: DeleteButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <>
-      <ActionModal
-        isOpen={isOpen}
-        closeModal={() => setIsOpen(false)}
-        onAction={() => {
-          onDelete();
-          setIsOpen(false);
-        }}
-        title={title}
-        text={text}
-      />
-      <button
-        type="submit"
-        className={styles.deleteAction}
-        onClick={() => setIsOpen(true)}
-      >
-        {deleteText}
-      </button>
-    </>
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete {itemType}</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete this {itemType}? This action cannot be
+            {itemName}? This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={onDelete}>Delete</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 

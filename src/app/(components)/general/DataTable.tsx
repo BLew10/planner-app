@@ -54,9 +54,9 @@ import {
 } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface DataTableProps<TData, TValue> {
+interface DataTableProps<TData> {
   isLoading: boolean;
-  columns: ColumnDef<TData, TValue>[];
+  columns: ColumnDef<TData, any>[];
   data: TData[];
   title?: string;
   filterOptions?: { value: string; label: string }[];
@@ -76,7 +76,7 @@ interface DataTableProps<TData, TValue> {
   onRowClick?: (row: TData) => void;
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable<TData extends { id?: string }>({
   isLoading,
   columns,
   data,
@@ -96,7 +96,7 @@ export function DataTable<TData, TValue>({
   currentPage = 1,
   onPageChange,
   onRowClick,
-}: DataTableProps<TData, TValue>) {
+}: DataTableProps<TData>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -105,6 +105,11 @@ export function DataTable<TData, TValue>({
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [searchQuery, setSearchQuery] = React.useState("");
+
+  // Reset row selection when data changes
+  React.useEffect(() => {
+    setRowSelection({});
+  }, [data]);
 
   const table = useReactTable({
     data,
@@ -235,9 +240,20 @@ export function DataTable<TData, TValue>({
                   <TableHead className="w-[50px]">
                     <Checkbox
                       checked={table.getIsAllPageRowsSelected()}
-                      onCheckedChange={(value) =>
-                        table.toggleAllPageRowsSelected(!!value)
-                      }
+                      onCheckedChange={(value) => {
+                        const currentPageIds = table
+                          .getRowModel()
+                          .rows.map((row) => row.original.id!);
+                        const newSelectedRows = value
+                          ? Array.from(
+                              new Set([...selectedRows, ...currentPageIds])
+                            )
+                          : selectedRows.filter(
+                              (id) => !currentPageIds.includes(id)
+                            );
+                        onSelectedRowsChange(newSelectedRows);
+                        table.toggleAllPageRowsSelected(!!value);
+                      }}
                       aria-label="Select all"
                     />
                   </TableHead>
@@ -279,32 +295,45 @@ export function DataTable<TData, TValue>({
                 ))
               ) : table.getRowModel().rows?.length ? (
                 // Existing content rendering
-                table.getRowModel().rows.map((row, index) => (
+                table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
-                    className={
-                      onRowClick 
-                        ? "cursor-pointer transition-all duration-200 hover:bg-blue-100 hover:shadow-sm" 
-                        : ""
-                    }
+                    className="cursor-pointer transition-all duration-200"
                     onClick={(e) => {
                       if (
                         (e.target as HTMLElement).closest("button") ||
+                        (e.target as HTMLElement).closest("a") ||
                         (e.target as HTMLElement).closest('[role="checkbox"]')
                       ) {
                         return;
                       }
-                      onRowClick?.(row.original);
+                      
+                      if (onSelectedRowsChange) {
+                        const rowId = row.original.id!;
+                        const isSelected = selectedRows.includes(rowId);
+                        const newSelectedRows = isSelected
+                          ? selectedRows.filter(id => id !== rowId)
+                          : [...selectedRows, rowId];
+                        onSelectedRowsChange(newSelectedRows);
+                        // Update the table's internal selection state
+                        row.toggleSelected(!isSelected);
+                      }
                     }}
                   >
                     {onSelectedRowsChange && (
                       <TableCell className="w-[70px]">
                         <Checkbox
-                          checked={row.getIsSelected()}
-                          onCheckedChange={(value) =>
-                            row.toggleSelected(!!value)
-                          }
+                          checked={selectedRows.includes(row.original.id!)}
+                          onCheckedChange={(value) => {
+                            const rowId = row.original.id!;
+                            const newSelectedRows = value
+                              ? [...selectedRows, rowId]
+                              : selectedRows.filter(id => id !== rowId);
+                            onSelectedRowsChange(newSelectedRows);
+                            // Update the table's internal selection state
+                            row.toggleSelected(!!value);
+                          }}
                           aria-label="Select row"
                         />
                       </TableCell>

@@ -9,9 +9,12 @@ export const getPaymentOverviewById = async (
   id: string
 ): Promise<Partial<PaymentOverviewModel> | null> => {
   try {
+    const session = await auth();
+    const userId = session?.user?.id;
     const payment = await prisma.paymentOverview.findFirst({
       where: {
         id,
+        userId
       },
       include: {
         purchase: true,

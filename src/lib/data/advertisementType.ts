@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma/prisma";
-import { Advertisement } from "@prisma/client";
+import { Advertisement, Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 
 /**
@@ -28,6 +28,7 @@ export const getAdvertisementTypeById = async (
       },
     });
 
+    console.log(advertisementType);
     return advertisementType;
   } catch {
     return null;
@@ -39,29 +40,57 @@ export const getAdvertisementTypeById = async (
  * @param id The id of the address book to retrieve
  * @returns id, name, and displayLevel of the address book
  */
-export const getAllAdvertisementTypes = async (): Promise<
-  Partial<Advertisement>[] | null
-> => {
+export const getAllAdvertisementTypes = async (
+  page: number | null = null,
+  pageSize: number | null = null,
+  search: string | null = null
+): Promise<{
+  data: Partial<Advertisement>[] | null;
+  totalItems: number;
+}> => {
   const session = await auth();
   const userId = session?.user?.id;
 
   try {
-    const advertisementTypes = await prisma.advertisement.findMany({
-      where: {
-        userId,
-        isDeleted: false
-      },
-      select: {
-        id: true,
-        name: true,
-        isDayType: true,
-        perMonth: true,
-      },
-    });
+    const skip = page && pageSize ? (page - 1) * pageSize : undefined;
+    const where = {
+      userId,
+      isDeleted: false,
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: Prisma.QueryMode.insensitive } },
+        ],
+      }),
+    };
 
-    return advertisementTypes;
-  } catch {
-    return null;
+    const [adTypes, total] = await Promise.all([
+      prisma.advertisement.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          perMonth: true,
+          isDayType: true,
+        },
+        ...(skip !== undefined && { skip }),
+        ...(pageSize && { take: pageSize }),
+        orderBy: {
+          name: 'asc'
+        }
+      }),
+      prisma.advertisement.count({ where })
+    ]);
+
+    return {
+      data: adTypes || [],
+      totalItems: total
+    };
+  } catch (error) {
+    console.error('Error fetching advertisement types:', error);
+    return {
+      data: null,
+      totalItems: 0
+    };
   }
 };
 

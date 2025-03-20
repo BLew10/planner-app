@@ -3,10 +3,6 @@ import { ContactTableData, getContactsByAddressBook, deleteManyContacts } from "
 import deleteContact from "@/actions/contact/deleteContact";
 import { useToast } from "@/hooks/shadcn/use-toast";
 
-interface CheckedContacts {
-  [key: string]: boolean;
-}
-
 interface UseContactsProps {
   itemsPerPage: number;
   addressBookId: string;
@@ -15,7 +11,7 @@ interface UseContactsProps {
 export const useContacts = ({ itemsPerPage, addressBookId }: UseContactsProps) => {
   const { toast } = useToast();
   const [contacts, setContacts] = useState<Partial<ContactTableData>[] | null>(null);
-  const [checkedContacts, setCheckedContacts] = useState<CheckedContacts>({});
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,36 +22,22 @@ export const useContacts = ({ itemsPerPage, addressBookId }: UseContactsProps) =
     const result = await getContactsByAddressBook(addressBookId, page, itemsPerPage, query);
     setContacts(result.contacts);
     setTotalItems(result.total);
-    const newCheckedContacts: CheckedContacts = {};
-    result.contacts?.forEach((contact) => {
-      if (contact.id) {
-        newCheckedContacts[contact.id] = false;
-      }
-    });
-      setCheckedContacts(newCheckedContacts);
-      setIsLoading(false);
-    },
-    [itemsPerPage]
-  );
+    setIsLoading(false);
+  }, [itemsPerPage]);
 
   useEffect(() => {
     fetchContacts(addressBookId, currentPage, searchQuery);
   }, [addressBookId, currentPage, itemsPerPage, fetchContacts, searchQuery]);
 
   const deleteSelectedContacts = async () => {
-    const contactIds = Object.keys(checkedContacts).filter((id) => checkedContacts[id]);
-    const deleted = await deleteManyContacts(contactIds);
+    const deleted = await deleteManyContacts(selectedRows);
     await fetchContacts(addressBookId, currentPage, searchQuery);
     if (deleted) {
       toast({
         title: "Successfully Deleted",
         variant: "default",
       });
-      setCheckedContacts((prev) => {
-        const newChecked = { ...prev };
-        contactIds.forEach((id) => delete newChecked[id]);
-        return newChecked;
-      });
+      setSelectedRows([]);
     } else {
       toast({
         title: "Something went wrong. Deletion failed",
@@ -65,9 +47,9 @@ export const useContacts = ({ itemsPerPage, addressBookId }: UseContactsProps) =
   };
 
   const onContactDelete = async (contactId: string) => {
-    // const deleted = await deleteContact(contactId);
-    // await fetchContacts(addressBookId, currentPage, searchQuery);
-    if (true) {
+    const deleted = await deleteContact(contactId);
+    await fetchContacts(addressBookId, currentPage, searchQuery);
+    if (deleted) {
       toast({
         title: "Successfully Deleted",
         variant: "default",
@@ -78,12 +60,12 @@ export const useContacts = ({ itemsPerPage, addressBookId }: UseContactsProps) =
         variant: "destructive",
       });
     }
-    // return deleted;
   };
 
   return {
     contacts,
-    setCheckedContacts,
+    selectedRows,
+    setSelectedRows,
     currentPage,
     setCurrentPage,
     totalItems,

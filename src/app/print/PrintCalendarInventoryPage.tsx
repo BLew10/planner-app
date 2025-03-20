@@ -27,7 +27,7 @@ export default function PrintCalendarInventoryPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const calendars = await getAllCalendars();
+      const { data: calendars } = await getAllCalendars();
       const ads = await getAllAdvertisementTypes();
       setCalendars(calendars || []);
       setSelectedCalendars(calendars || []);
