@@ -13,6 +13,7 @@ import SimpleModal from "@/app/(components)/general/SimpleModal";
 import SelectInput from "@/app/(components)/form/SelectInput";
 import PaymentScheduleModal from "./PaymentScheduleModal";
 import { ToastContainer } from "react-toastify";
+import { DEFAULT_YEAR } from "@/lib/constants";
 
 const columns = [
   {
@@ -68,7 +69,7 @@ const BillingPage = () => {
   >([]);
   const [invoiceType, setInvoiceType] =
     useState<InvoiceType>("invoiceTotalSale");
-  const [year, setYear] = useState(ALL_YEARS[0].value);
+  const [year, setYear] = useState(DEFAULT_YEAR);
   const [selectAll, setSelectAll] = useState(false);
   const [tableData, setTableData] = useState<any[]>();
   const [openModal, setOpenModal] = useState(false);

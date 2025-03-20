@@ -601,6 +601,12 @@ export const FUTURE_YEARS = generateFutureYears();
 
 export const ALL_YEARS = allYears();
 
+const nextYear = new Date().getFullYear() + 1;
+
+export const DEFAULT_YEAR =
+  ALL_YEARS.find((year) => year.value === String(nextYear))?.value ||
+  ALL_YEARS[0].value;
+
 export const MONTHS = [
   "January",
   "February",
