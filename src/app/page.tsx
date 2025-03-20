@@ -1,28 +1,35 @@
 import Image from "next/image";
-import Link from "next/link";
-import styles from "./page.module.scss";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Login from "./Login";
+import SignUp from "./SignUp";
 
-export default function LoginPage() {
+export default function AuthPage() {
   return (
-    <div className={styles.homeContainer}>
-      <div className={styles.header}>
-        <h2 className={styles.heading}>Calendar Planner</h2>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-muted/40">
+      <div className="flex flex-col items-center mb-6 gap-2">
+        <h2 className="text-3xl font-bold tracking-tight">Calendar Planner</h2>
         <Image
           src="/images/logo.png"
           alt="Calendar Planner Logo"
           width={100}
           height={100}
+          className="rounded-md"
         />
       </div>
-      <div className={styles.toggleLogin}>
-        <p className={styles.toggleLoginText}>Don&rsquo;t have an account?</p>
-        <Link href="/signup" className={styles.toggleLoginButton}>
-          Sign Up
-        </Link>
-      </div>
-      <div className={styles.componentWrapper}>
-        <Login />
+      
+      <div className="w-full max-w-md">
+        <Tabs defaultValue="login" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="login">Login</TabsTrigger>
+            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+          </TabsList>
+          <TabsContent value="login">
+            <Login />
+          </TabsContent>
+          <TabsContent value="signup">
+            <SignUp />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
