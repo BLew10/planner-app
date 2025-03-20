@@ -129,8 +129,8 @@ const PaymentsPage = () => {
               Edit
             </Link>
             <DeleteButton
-              title="Delete Purchase"
-              text={`Are you sure you want to delete ${p.contact?.contactContactInformation?.company}'s purchase for ${p.paymentOverview?.year}?`}
+              itemType="payment"
+              itemName={p.contact?.contactContactInformation?.company || ""}
               onDelete={() => {
                 onDeletePayment(p.id || "");
               }}

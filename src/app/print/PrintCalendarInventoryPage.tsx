@@ -31,8 +31,8 @@ export default function PrintCalendarInventoryPage() {
       const ads = await getAllAdvertisementTypes();
       setCalendars(calendars || []);
       setSelectedCalendars(calendars || []);
-      setAds(ads || []);
-      setSelectedAds(ads || []);
+      setAds(ads?.data || []);
+      setSelectedAds(ads?.data || []);
     };
     fetchData();
     setIsDarkMode(false);

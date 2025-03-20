@@ -74,9 +74,9 @@ module.exports = {
   			md: '768px',
   			lg: '1024px',
   			xl: '1500px',
-  			'2xl': '1800px',
-  		},
-  	},
+  			'2xl': '1800px'
+  		}
+  	}
   },
   plugins: [require("tailwindcss-animate")],
 }

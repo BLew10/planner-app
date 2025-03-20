@@ -16,7 +16,7 @@ const PurchaseOverviewPage = async ({
   const advertisementTypes = await getAllAdvertisementTypes();
   const { data: calendars } = await getAllCalendars();
 
-  if (!advertisementTypes || advertisementTypes.length === 0) {
+  if (!advertisementTypes || !advertisementTypes.data || advertisementTypes.data.length === 0) {
     redirect("/dashboard/advertisement-types");
   }
 
@@ -28,7 +28,7 @@ const PurchaseOverviewPage = async ({
     <Suspense fallback={<LoadingSpinner />}>
       <section className={styles.container}>
         <PurchaseForm
-          advertisementTypes={advertisementTypes}
+          advertisementTypes={advertisementTypes.data}
           purchaseId={purchaseId}
           calendars={calendars}
         />
