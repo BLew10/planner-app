@@ -168,7 +168,7 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
     } else if (!index || (index === -1 && isChecked)) {
       const updatedPayments = [
         ...(paymentStore.paymentOverview.scheduledPayments || []),
-        { month, year, amount: null, dueDate: generateDueDates(year, month), checked: isChecked },
+        { month, year, amount: null, dueDate: generateDueDates(year, month-1), checked: isChecked },
       ];
       paymentStore.updateKeyValue("scheduledPayments", updatedPayments);
     }
@@ -187,7 +187,7 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
     } else if ((!index && amount) || (index === -1 && amount)) {
       const updatedPayments = [
         ...paymentStore.paymentOverview.scheduledPayments,
-        { month, year, amount, dueDate: generateDueDates(year, month) },
+        { month, year, amount, dueDate: generateDueDates(year, month-1) },
       ];
       paymentStore.updateKeyValue("scheduledPayments", updatedPayments);
     }

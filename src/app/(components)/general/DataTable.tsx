@@ -76,6 +76,7 @@ interface DataTableProps<TData> {
   onRowClick?: (row: TData) => void;
   searchDebounceMs?: number;
   searchQuery?: string;
+  noPagination?: boolean;
 }
 
 export function DataTable<TData extends { id?: string }>({
@@ -100,6 +101,7 @@ export function DataTable<TData extends { id?: string }>({
   onRowClick,
   searchDebounceMs = 500,
   searchQuery: externalSearchQuery,
+  noPagination = false,
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -131,10 +133,12 @@ export function DataTable<TData extends { id?: string }>({
       columnFilters,
       columnVisibility,
       rowSelection,
-      pagination: {
-        pageIndex: currentPage - 1,
-        pageSize: itemsPerPage,
-      },
+      pagination: noPagination
+        ? undefined
+        : {
+            pageIndex: currentPage - 1,
+            pageSize: itemsPerPage,
+          },
     },
     pageCount: Math.ceil(totalItems / itemsPerPage),
     manualPagination: true,
@@ -151,7 +155,7 @@ export function DataTable<TData extends { id?: string }>({
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const totalPages = noPagination ? 1 : Math.ceil(totalItems / itemsPerPage);
 
   // Handle debounced search
   const handleSearchChange = (value: string) => {
@@ -412,9 +416,10 @@ export function DataTable<TData extends { id?: string }>({
               )
             </Button>
           )}
-          <div className="ml-auto">
-            <Pagination>
-              <PaginationContent>
+          {!noPagination && (
+            <div className="ml-auto">
+              <Pagination>
+                <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
                     onClick={() =>
@@ -482,6 +487,7 @@ export function DataTable<TData extends { id?: string }>({
               </PaginationContent>
             </Pagination>
           </div>
+          )}
         </div>
       </CardContent>
     </Card>

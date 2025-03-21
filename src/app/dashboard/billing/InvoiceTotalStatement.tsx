@@ -1,4 +1,4 @@
-import React, { useEffect} from "react";
+import React from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import styles from "./InvoiceTotalStatement.module.scss";

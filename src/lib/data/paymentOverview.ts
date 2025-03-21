@@ -14,7 +14,7 @@ export const getPaymentOverviewById = async (
     const payment = await prisma.paymentOverview.findFirst({
       where: {
         id,
-        userId
+        userId,
       },
       include: {
         purchase: true,
@@ -28,116 +28,120 @@ export const getPaymentOverviewById = async (
   }
 };
 
-export const getOwedPayments = async (year: string, search?: string) => {
+export const getOwedPayments = async (
+  calendarYear: string = "all",
+  searchQuery: string = "",
+  page: number = 1,
+  pageSize: number | null = null
+): Promise<{
+  data: Partial<PaymentOverviewModel>[] | null;
+  totalItems: number;
+}> => {
   const session = await auth();
-  const userId = session?.user?.id;
-
-  if (!userId) {
-    console.error("User is not authenticated.");
-    return null;
+  if (!session) {
+    return { data: null, totalItems: 0 };
   }
 
-  try {
-    await flagLatePayments(userId);
-    const payments = await prisma.paymentOverview.findMany({
-      where: {
-        userId,
-        year: Number(year),
-        isPaid: false,
-        OR: search
-          ? [
-              {
-                contact: {
-                  contactContactInformation: {
-                    firstName: {
-                      contains: search,
-                      mode: "insensitive",
-                    },
-                  },
-                },
-              },
-              {
-                contact: {
-                  contactContactInformation: {
-                    lastName: {
-                      contains: search,
-                      mode: "insensitive",
-                    },
-                  },
-                },
-              },
-              {
-                contact: {
-                  contactContactInformation: {
-                    company: {
-                      contains: search,
-                      mode: "insensitive",
-                    },
-                  },
-                },
-              },
-              {
-                contact: {
-                  contactTelecomInformation: {
-                    email: {
-                      contains: search,
-                      mode: "insensitive",
-                    },
-                  },
-                },
-              },
-              {
-                invoiceNumber: {
-                  contains: search,
-                  mode: "insensitive",
-                },
-              },
-            ]
-          : undefined,
-      },
-      include: {
-        contact: {
-          include: {
-            contactContactInformation: true,
-            contactTelecomInformation: true,
-          },
-        },
-        scheduledPayments: {
-          orderBy: {
-            dueDate: "asc",
-          },
-        },
-        payments: true,
-        purchase: {
-          include: {
-            adPurchases: {
-              include: {
-                calendar: true,
-                advertisement: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: [
+  const userId = session.user.id;
+
+  // Base query conditions
+  const whereConditions: any = {
+    userId,
+    purchase: {
+      isDeleted: false,
+    },
+  };
+
+  // Add calendarYear filter if not "all"
+  if (calendarYear !== "all") {
+    whereConditions.purchase.year = Number(calendarYear);
+  }
+
+  // Add search query condition if provided
+  if (searchQuery) {
+    whereConditions.contact = {
+      OR: [
         {
-          contact: {
-            contactContactInformation: {
-              company: "asc",
+          contactContactInformation: {
+            firstName: {
+              contains: searchQuery,
+              mode: "insensitive",
             },
           },
         },
         {
-          year: "asc",
+          contactContactInformation: {
+            lastName: {
+              contains: searchQuery,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          contactContactInformation: {
+            company: {
+              contains: searchQuery,
+              mode: "insensitive",
+            },
+          },
         },
       ],
-    });
-
-    return serializeReturn(payments);
-  } catch (e) {
-    console.error("Error getting owed payments", e);
-    return null;
+    };
   }
+
+  // First get the total count for pagination
+  const totalItems = await prisma.paymentOverview.count({
+    where: whereConditions,
+  });
+
+  // Create base query options
+  const queryOptions: any = {
+    where: whereConditions,
+    include: {
+      contact: {
+        include: {
+          contactContactInformation: true,
+          contactTelecomInformation: true,
+        },
+      },
+      scheduledPayments: true,
+      purchase: {
+        include: {
+          calendarEditions: true,
+        },
+      },
+    },
+    orderBy: [
+      // Order by company name first
+      {
+        contact: {
+          contactContactInformation: {
+            company: "asc",
+          },
+        },
+      },
+      // Then by calendar year
+      {
+        purchase: {
+          year: "desc",
+        },
+      },
+    ],
+  };
+
+  // Add pagination parameters only if pageSize is provided
+  if (pageSize !== null) {
+    queryOptions.skip = (page - 1) * pageSize;
+    queryOptions.take = pageSize;
+  }
+
+  // Then get the data (paginated or all)
+  const payments = await prisma.paymentOverview.findMany(queryOptions);
+
+  return {
+    data: payments,
+    totalItems,
+  };
 };
 
 export const flagLatePayments = async (userId: string) => {
@@ -204,4 +208,126 @@ const billingUpdatedAlready = (date: Date): boolean => {
     date.getMonth() === today.getMonth() &&
     date.getFullYear() === today.getFullYear()
   );
+};
+
+export const getThisMonthPayments = async (
+  calendarYear: string = "all",
+  searchQuery: string = "",
+  page: number = 1,
+  pageSize: number = 10
+): Promise<{
+  data: Partial<PaymentOverviewModel>[] | null;
+  totalItems: number;
+}> => {
+  const session = await auth();
+  if (!session) {
+    return { data: null, totalItems: 0 };
+  }
+
+  const userId = session.user.id;
+
+  // Get current month and year
+  const today = new Date();
+  const currentMonth = today.getMonth() + 1; // Convert to 1-based (January is 1)
+
+  // Base query conditions
+  const whereConditions: any = {
+    userId,
+    purchase: {
+      isDeleted: false,
+    },
+    scheduledPayments: {
+      some: {
+        isPaid: false,
+        month: currentMonth, // Already 1-based, don't add 1 again
+      },
+    },
+  };
+
+  // Add calendarYear filter if not "all"
+  if (calendarYear !== "all") {
+    whereConditions.purchase.year = Number(calendarYear);
+  }
+
+  // Add search query condition if provided
+  if (searchQuery) {
+    whereConditions.contact = {
+      OR: [
+        {
+          contactContactInformation: {
+            firstName: {
+              contains: searchQuery,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          contactContactInformation: {
+            lastName: {
+              contains: searchQuery,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          contactContactInformation: {
+            company: {
+              contains: searchQuery,
+              mode: "insensitive",
+            },
+          },
+        },
+      ],
+    };
+  }
+
+  // First get the total count for pagination
+  const totalItems = await prisma.paymentOverview.count({
+    where: whereConditions,
+  });
+
+  // Then get the paginated data
+  const payments = await prisma.paymentOverview.findMany({
+    where: whereConditions,
+    include: {
+      contact: {
+        include: {
+          contactContactInformation: true,
+          contactTelecomInformation: true,
+        },
+      },
+      scheduledPayments: {
+        where: {
+          isPaid: false,
+          month: currentMonth, // Filter with the same month here too
+        },
+      },
+      purchase: {
+        include: {
+          calendarEditions: true,
+        },
+      },
+    },
+    orderBy: [
+      {
+        contact: {
+          contactContactInformation: {
+            company: "asc",
+          },
+        },
+      },
+      {
+        purchase: {
+          year: "desc",
+        },
+      },
+    ],
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+  });
+
+  return {
+    data: payments,
+    totalItems,
+  };
 };
