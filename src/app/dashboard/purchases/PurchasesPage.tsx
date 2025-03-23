@@ -137,14 +137,14 @@ const PurchasesPage = () => {
           </>
         )}
         <Link
-          href={`/dashboard/purchases/${p.id}?contactId=${p.contactId}&year=${p.year}`}
+          href={`/dashboard/purchases/${p.id}?contactId=${p.contactId}&year=${p.calendarEditionYear}`}
           className={styles.editAction}
         >
           Edit Purchase
         </Link>
         <DeleteButton
           itemType={`Purchase`}
-          itemName={`${p.companyName}'s purchase for ${p.year}`}
+          itemName={`${p.companyName}'s purchase for ${p.calendarEditionYear}`}
           onDelete={() => {
             onDeletePurchase(p.id, p.paymentOverviewId || "");
           }}

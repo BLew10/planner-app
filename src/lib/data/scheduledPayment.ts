@@ -6,13 +6,13 @@ import { serializeReturn } from "../helpers"
 
 export const getScheduledPaymentsByContactIdAndYear = async (
   contactId: string,
-  year: String
+  calendarEditionYear: string
 ): Promise<ScheduledPayment[] | null> => {
   try {
     const payments = await prisma.scheduledPayment.findMany({
       where: {
         paymentOverview: {
-          year: Number(year),
+          calendarEditionYear: Number(calendarEditionYear),
           contactId: contactId,
         },
       },

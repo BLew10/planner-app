@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import styles from "./Dashboard.module.scss";
 import { getAllCalendars } from "@/lib/data/calendarEdition";
 import { getAllAdvertisementTypes } from "@/lib/data/advertisementType";
-import { getAllSlotsByYearAndCalendarId } from "@/lib/data/purchase";
+import { getAllSlotsByCalendarEditionYearAndCalendarId } from "@/lib/data/purchase";
 import SelectInput from "../(components)/form/SelectInput";
 import { ALL_YEARS } from "@/lib/constants";
 import { Advertisement } from "@prisma/client";
@@ -57,7 +57,7 @@ const Dashboard = () => {
       setFetching(true);
       const adtypesIds = selectedAdtypes.map((ad) => ad.id);
 
-      const slots = await getAllSlotsByYearAndCalendarId(
+      const slots = await getAllSlotsByCalendarEditionYearAndCalendarId(
         selectedCalendar,
         selectedYear,
         adtypesIds || []
@@ -104,7 +104,7 @@ const Dashboard = () => {
     const adTypeIds = Array.from(selectedAds)
       .filter((ad) => ad.checked)
       .map((ad) => ad.value);
-    const slots = await getAllSlotsByYearAndCalendarId(
+    const slots = await getAllSlotsByCalendarEditionYearAndCalendarId(
       calendarId,
       year,
       adTypeIds

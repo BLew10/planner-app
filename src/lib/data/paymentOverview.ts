@@ -324,7 +324,7 @@ export const getThisMonthPayments = async (
       },
       {
         purchase: {
-          year: "desc",
+          calendarEditionYear: "desc",
         },
       },
     ],

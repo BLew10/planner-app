@@ -130,7 +130,7 @@ export async function upsertPaymentOverview(
           userId: session.user.id,
           invoiceNumber,
           contactId,
-          year: Number(calendarEditionYear),
+          calendarEditionYear: Number(calendarEditionYear),
           totalSale,
           net: net || 0,
           additionalDiscount1,

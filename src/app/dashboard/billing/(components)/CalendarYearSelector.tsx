@@ -21,8 +21,8 @@ const CalendarYearSelector: React.FC<CalendarYearSelectorProps> = ({
   return (
     <div className="flex items-center gap-2">
       <Label htmlFor="calendarYear">Calendar Edition Year</Label>
-      <Select 
-        value={selectedYear} 
+      <Select
+        value={selectedYear}
         onValueChange={onYearChange}
         defaultValue={DEFAULT_YEAR}
       >
@@ -42,4 +42,4 @@ const CalendarYearSelector: React.FC<CalendarYearSelectorProps> = ({
   );
 };
 
-export default CalendarYearSelector; 
+export default CalendarYearSelector;

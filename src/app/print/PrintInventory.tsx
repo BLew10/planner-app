@@ -4,7 +4,7 @@ import html2canvas from "html2canvas";
 import React, { useState, useEffect, useRef } from "react";
 import styles from "./PrintInventory.module.scss";
 import { useRouter } from "next/navigation";
-import { getAllSlotsByYearAndCalendarId } from "@/lib/data/purchase";
+import { getAllSlotsByCalendarEditionYearAndCalendarId } from "@/lib/data/purchase";
 import { Advertisement } from "@prisma/client";
 import { CalendarEdition } from "@prisma/client";
 import LoadingSpinner from "../(components)/general/LoadingSpinner";
@@ -67,7 +67,7 @@ const PrintInventory = ({
     const fetchData = async (selectedYear: string) => {
       setFetching(true);
       const adIds = advertisementTypes?.map((ad) => ad.id) || [];
-      const slots = await getAllSlotsByYearAndCalendarId(
+      const slots = await getAllSlotsByCalendarEditionYearAndCalendarId(
         calendar.id || "",
         selectedYear,
         adIds

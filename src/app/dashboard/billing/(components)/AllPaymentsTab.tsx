@@ -97,7 +97,7 @@ const AllPaymentsTab: React.FC<AllPaymentsTabProps> = ({
       header: "Calendar Year",
       cell: ({ row }: { row: Row<Partial<PaymentOverviewModel>> }) => {
         const payment = row.original;
-        return payment.purchase?.year || "-";
+        return payment.purchase?.calendarEditionYear || "-";
       },
     },
     {

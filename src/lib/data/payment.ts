@@ -28,7 +28,9 @@ export const getPaymentById = async (
   }
 };
 
-export const getPaymentsByYear = async (year: String) => {
+export const getPaymentsByCalendarEditionYear = async (
+  calendarEditionYear: string
+) => {
   try {
     const session = await auth();
     const userId = session?.user?.id;
@@ -37,7 +39,7 @@ export const getPaymentsByYear = async (year: String) => {
       where: {
         userId,
         purchase: {
-          year: Number(year),
+          calendarEditionYear: Number(calendarEditionYear),
         },
       },
       include: {
@@ -88,7 +90,7 @@ export const getPaymentsByContactId = async (
       orderBy: [
         {
           paymentOverview: {
-            year: "desc",
+            calendarEditionYear: "desc",
           },
         },
         {

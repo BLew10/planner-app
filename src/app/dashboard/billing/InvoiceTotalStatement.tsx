@@ -94,7 +94,7 @@ export const generateInvoiceTotalStatementPdf = (paymentOverview: Partial<Paymen
     leftAlignedX,
     50
   );
-  doc.text(`${paymentOverview?.year} TOWN PLANNER`, rightAlignedX, 50, {
+  doc.text(`${paymentOverview?.calendarEditionYear} TOWN PLANNER`, rightAlignedX, 50, {
     align: "right",
   });
   doc.text(`${formatDateToString(paymentOverview?.purchase?.createdAt || new Date())}`,

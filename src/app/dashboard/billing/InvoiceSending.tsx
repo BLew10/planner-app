@@ -80,11 +80,11 @@ export default function InvoiceSending({
           body: JSON.stringify({
             attachment: {
               ContentType: "application/pdf",
-              Filename: `Invoice-${paymentOverview.year}.pdf`,
+              Filename: `Invoice-${paymentOverview.calendarEditionYear}.pdf`,
               Base64Content: base64data?.toString().split("base64,")[1], // Remove the prefix to get pure Base64 data
             },
             to: customerEmail,
-            subject: `Invoice for Calendar ${paymentOverview.year}`,
+            subject: `Invoice for Calendar ${paymentOverview.calendarEditionYear}`,
             text: `Next Payment: ${nextPayment.dueDate} ${nextPayment.amount}`,
           }),
           headers: {
@@ -117,7 +117,7 @@ export default function InvoiceSending({
             {paymentOverview.contact?.contactContactInformation?.firstName}{" "}
             {paymentOverview.contact?.contactContactInformation?.lastName}
           </p>
-          <p>{paymentOverview.year}</p>
+          <p>{paymentOverview.calendarEditionYear}</p>
 
           {invoiceType === "invoiceTotalSale" && (
             <InvoiceTotalStatement

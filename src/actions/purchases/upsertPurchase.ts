@@ -27,11 +27,11 @@ export async function upsertPurchase(
           where: {
             id: purchaseId,
             userId: userId,
-            year: parseInt(calendarEditionYear),
+            calendarEditionYear: parseInt(calendarEditionYear),
           },
           update: {
             amountOwed: total,
-            year: parseInt(calendarEditionYear),
+            calendarEditionYear: parseInt(calendarEditionYear),
             calendarEditions: {
               set: [],
               connect: calendarIds.map((calendarId) => ({ id: calendarId })),
@@ -40,7 +40,7 @@ export async function upsertPurchase(
           create: {
             userId,
             contactId,
-            year: parseInt(calendarEditionYear),
+            calendarEditionYear: parseInt(calendarEditionYear),
             amountOwed: total,
             calendarEditions: {
               connect: calendarIds.map((calendarId) => ({ id: calendarId })),
@@ -80,7 +80,7 @@ export async function upsertPurchase(
               slot: slot.slot,
               date: slot.date ? slot.date : null,
               calendarId: calendarId,
-              year: parseInt(calendarEditionYear),
+              calendarEditionYear: parseInt(calendarEditionYear),
               advertisementId: adId,
               contactId: contactId,
             }));

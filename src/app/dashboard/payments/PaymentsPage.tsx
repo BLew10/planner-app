@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import styles from "./page.module.scss";
 import Table from "@/app/(components)/general/Table";
-import { getPaymentsByYear } from "@/lib/data/payment";
+import { getPaymentsByCalendarEditionYear } from "@/lib/data/payment";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import deletePayment from "@/actions/payment/deletePayment";
 import PaymentScheduleModal from "../billing/PaymentScheduleModal";
@@ -71,7 +71,7 @@ const PaymentsPage = () => {
 
   useEffect(() => {
     const fetchPayments = async () => {
-      const payments = await getPaymentsByYear(year);
+      const payments = await getPaymentsByCalendarEditionYear(year);
       setPayments(payments);
     };
     fetchPayments();

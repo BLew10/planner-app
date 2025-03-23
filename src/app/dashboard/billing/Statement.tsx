@@ -55,7 +55,7 @@ const generateStatementTable = (
   const tableData = [];
   const firstRow = [
     formatDateToString(paymentOverview?.purchase?.createdAt as Date),
-    `${paymentOverview?.year} TOWN PLANNER`,
+    `${paymentOverview?.calendarEditionYear} TOWN PLANNER`,
     `$${balance.toFixed(2)}`,
     `$${balance.toFixed(2)}`,
   ];
@@ -198,7 +198,7 @@ export const generateStatementPdf = async (
   doc.text(`Joyce Nazabal`, rightAlignedX, 45, {
     align: "right",
   });
-  doc.text(`${paymentOverview?.year} TOWN PLANNER`, rightAlignedX, 50, {
+  doc.text(`${paymentOverview?.calendarEditionYear} TOWN PLANNER`, rightAlignedX, 50, {
     align: "right",
   });
 

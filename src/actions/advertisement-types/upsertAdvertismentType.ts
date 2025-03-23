@@ -4,28 +4,31 @@ import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
 
 export interface AdvertisementTypeFormData {
-  name: string ;
+  name: string;
   isDayType: boolean;
   perMonth: number;
 }
 
-const upsertAdvertisementType = async (formData: AdvertisementTypeFormData, id?: string | null) => {
+const upsertAdvertisementType = async (
+  formData: AdvertisementTypeFormData,
+  id?: string | null
+) => {
   try {
     const session = await auth();
     const userId = session?.user?.id;
-    if (!userId) return false
-    
+    if (!userId) return false;
+
     const data = {
       ...formData,
       userId,
-    }
+    };
 
-    if (!data) return false
+    if (!data) return false;
 
     const advertisement = await prisma.advertisement.upsert({
       where: {
         id: id || "-1",
-        userId
+        userId,
       },
       update: data,
       create: data,
@@ -37,7 +40,6 @@ const upsertAdvertisementType = async (formData: AdvertisementTypeFormData, id?:
 
     return false;
   }
-
 };
 
 export default upsertAdvertisementType;

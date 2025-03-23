@@ -49,7 +49,7 @@ const ContactPaymentsOverview = ({
     const grouped: Record<string, Partial<PaymentModel>[]> = {};
 
     payments.forEach((payment) => {
-      const paymentYear = payment.paymentOverview?.year?.toString() || "Unknown";
+      const paymentYear = payment.paymentOverview?.calendarEditionYear?.toString() || "Unknown";
       if (!grouped[paymentYear]) {
         grouped[paymentYear] = [];
       }
@@ -97,7 +97,7 @@ const ContactPaymentsOverview = ({
                     <TableCell>
                       {payment.paymentOverview?.invoiceNumber || "—"}
                     </TableCell>
-                    <TableCell>{payment.paymentOverview?.year || "—"}</TableCell>
+                    <TableCell>{payment.paymentOverview?.calendarEditionYear || "—"}</TableCell>
                     <TableCell>
                       {payment.purchase?.calendarEditions
                         ?.map((c) => c.code)
@@ -167,7 +167,7 @@ const ContactPaymentsOverview = ({
                       <span className="text-sm text-gray-500 dark:text-gray-400">
                         Calendar Edition Year
                       </span>
-                      <span>{payment.paymentOverview?.year || "—"}</span>
+                      <span>{payment.paymentOverview?.calendarEditionYear || "—"}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-500 dark:text-gray-400">

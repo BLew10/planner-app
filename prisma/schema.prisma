@@ -146,23 +146,23 @@ model ContactAddressBook {
 }
 
 model PurchaseOverview {
-  id                String                      @id @default(uuid())
-  contactId         String
-  userId            String
-  year              Int
-  amountOwed        Decimal
-  isDeleted         Boolean                     @default(false)
-  createdAt         DateTime                    @default(now())
-  paymentOverviewId String?                     @unique
-  adPurchases       AdvertisementPurchase[]
-  adPurchaseSlots   AdvertisementPurchaseSlot[]
-  payments          Payment[]
-  paymentOverview   PaymentOverview?
-  contact           Contact                     @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  user              User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  calendarEditions  CalendarEdition[]           @relation("CalendarEditionToPurchaseOverview")
+  id                  String                      @id @default(uuid())
+  contactId           String
+  userId              String
+  calendarEditionYear Int
+  amountOwed          Decimal
+  isDeleted           Boolean                     @default(false)
+  createdAt           DateTime                    @default(now())
+  paymentOverviewId   String?                     @unique
+  adPurchases         AdvertisementPurchase[]
+  adPurchaseSlots     AdvertisementPurchaseSlot[]
+  payments            Payment[]
+  paymentOverview     PaymentOverview?
+  contact             Contact                     @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  user                User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  calendarEditions    CalendarEdition[]           @relation("CalendarEditionToPurchaseOverview")
 
-  @@unique([year, contactId])
+  @@unique([calendarEditionYear, contactId], map: "PurchaseOverview_year_contactId_key")
 }
 
 model PaymentOverview {
@@ -192,7 +192,7 @@ model PaymentOverview {
   amountPaid                  Decimal             @default(0)
   isPaid                      Boolean             @default(false)
   net                         Decimal
-  year                        Int
+  calendarEditionYear         Int
   prepaid                     Boolean             @default(false)
   lastPaymentId               String?             @unique
   invoiceNumber               String              @unique
@@ -277,7 +277,7 @@ model AdvertisementPurchaseSlot {
   purchaseId              String?
   isDeleted               Boolean               @default(false)
   calendarId              String
-  year                    Int
+  calendarEditionYear     Int
   advertisementId         String
   contactId               String
   advertisement           Advertisement         @relation(fields: [advertisementId], references: [id], onDelete: Cascade)
