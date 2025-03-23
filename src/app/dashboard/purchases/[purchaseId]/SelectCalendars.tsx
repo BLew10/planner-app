@@ -21,12 +21,11 @@ const SelectCalendars = ({ calendars, onNext, purchase, onYearChange, year }: Se
   const purchaseStore = usePurchasesStore();
 
   useEffect(() => {
-    if (purchase) {
+    if (purchase && !purchaseStore.purchaseOverview) {
       purchase.calendarEditions?.forEach((calendar) => {
         purchaseStore.addCalendarId(calendar.id);
-      })
+      });
     }
-
   }, [purchase]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -1,27 +1,5 @@
-# Testing
-
-## Payments
-
-- If Joyce has any failed payments, that needs to be handled within stripe. 
-- The system should just be aware when payments are made and update. If the subscription is cancelled, it should know as well.
-
-### Payment Test Cases for Webhooks 
-- Creating a payment
-    - Verify a subscription schedule is created
-    - Verify the first invoice is created
-    - Verify the that when a new invoice is sent, the system picks up on it
-    - 
-
-
-
-### Sync with Stripe
-- When Joyce clicks 'Sync', it should grab all subscriptions, check the status
-    - if id does not exists, move status to `Cancelled`
-- My system should just interface with status, joyce will need to check stripe be see payment updates and issues. 
-
-
-## Setup
-- Have joyce setup a vercel account
-
-## CHANGES
-- light mode?
+## TODO
+- Check Data tables being used for page reset on changes
+- Look into the year logic for the scheduled payments. is the year of the due date or year of the calendar edition? Somehow there was a 1/15/2026 scheduled payment due date but the year was 2025. Look into this issue. seems to only have happened multiple times for January.
+- cannot edit a purchase. getting a infinte loop
+- confirm year logic all over the code for clarity

@@ -48,7 +48,7 @@ export async function upsertPaymentOverview(
     "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
   >,
   data: PaymentOverview,
-  year: string,
+  calendarEditionYear: string,
   contactId: string,
   purchaseOverviewId: string
 ) {
@@ -124,14 +124,13 @@ export async function upsertPaymentOverview(
         },
       });
     } else {
-      // Create new payment
-      const invoiceNumber = await generateInvoiceNumber(prisma, year);
+      const invoiceNumber = await generateInvoiceNumber(prisma, calendarEditionYear);
       paymentOverview = await prisma.paymentOverview.create({
         data: {
           userId: session.user.id,
           invoiceNumber,
           contactId,
-          year: Number(year),
+          year: Number(calendarEditionYear),
           totalSale,
           net: net || 0,
           additionalDiscount1,
@@ -197,18 +196,31 @@ export async function upsertPaymentOverview(
           paymentOverviewId: paymentOverview.id,
           wasPrepaid: true,
         },
-      })
+      });
     }
     for (const scheduledPayment of scheduledPayments) {
-      const { dueDate, month, year, amount } = scheduledPayment;
+      const { dueDate, month, amount } = scheduledPayment;
+
+      const dueDateString = formatDateToString(dueDate);
+      const dueDateObj = new Date(
+        Date.UTC(
+          dueDate.getFullYear(),
+          dueDate.getMonth(),
+          dueDate.getDate(),
+          12,
+          0,
+          0
+        )
+      );
       await prisma.scheduledPayment.create({
         data: {
           paymentOverviewId: paymentOverview.id,
-          dueDate: formatDateToString(dueDate),
+          dueDate: dueDateString, // Keep the string version for backward compatibility
+          dueDateTimeStamp: dueDateObj, // Store the proper Date object (YYYY-MM-DD)
           month: month,
-          year: year,
+          year: dueDate.getFullYear(),
           amount: amount || 0,
-          lateFee: lateFeeFinal
+          lateFee: lateFeeFinal,
         },
       });
     }

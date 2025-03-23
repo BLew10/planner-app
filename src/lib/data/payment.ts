@@ -14,7 +14,7 @@ export const getPaymentById = async (
     const payment = await prisma.payment.findFirst({
       where: {
         id,
-        userId
+        userId,
       },
       include: {
         purchase: true,
@@ -54,18 +54,29 @@ export const getPaymentsByYear = async (year: String) => {
   }
 };
 
-export const getPaymentsByContactIdAndYear = async (
+export const getPaymentsByContactId = async (
   contactId: string,
-  year: String
-) => {
+  year?: string
+): Promise<Partial<PaymentModel>[] | null> => {
+  const session = await auth();
+  if (!session) {
+    return null;
+  }
+
+  const userId = session.user.id;
+
   try {
-    const payments = await prisma.payment.findMany({
-      where: {
-        contactId,
-        purchase: {
-          year: Number(year),
-        },
+    const where = {
+      userId,
+      contactId,
+      purchase: {
+        isDeleted: false,
+        ...(year && year !== "all" ? { year: Number(year) } : {}),
       },
+    };
+
+    const payments = await prisma.payment.findMany({
+      where,
       include: {
         paymentOverview: true,
         purchase: {
@@ -74,7 +85,18 @@ export const getPaymentsByContactIdAndYear = async (
           },
         },
       },
+      orderBy: [
+        {
+          paymentOverview: {
+            year: "desc",
+          },
+        },
+        {
+          paymentDate: "desc",
+        },
+      ],
     });
+
     return serializeReturn(payments);
   } catch (e) {
     console.error("Error getting payments for contact:", e);

@@ -7,15 +7,5 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-}
-
-.modWrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.editAction {
-  @include edit-link;
-  padding: 0.25rem;
+  padding: 1.5rem;
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   Table,
   TableBody,
@@ -17,27 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { FileDown } from "lucide-react";
-import { getCashFlowData } from "@/lib/data/cashFlowReport";
 import { Skeleton } from "@/components/ui/skeleton";
-
-// Define our data types for the cash flow report
-interface CashFlowEntry {
-  name: string;
-  representativeName?: string;
-  isInactive?: boolean;
-  months: {
-    [month: string]: {
-      projected?: number;
-      actual?: number;
-      isCredit?: boolean;
-    };
-  };
-  yearTotal: {
-    projected: number;
-    actual: number;
-  };
-}
+import { useCashFlowReport } from "@/hooks/billing/useCashFlowReport";
 
 const MONTHS = [
   "Jan",
@@ -60,44 +41,17 @@ const ALL_YEARS = Array.from({ length: 5 }, (_, i) => {
 });
 
 const CashFlowReportTab = () => {
-  const [cashFlowData, setCashFlowData] = useState<CashFlowEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedCompany, setSelectedCompany] = useState("All");
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
-  const [companies, setCompanies] = useState<string[]>(["All"]);
-  const [reportDate, setReportDate] = useState(new Date().toLocaleDateString());
-
-  useEffect(() => {
-    const fetchCashFlowData = async () => {
-      setIsLoading(true);
-      try {
-        const data = await getCashFlowData(selectedYear, selectedCompany) as CashFlowEntry[];
-        if (data) {
-          setCashFlowData(data);
-          // Get unique company names from data
-          const companyNames = [
-            "All",
-            ...Array.from(
-              new Set(
-                data.map((item) => item.name).filter(Boolean)
-              )
-            ).sort(),
-          ];
-          setCompanies(companyNames);
-        }
-      } catch (error) {
-        console.error("Error fetching cash flow data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCashFlowData();
-  }, [selectedYear, selectedCompany]);
-
-  const handleGeneratePDF = () => {
-    window.open(`/api/reports/cash-flow-pdf?year=${selectedYear}&company=${selectedCompany}`, "_blank");
-  };
+  const {
+    cashFlowData,
+    isLoading,
+    selectedCompany,
+    setSelectedCompany,
+    selectedYear,
+    setSelectedYear,
+    companies,
+    reportDate,
+    handleGeneratePDF
+  } = useCashFlowReport();
 
   if (isLoading) {
     return (

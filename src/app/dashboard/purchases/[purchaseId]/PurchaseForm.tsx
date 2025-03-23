@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Advertisement } from "@prisma/client";
 import styles from "./PurchaseForm.module.scss";
@@ -21,7 +21,8 @@ import LoadingSpinner from "@/app/(components)/general/LoadingSpinner";
 import PaymentOverview from "./PaymentOverview";
 import PaymentDetails from "./PaymentDetails";
 import PaymentSchedule from "./PaymentSchedule";
-import { toast, useToast } from "@/hooks/shadcn/use-toast";
+import { toast } from "@/hooks/shadcn/use-toast";
+
 interface PurchaseProps {
   advertisementTypes: Partial<Advertisement>[];
   calendars: Partial<CalendarEdition>[];
@@ -58,7 +59,11 @@ const Purchase: React.FC<PurchaseProps> = ({
     setStep((prevStep) => prevStep - 1);
   };
 
-  const fetchPurchase = async (contactId: string, year: string) => {
+  const isInitialMount = React.useRef(true);
+
+  const fetchPurchase = useCallback(async (contactId: string, year: string) => {
+    if (isFetching) return;
+    
     purchaseStore.reset();
     setPurchase(null);
     setIsFetching(true);
@@ -73,31 +78,36 @@ const Purchase: React.FC<PurchaseProps> = ({
       paymentOverviewStore.reset();
     }
     setIsFetching(false);
-  };
+  }, [isFetching, purchaseStore, paymentOverviewStore]);
 
   useEffect(() => {
-    const fetchContact = async (contactId: string) => {
-      const contactData = await getContactById(contactId);
-      if (!contactData) {
-        router.push("/dashboard/contacts");
-        return;
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      
+      const fetchContact = async (contactId: string) => {
+        const contactData = await getContactById(contactId);
+        if (!contactData) {
+          router.push("/dashboard/contacts");
+          return;
+        }
+        if (contactData) {
+          const contact = {
+            id: contactData.id as string,
+            companyName: contactData.contactContactInformation?.company || "",
+          };
+          setContact(contact);
+        }
+      };
+      
+      const contactId = searchParams?.get("contactId") as string;
+      fetchContact(contactId);
+      const paramYear = searchParams?.get("year") as string;
+      if (paramYear) {
+        setYear(paramYear);
       }
-      if (contactData) {
-        const contact = {
-          id: contactData.id as string,
-          companyName: contactData.contactContactInformation?.company || "",
-        };
-        setContact(contact);
-      }
-    };
-    const contactId = searchParams?.get("contactId") as string;
-    fetchContact(contactId);
-    const paramYear = searchParams?.get("year") as string;
-    if (paramYear) {
-      setYear(paramYear);
-    }
 
-    fetchPurchase(contactId, paramYear || defaultYear);
+      fetchPurchase(contactId, paramYear || defaultYear);
+    }
 
     return () => {
       purchaseStore.reset();

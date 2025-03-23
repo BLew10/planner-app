@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "@/hooks/shadcn/use-toast";
-import { getPaymentsByContactIdAndYear } from "@/lib/data/payment";
+import { getPaymentsByContactId } from "@/lib/data/payment";
 import { PaymentModel } from "@/lib/models/payment";
 
 interface UseContactPaymentsOptions {
@@ -15,7 +15,7 @@ export const useContactPayments = ({ contactId, year }: UseContactPaymentsOption
   const fetchPayments = useCallback(async () => {
     setIsLoading(true);
     try {
-      const paymentsData = await getPaymentsByContactIdAndYear(contactId, year);
+      const paymentsData = await getPaymentsByContactId(contactId, year);
       setPayments(paymentsData);
     } catch (error) {
       toast({

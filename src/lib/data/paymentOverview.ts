@@ -152,7 +152,7 @@ export const flagLatePayments = async (userId: string) => {
   });
   if (user) {
     const alreadyFlaggedToday = billingUpdatedAlready(user?.billingUpdated);
-    if (true) {
+    if (alreadyFlaggedToday) {
       await prisma.user.update({
         where: {
           id: userId,
@@ -226,10 +226,9 @@ export const getThisMonthPayments = async (
 
   const userId = session.user.id;
 
-  // Get current month and year
+  // Get today's date as a proper Date object
   const today = new Date();
-  const currentMonth = today.getMonth() + 1; // Convert to 1-based (January is 1)
-
+  
   // Base query conditions
   const whereConditions: any = {
     userId,
@@ -239,7 +238,11 @@ export const getThisMonthPayments = async (
     scheduledPayments: {
       some: {
         isPaid: false,
-        month: currentMonth, // Already 1-based, don't add 1 again
+        // Use the correct field name with capitalized 'T'
+        // and pass a proper Date object
+        dueDateTimeStamp: {
+          lte: today
+        }
       },
     },
   };
@@ -299,7 +302,10 @@ export const getThisMonthPayments = async (
       scheduledPayments: {
         where: {
           isPaid: false,
-          month: currentMonth, // Filter with the same month here too
+          // Use the correct field name with capitalized 'T'
+          dueDateTimeStamp: {
+            lte: today
+          }
         },
       },
       purchase: {

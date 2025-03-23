@@ -42,8 +42,6 @@ const AllPaymentsTab: React.FC<AllPaymentsTabProps> = ({
   onCalendarYearChange,
 }) => {
 
-  console.log(owedPayments);
-  // Define column definitions for all payments
   const columns = [
     {
       accessorKey: "contact",

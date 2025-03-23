@@ -218,6 +218,7 @@ model ScheduledPayment {
   lateFeeWaived     Boolean             @default(false)
   lateFeeAddedToNet Boolean             @default(false)
   lateFee           Decimal?
+  dueDateTimeStamp  DateTime?           @db.Date
   paymentAllocation PaymentAllocation[]
   paymentOverview   PaymentOverview     @relation(fields: [paymentOverviewId], references: [id], onDelete: Cascade)
 }

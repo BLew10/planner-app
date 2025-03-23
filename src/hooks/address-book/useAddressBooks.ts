@@ -23,9 +23,9 @@ export const useAddressBooks = (options: UseAddressBooksOptions = { includeAllOp
   const fetchAddressBooks = async () => {
     let userAddressBooks = await getAllAddressBooks();
     if (options.includeAllOption) {
-      userAddressBooks?.unshift(firstOptionAddressBook);
+      userAddressBooks?.data?.unshift(firstOptionAddressBook);
     }
-    setAddressBooks(userAddressBooks);
+    setAddressBooks(userAddressBooks?.data || []);
   };
 
   useEffect(() => {

@@ -5,7 +5,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { AddressBook } from "@prisma/client";
 import { DataTable } from "@/app/(components)/general/DataTable";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit } from "lucide-react";
 import DeleteButton from "@/app/(components)/general/DeleteButton";
 import { useRouter } from "next/navigation";
 

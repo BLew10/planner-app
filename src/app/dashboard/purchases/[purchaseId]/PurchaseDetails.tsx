@@ -93,7 +93,7 @@ const Purchase: React.FC<PurchaseProps> = ({
         purchaseStore.setPurchaseData(data, calendarId);
       }
     }
-  }, [purchase, purchaseStore]);
+  }, [purchase]);
 
   useEffect(() => {
     const filteredCalendars = calendars?.filter(
