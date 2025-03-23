@@ -61,29 +61,32 @@ const Purchase: React.FC<PurchaseProps> = ({
 
   const isInitialMount = React.useRef(true);
 
-  const fetchPurchase = useCallback(async (contactId: string, year: string) => {
-    if (isFetching) return;
-    
-    purchaseStore.reset();
-    setPurchase(null);
-    setIsFetching(true);
-    const purchase = await getPurchaseByContactIdAndYear(contactId, year);
-    if (purchase) {
-      setPurchase(purchase);
-      setPaymentOverview(purchase.paymentOverview || null);
-    } else {
-      setPaymentOverview(null);
-      setPurchase(null);
+  const fetchPurchase = useCallback(
+    async (contactId: string, year: string) => {
+      if (isFetching) return;
+
       purchaseStore.reset();
-      paymentOverviewStore.reset();
-    }
-    setIsFetching(false);
-  }, [isFetching, purchaseStore, paymentOverviewStore]);
+      setPurchase(null);
+      setIsFetching(true);
+      const purchase = await getPurchaseByContactIdAndYear(contactId, year);
+      if (purchase) {
+        setPurchase(purchase);
+        setPaymentOverview(purchase.paymentOverview || null);
+      } else {
+        setPaymentOverview(null);
+        setPurchase(null);
+        purchaseStore.reset();
+        paymentOverviewStore.reset();
+      }
+      setIsFetching(false);
+    },
+    [isFetching, purchaseStore, paymentOverviewStore]
+  );
 
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
-      
+
       const fetchContact = async (contactId: string) => {
         const contactData = await getContactById(contactId);
         if (!contactData) {
@@ -98,7 +101,7 @@ const Purchase: React.FC<PurchaseProps> = ({
           setContact(contact);
         }
       };
-      
+
       const contactId = searchParams?.get("contactId") as string;
       fetchContact(contactId);
       const paramYear = searchParams?.get("year") as string;

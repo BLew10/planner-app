@@ -133,9 +133,9 @@ const ThisMonthTab: React.FC<ThisMonthTabProps> = ({
       },
     },
     {
-      accessorKey: "purchase.year",
+      accessorKey: "purchase.calendarEditionYear",
       header: "Calendar Edition Year",
-      cell: ({ row }: any) => row.original.purchase?.year || "-",
+      cell: ({ row }: any) => row.original.purchase?.calendarEditionYear || "-",
     },
     {
       accessorKey: "net",
@@ -165,19 +165,21 @@ const ThisMonthTab: React.FC<ThisMonthTabProps> = ({
         if (nextPayment?.isLate) {
           return <span className="text-red-500 font-semibold">Late</span>;
         }
-        
+
         const today = new Date();
         const currentMonth = today.getMonth() + 1;
         const currentYear = today.getFullYear();
         const dueDate = new Date(nextPayment?.dueDate || "");
         const paymentMonth = dueDate.getMonth() + 1;
         const paymentYear = dueDate.getFullYear();
-        
-        if (paymentYear < currentYear || 
-            (paymentYear === currentYear && paymentMonth < currentMonth)) {
+
+        if (
+          paymentYear < currentYear ||
+          (paymentYear === currentYear && paymentMonth < currentMonth)
+        ) {
           return <span className="text-amber-600">Overdue</span>;
         }
-        
+
         return <span className="text-yellow-500">Pending</span>;
       },
     },

@@ -8,7 +8,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -19,6 +18,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCashFlowReport } from "@/hooks/billing/useCashFlowReport";
+import { ALL_YEARS } from "@/lib/constants";
 
 const MONTHS = [
   "Jan",
@@ -34,11 +34,6 @@ const MONTHS = [
   "Nov",
   "Dec",
 ];
-
-const ALL_YEARS = Array.from({ length: 5 }, (_, i) => {
-  const year = new Date().getFullYear() - 2 + i;
-  return { value: year.toString(), label: year.toString() };
-});
 
 const CashFlowReportTab = () => {
   const {

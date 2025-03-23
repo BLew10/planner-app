@@ -1,7 +1,3 @@
-import { useState } from "react";
-import { getPurchasesByContactId } from "@/lib/data/purchase";
-import styles from "./ContactPurchasesOverview.module.scss";
-import { Purchase } from "@/lib/data/purchase";
 import { MONTHS } from "@/lib/constants";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,7 +70,7 @@ const ContactPurchasesOverview = ({
             <div className="space-y-8">
               {Object.entries(groupedPurchases).map(([key, value]) => (
                 <div key={key} className="space-y-4">
-                  <h3 className="text-lg font-semibold">{value.year}</h3>
+                  <h3 className="text-lg font-semibold">{value.calendarEditionYear}</h3>
                   <div className="space-y-4">
                     {value.purchases.map((purchase) => {
                       const monthSlots = purchase.slots

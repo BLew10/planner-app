@@ -11,7 +11,6 @@ import { ALL_YEARS } from "@/lib/constants";
 import { Advertisement } from "@prisma/client";
 import { CalendarEdition } from "@prisma/client";
 import LoadingSpinner from "../(components)/general/LoadingSpinner";
-import AnimateWrapper from "../(components)/general/AnimateWrapper";
 import CalendarInventory from "./CalendarInventory";
 import { SlotInfo } from "@/lib/data/purchase";
 import CheckboxGroup from "../(components)/form/CheckboxGroup";

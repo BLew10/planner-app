@@ -5,8 +5,8 @@ import { Purchase } from "@/lib/data/purchase";
 
 interface GroupedPurchases {
   [key: string]: {
-    calendarName: string; // Assuming calendarEdition is a string; adjust if it's an object or another type
-    year: number;
+    calendarName: string;
+    calendarEditionYear: number;
     purchases: {
       id: string;
       advertisement: {
@@ -14,7 +14,7 @@ interface GroupedPurchases {
         id: string;
       };
       calendarName: string;
-      year: number;
+      calendarEditionYear: number;
       quantity: number;
       charge: number;
       slots: PurchaseSlots[];
@@ -49,12 +49,12 @@ export const useContactPurchases = ({
     return (
       purchases?.reduce((acc: { [key: string]: any }, purchaseOverviews) => {
         purchaseOverviews.forEach((purchase) => {
-          const { year } = purchase;
-          const key = `${year}`;
+          const { calendarEditionYear } = purchase;
+          const key = `${calendarEditionYear}`;
 
           if (!acc[key]) {
             acc[key] = {
-              year,
+              calendarEditionYear,
               purchases: [],
             };
           }

@@ -15,7 +15,7 @@ import { formatDateToString, serializeReturn } from "../helpers";
 
 export interface Purchase {
   id: string;
-  year: number;
+  calendarEditionYear: number;
   adPurchases: {
     id: string;
     charge: number;

@@ -14,7 +14,7 @@ export interface PaymentOverview {
   id: string;
   purchaseId: string;
   net?: number;
-  year: number;
+  calendarEditionYear: number;
   contactId?: string;
   totalSale: number;
   additionalDiscount1?: number;

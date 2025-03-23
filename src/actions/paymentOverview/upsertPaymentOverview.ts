@@ -231,12 +231,12 @@ export async function upsertPaymentOverview(
   }
 }
 
-const generateInvoiceNumber = async (prisma: any, year: string) => {
-  const lastTwoDigits = year.slice(-2);
+const generateInvoiceNumber = async (prisma: any, calendarEditionYear : string) => {
+  const lastTwoDigits = calendarEditionYear.slice(-2);
   let count =
     (await prisma.paymentOverview.count({
       where: {
-        year: Number(year),
+        calendarEditionYear: Number(calendarEditionYear),
       },
     })) + 1;
 

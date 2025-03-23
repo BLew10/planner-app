@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma/prisma";
 import { ScheduledPayment } from "@prisma/client";
-import { serializeReturn } from "../helpers"  
+import { serializeReturn } from "../helpers";
 
 export const getScheduledPaymentsByContactIdAndYear = async (
   contactId: string,
@@ -27,7 +27,7 @@ export const getScheduledPaymentsByContactIdAndYear = async (
 };
 
 export const updateSchedulePaymentLateFeesByYear = async (
-  paymentUpdates: { id: string; waived: boolean }[],
+  paymentUpdates: { id: string; waived: boolean }[]
 ) => {
   try {
     const paymentsToWaive = paymentUpdates

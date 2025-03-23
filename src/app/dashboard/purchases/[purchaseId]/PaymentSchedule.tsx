@@ -24,7 +24,7 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
   );
 
   useEffect(() => {
-    let paymentYear = paymentStore.paymentOverview.year;
+    let paymentYear = paymentStore.paymentOverview.calendarEditionYear;
     if (paymentYear && !upcomingYears.includes(paymentYear)) {
       const difference = Math.abs(upcomingYears[0] - paymentYear);
       const prevYears = [];

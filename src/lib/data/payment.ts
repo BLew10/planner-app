@@ -58,7 +58,7 @@ export const getPaymentsByCalendarEditionYear = async (
 
 export const getPaymentsByContactId = async (
   contactId: string,
-  year?: string
+  calendarEditionYear?: string
 ): Promise<Partial<PaymentModel>[] | null> => {
   const session = await auth();
   if (!session) {
@@ -73,7 +73,9 @@ export const getPaymentsByContactId = async (
       contactId,
       purchase: {
         isDeleted: false,
-        ...(year && year !== "all" ? { year: Number(year) } : {}),
+        ...(calendarEditionYear && calendarEditionYear !== "all"
+          ? { calendarEditionYear: Number(calendarEditionYear) }
+          : {}),
       },
     };
 

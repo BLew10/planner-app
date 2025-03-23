@@ -54,7 +54,7 @@ export const getOwedPayments = async (
 
   // Add calendarYear filter if not "all"
   if (calendarYear !== "all") {
-    whereConditions.purchase.year = Number(calendarYear);
+    whereConditions.purchase.calendarEditionYear = Number(calendarYear);
   }
 
   // Add search query condition if provided
@@ -112,7 +112,6 @@ export const getOwedPayments = async (
       },
     },
     orderBy: [
-      // Order by company name first
       {
         contact: {
           contactContactInformation: {
@@ -120,10 +119,9 @@ export const getOwedPayments = async (
           },
         },
       },
-      // Then by calendar year
       {
         purchase: {
-          year: "desc",
+          calendarEditionYear: "desc",
         },
       },
     ],
@@ -228,7 +226,7 @@ export const getThisMonthPayments = async (
 
   // Get today's date as a proper Date object
   const today = new Date();
-  
+
   // Base query conditions
   const whereConditions: any = {
     userId,
@@ -241,15 +239,15 @@ export const getThisMonthPayments = async (
         // Use the correct field name with capitalized 'T'
         // and pass a proper Date object
         dueDateTimeStamp: {
-          lte: today
-        }
+          lte: today,
+        },
       },
     },
   };
 
   // Add calendarYear filter if not "all"
   if (calendarYear !== "all") {
-    whereConditions.purchase.year = Number(calendarYear);
+    whereConditions.purchase.calendarEditionYear = Number(calendarYear);
   }
 
   // Add search query condition if provided
@@ -304,8 +302,8 @@ export const getThisMonthPayments = async (
           isPaid: false,
           // Use the correct field name with capitalized 'T'
           dueDateTimeStamp: {
-            lte: today
-          }
+            lte: today,
+          },
         },
       },
       purchase: {
