@@ -2,7 +2,6 @@
 
 import prisma from "@/lib/prisma/prisma";
 import { ScheduledPayment } from "@prisma/client";
-import { serializeReturn } from "../helpers";
 
 export const getScheduledPaymentsByContactIdAndYear = async (
   contactId: string,
@@ -20,7 +19,7 @@ export const getScheduledPaymentsByContactIdAndYear = async (
         dueDate: "asc",
       },
     });
-    return serializeReturn(payments);
+    return payments;
   } catch (e) {
     return null;
   }

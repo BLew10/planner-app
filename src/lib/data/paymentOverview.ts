@@ -3,7 +3,7 @@
 import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
 import { PaymentOverviewModel } from "../models/paymentOverview";
-import { isLate, serializeReturn } from "../helpers";
+import { isLate } from "../helpers";
 
 export const getPaymentOverviewById = async (
   id: string
@@ -22,7 +22,7 @@ export const getPaymentOverviewById = async (
         payments: true,
       },
     });
-    return serializeReturn(payment);
+    return payment;
   } catch (e) {
     return null;
   }

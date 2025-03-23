@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma/prisma";
 import { PaymentModel } from "../models/payment";
 import { flagLatePayments } from "./paymentOverview";
 import { auth } from "@/auth";
-import { serializeReturn } from "../helpers";
+
 export const getPaymentById = async (
   id: string
 ): Promise<Partial<PaymentModel> | null> => {
@@ -22,7 +22,7 @@ export const getPaymentById = async (
         paymentOverview: true,
       },
     });
-    return serializeReturn(payment);
+    return payment;
   } catch (e) {
     return null;
   }
@@ -50,7 +50,7 @@ export const getPaymentsByCalendarEditionYear = async (
         },
       },
     });
-    return serializeReturn(payments);
+    return payments;
   } catch (e) {
     return null;
   }
@@ -101,7 +101,7 @@ export const getPaymentsByContactId = async (
       ],
     });
 
-    return serializeReturn(payments);
+    return payments;
   } catch (e) {
     console.error("Error getting payments for contact:", e);
     return null;

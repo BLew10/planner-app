@@ -2,7 +2,6 @@
 
 import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
-import { serializeReturn } from "../helpers";
 
 const MONTHS = [
   "jan",
@@ -190,7 +189,7 @@ export const getCashFlowData = async (year: string, company: string = "All") => 
       };
     });
 
-    return serializeReturn(transformedData);
+    return transformedData;
   } catch (error) {
     console.error("Error in getCashFlowData:", error);
     throw error;
