@@ -45,7 +45,7 @@ const CashFlowReportTab = () => {
     setSelectedYear,
     companies,
     reportDate,
-    handleGeneratePDF
+    handleGeneratePDF,
   } = useCashFlowReport();
 
   if (isLoading) {
@@ -72,7 +72,10 @@ const CashFlowReportTab = () => {
             <div className="flex space-x-4 items-end">
               <div className="flex flex-col space-y-2">
                 <Label htmlFor="company-select">Company</Label>
-                <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+                <Select
+                  value={selectedCompany}
+                  onValueChange={setSelectedCompany}
+                >
                   <SelectTrigger id="company-select" className="w-[180px]">
                     <SelectValue placeholder="Select company" />
                   </SelectTrigger>
@@ -93,7 +96,10 @@ const CashFlowReportTab = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {ALL_YEARS.map((yearOption) => (
-                      <SelectItem key={yearOption.value} value={yearOption.value}>
+                      <SelectItem
+                        key={yearOption.value}
+                        value={yearOption.value}
+                      >
                         {yearOption.label}
                       </SelectItem>
                     ))}
@@ -107,7 +113,8 @@ const CashFlowReportTab = () => {
             </div>
           </div>
 
-          <div className="space-y-2">
+
+          <div className="text-muted-foreground text-sm space-y-2">
             <div className="flex flex-col space-y-1">
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
@@ -123,6 +130,10 @@ const CashFlowReportTab = () => {
                   each month)
                 </p>
               </div>
+              <p className="text-muted-foreground mt-1 italic">
+                Note: Prepayments are included in both projected and actual
+                amounts for the month they occur.
+              </p>
             </div>
           </div>
 
