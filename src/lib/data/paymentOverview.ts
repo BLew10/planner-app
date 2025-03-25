@@ -44,102 +44,141 @@ export const getOwedPayments = async (
 
   const userId = session.user.id;
 
-  // Base query conditions
-  const whereConditions: any = {
-    userId,
-    purchase: {
-      isDeleted: false,
-    },
-  };
+  try {
+    await flagLatePayments(userId);
+    
+    // Base query conditions
+    const whereConditions: any = {
+      userId,
+      isPaid: false,
+      purchase: {
+        isDeleted: false,
+      },
+    };
 
-  // Add calendarYear filter if not "all"
-  if (calendarYear !== "all") {
-    whereConditions.purchase.calendarEditionYear = Number(calendarYear);
-  }
+    // Add calendarYear filter if not "all"
+    if (calendarYear !== "all") {
+      whereConditions.purchase.calendarEditionYear = Number(calendarYear);
+    }
 
-  // Add search query condition if provided
-  if (searchQuery) {
-    whereConditions.contact = {
-      OR: [
+    // Add search query condition if provided
+    if (searchQuery) {
+      whereConditions.OR = [
         {
-          contactContactInformation: {
-            firstName: {
-              contains: searchQuery,
-              mode: "insensitive",
+          contact: {
+            contactContactInformation: {
+              firstName: {
+                contains: searchQuery,
+                mode: "insensitive",
+              },
             },
           },
         },
         {
-          contactContactInformation: {
-            lastName: {
-              contains: searchQuery,
-              mode: "insensitive",
+          contact: {
+            contactContactInformation: {
+              lastName: {
+                contains: searchQuery,
+                mode: "insensitive",
+              },
             },
           },
         },
         {
-          contactContactInformation: {
-            company: {
-              contains: searchQuery,
-              mode: "insensitive",
+          contact: {
+            contactContactInformation: {
+              company: {
+                contains: searchQuery,
+                mode: "insensitive",
+              },
             },
+          },
+        },
+        {
+          contact: {
+            contactTelecomInformation: {
+              email: {
+                contains: searchQuery,
+                mode: "insensitive",
+              },
+            },
+          },
+        },
+        {
+          invoiceNumber: {
+            contains: searchQuery,
+            mode: "insensitive",
+          },
+        },
+      ];
+    }
+
+    // First get the total count for pagination
+    const totalItems = await prisma.paymentOverview.count({
+      where: whereConditions,
+    });
+
+    // Create base query options
+    const queryOptions: any = {
+      where: whereConditions,
+      include: {
+        contact: {
+          include: {
+            contactContactInformation: true,
+            contactTelecomInformation: true,
+          },
+        },
+        scheduledPayments: {
+          orderBy: {
+            dueDate: "asc",
+          },
+        },
+        payments: true,
+        purchase: {
+          include: {
+            calendarEditions: true,
+            adPurchases: {
+              include: {
+                calendar: true,
+                advertisement: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: [
+        {
+          contact: {
+            contactContactInformation: {
+              company: "asc",
+            },
+          },
+        },
+        {
+          purchase: {
+            calendarEditionYear: "asc",
           },
         },
       ],
     };
+
+    // Add pagination parameters only if pageSize is provided
+    if (pageSize !== null) {
+      queryOptions.skip = (page - 1) * pageSize;
+      queryOptions.take = pageSize;
+    }
+
+    // Then get the data (paginated or all)
+    const payments = await prisma.paymentOverview.findMany(queryOptions);
+
+    return {
+      data: payments,
+      totalItems,
+    };
+  } catch (e) {
+    console.error("Error getting owed payments", e);
+    return { data: null, totalItems: 0 };
   }
-
-  // First get the total count for pagination
-  const totalItems = await prisma.paymentOverview.count({
-    where: whereConditions,
-  });
-
-  // Create base query options
-  const queryOptions: any = {
-    where: whereConditions,
-    include: {
-      contact: {
-        include: {
-          contactContactInformation: true,
-          contactTelecomInformation: true,
-        },
-      },
-      scheduledPayments: true,
-      purchase: {
-        include: {
-          calendarEditions: true,
-        },
-      },
-    },
-    orderBy: [
-      {
-        contact: {
-          contactContactInformation: {
-            company: "asc",
-          },
-        },
-      },
-      {
-        purchase: {
-          calendarEditionYear: "desc",
-        },
-      },
-    ],
-  };
-
-  // Add pagination parameters only if pageSize is provided
-  if (pageSize !== null) {
-    queryOptions.skip = (page - 1) * pageSize;
-    queryOptions.take = pageSize;
-  }
-
-  // Then get the data (paginated or all)
-  const payments = await prisma.paymentOverview.findMany(queryOptions);
-
-  return {
-    data: payments,
-    totalItems,
-  };
 };
 
 export const flagLatePayments = async (userId: string) => {

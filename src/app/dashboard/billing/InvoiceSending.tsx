@@ -20,6 +20,7 @@ export default function InvoiceSending({
   invoiceType,
   onSendInvoices,
 }: InvoiceSendingProps) {
+  console.log(paymentOverviews);
   const [checkedIds, setCheckedIds] = useState<string[]>([]);
   const { toast } = useToast();
   const handleSendInvoice = (event: React.ChangeEvent<HTMLInputElement>) => {

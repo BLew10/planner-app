@@ -10,7 +10,6 @@ import { Info, ExternalLink } from "lucide-react";
 // Helper functions
 import { formatDate } from "../(utils)/formatHelpers";
 import { getNextPaymentDate } from "../(utils)/paymentHelpers";
-import CalendarYearSelector from "./CalendarYearSelector";
 
 interface AllPaymentsTabProps {
   owedPayments: Partial<PaymentOverviewModel>[] | null;
@@ -24,22 +23,20 @@ interface AllPaymentsTabProps {
   totalItems: number;
   year: string;
   onPaymentClick: (paymentId: string) => void;
-  selectedCalendarYear: string;
-  onCalendarYearChange: (value: string) => void;
 }
 
 const AllPaymentsTab: React.FC<AllPaymentsTabProps> = ({
   owedPayments,
   isLoading,
+  searchQuery,
   onSearch,
   selectedPayments,
   onSelectedRowsChange,
   currentPage,
   onPageChange,
   totalItems,
+  year,
   onPaymentClick,
-  selectedCalendarYear,
-  onCalendarYearChange,
 }) => {
 
   const columns = [
@@ -159,25 +156,20 @@ const AllPaymentsTab: React.FC<AllPaymentsTabProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <CalendarYearSelector
-          selectedYear={selectedCalendarYear}
-          onYearChange={onCalendarYearChange}
-        />
-      </div>
       <DataTable
         isLoading={isLoading}
         columns={columns}
         data={owedPayments || []}
-        title={`Payments for ${selectedCalendarYear === "all" ? "All Years" : selectedCalendarYear}`}
+        title="All Owed Payments"
         searchPlaceholder="Search payments..."
+        searchQuery={searchQuery}
         onSearch={onSearch}
-        selectedRows={selectedPayments.map((p) => p.id as string)}
+        selectedRows={selectedPayments.map((payment) => payment.id as string)}
         onSelectedRowsChange={onSelectedRowsChange}
+        itemsPerPage={10}
         totalItems={totalItems}
         currentPage={currentPage}
         onPageChange={onPageChange}
-        noPagination={true}
       />
     </div>
   );

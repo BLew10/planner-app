@@ -76,25 +76,24 @@ export const generateInvoiceTotalStatementPdf = (paymentOverview: Partial<Paymen
     paymentOverview?.purchase?.adPurchases || []
   );
 
-  doc.setFont("Courier", "normal", "400");
+  doc.setFont("Times", "normal", "400");
   doc.setFontSize(10);
-  doc.text("Town Planner", leftAlignedX, 25);
+  doc.text("Publishing Concepts LLC", leftAlignedX, 25);
   doc.text("P.O. Box 188", leftAlignedX, 30);
   doc.text("Elk Grove, CA 95759", leftAlignedX, 35);
 
   // Contact Information
   doc.text("Tel: 916-217-0106", rightAlignedX, 25, { align: "right" });
-  doc.text("Fax: ", rightAlignedX, 30, { align: "right" }); // Add actual fax number
   doc.text("joyce@metrocalendars.com", rightAlignedX, 35, {
     align: "right",
   });
 
   doc.text(
-    `Your Town Planner Representative: Joyce Nazabal`,
+    `Publisher: Joyce Nazabal`,
     leftAlignedX,
     50
   );
-  doc.text(`${paymentOverview?.calendarEditionYear} TOWN PLANNER`, rightAlignedX, 50, {
+  doc.text(`${paymentOverview?.calendarEditionYear} Calendar`, rightAlignedX, 50, {
     align: "right",
   });
   doc.text(`${formatDateToString(paymentOverview?.purchase?.createdAt || new Date())}`,
@@ -103,11 +102,11 @@ export const generateInvoiceTotalStatementPdf = (paymentOverview: Partial<Paymen
     { align: "right" }
   );
 
-  doc.setFont("Courier", "normal", "700");
+  doc.setFont("Times", "normal", "700");
   doc.text(`INVOICE #${paymentOverview?.invoiceNumber}`, rightAlignedX, 70, { // TODO add invoice number
     align: "right",
   });
-  doc.setFont("Courier", "normal", "400");
+  doc.setFont("Times", "normal", "400");
 
   // Sponsor Information
   let currentY = 80;
@@ -117,12 +116,6 @@ export const generateInvoiceTotalStatementPdf = (paymentOverview: Partial<Paymen
     }`,
     rightAlignedX,
     currentY,
-    { align: "right" }
-  );
-  doc.text(
-    `Fax: ${paymentOverview?.contact?.contactTelecomInformation?.fax || ""}`,
-    rightAlignedX,
-    currentY + 5,
     { align: "right" }
   );
   doc.text(
@@ -271,20 +264,20 @@ export const generateInvoiceTotalStatementPdf = (paymentOverview: Partial<Paymen
 
   currentY += 10;
 
-  doc.setFont("Courier", "normal", "700");
+  doc.setFont("Times", "normal", "700");
   doc.text("Editions", 20, currentY, { align: "left" });
   doc.text("Description", 70, currentY, { align: "left" });
   doc.text("Total", 170, currentY, { align: "left" });
 
   currentY += 3; // Adjust space to account for text height
   doc.line(15, currentY, 195, currentY);
-  doc.setFont("Courier", "normal", "400");
+  doc.setFont("Times", "normal", "400");
   // Itemized Breakdown
   autoTable(doc, {
     startY: currentY,
     theme: "plain",
     body: transfomedData,
-    styles: { font: "Courier" },
+    styles: { font: "Times" },
     didDrawPage: (data) => {
       currentY = data?.cursor?.y || currentY; // Update currentY after the table is drawn
     },

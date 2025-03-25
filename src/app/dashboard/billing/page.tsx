@@ -9,12 +9,7 @@ import { INVOICE_TYPES, InvoiceType, DEFAULT_YEAR } from "@/lib/constants";
 import { Row } from "@tanstack/react-table";
 
 // shadcn components
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -38,6 +33,7 @@ import {
 import CashFlowReportTab from "./(components)/CashFlowReportTab";
 import AllPaymentsTab from "./(components)/AllPaymentsTab";
 import ThisMonthTab from "./(components)/ThisMonthTab";
+import CalendarYearSelector from "./(components)/CalendarYearSelector";
 
 const getNextPaymentDate = (scheduledPayments: ScheduledPayment[] | null) => {
   if (!scheduledPayments || scheduledPayments.length === 0) {
@@ -94,12 +90,12 @@ const BillingPage = () => {
   const [activeTab, setActiveTab] = useState("all-payments");
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCalendarYear, setSelectedCalendarYear] = useState(DEFAULT_YEAR);
+  const [selectedCalendarYear, setSelectedCalendarYear] =
+    useState(DEFAULT_YEAR);
 
   // Separate pagination states for each tab
   const [allPaymentsPage, setAllPaymentsPage] = useState(1);
   const [thisMonthPage, setThisMonthPage] = useState(1);
-
 
   const onPaymentClick = (paymentId: string) => {
     setPayment(owedPayments?.find((p) => p.id === paymentId) || null);
@@ -137,7 +133,6 @@ const BillingPage = () => {
     thisMonthPage,
   ]);
 
-
   const handleInvoiceType = (value: string) => {
     setInvoiceType(value as InvoiceType);
   };
@@ -154,6 +149,16 @@ const BillingPage = () => {
       setAllPaymentsPage(1);
     }
   }, [activeTab]);
+
+  // Handle tab change to automatically select a year for cash flow report
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+
+    // If switching to cash flow report and "all" is selected, auto-select the default year
+    if (value === "cash-flow" && selectedCalendarYear === "all") {
+      setSelectedCalendarYear(DEFAULT_YEAR);
+    }
+  };
 
   return (
     <div className="container mx-auto p-8">
@@ -219,10 +224,17 @@ const BillingPage = () => {
       )}
 
       {step === 1 && (
-        <Card>
+        <Card className="mb-8">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle>Billing Management</CardTitle>
+            <div className="flex items-center gap-4">
+              <CardTitle>Billing Management</CardTitle>
+            </div>
             <div className="flex items-center gap-3">
+              <CalendarYearSelector
+                selectedYear={selectedCalendarYear}
+                onYearChange={setSelectedCalendarYear}
+                hideAllYears={activeTab === "cash-flow"}
+              />
               {selectedPayments.length > 0 && (
                 <Button onClick={() => setOpenModal(true)}>
                   <Mail className="mr-2 h-4 w-4" />
@@ -231,11 +243,11 @@ const BillingPage = () => {
               )}
             </div>
           </CardHeader>
-
           <CardContent>
             <Tabs
+              defaultValue="all-payments"
               value={activeTab}
-              onValueChange={setActiveTab}
+              onValueChange={handleTabChange}
               className="w-full"
             >
               <TabsList className="grid grid-cols-1 md:grid-cols-3 w-full gap-4">
@@ -289,8 +301,6 @@ const BillingPage = () => {
                   currentPage={allPaymentsPage}
                   onPageChange={setAllPaymentsPage}
                   onPaymentClick={onPaymentClick}
-                  selectedCalendarYear={selectedCalendarYear}
-                  onCalendarYearChange={setSelectedCalendarYear}
                   year={selectedCalendarYear}
                 />
               </TabsContent>
@@ -308,7 +318,10 @@ const BillingPage = () => {
               </TabsContent>
 
               <TabsContent value="cash-flow" className="space-y-4">
-                <CashFlowReportTab />
+                <CashFlowReportTab
+                  selectedCalendarYear={selectedCalendarYear}
+                  onCalendarYearChange={setSelectedCalendarYear}
+                />
               </TabsContent>
             </Tabs>
           </CardContent>

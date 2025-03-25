@@ -12,11 +12,13 @@ import { ALL_YEARS, DEFAULT_YEAR } from "@/lib/constants";
 interface CalendarYearSelectorProps {
   selectedYear: string;
   onYearChange: (value: string) => void;
+  hideAllYears?: boolean;
 }
 
 const CalendarYearSelector: React.FC<CalendarYearSelectorProps> = ({
   selectedYear,
   onYearChange,
+  hideAllYears = false,
 }) => {
   return (
     <div className="flex items-center gap-2">
@@ -30,7 +32,7 @@ const CalendarYearSelector: React.FC<CalendarYearSelectorProps> = ({
           <SelectValue placeholder="Select year" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Years</SelectItem>
+          {!hideAllYears && <SelectItem value="all">All Years</SelectItem>}
           {ALL_YEARS.map((yearOption) => (
             <SelectItem key={yearOption.value} value={yearOption.value}>
               {yearOption.label}

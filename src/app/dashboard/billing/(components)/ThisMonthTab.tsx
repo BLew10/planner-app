@@ -5,10 +5,10 @@ import { PaymentOverviewModel } from "@/lib/models/paymentOverview";
 import { Button } from "@/components/ui/button";
 import { ExternalLink } from "lucide-react";
 import { formatDate } from "../(utils)/formatHelpers";
-import CalendarYearSelector from "./CalendarYearSelector";
 import { getThisMonthPayments } from "@/lib/data/paymentOverview";
 import PaymentScheduleModal from "../PaymentScheduleModal";
 import { getNextPaymentDate } from "@/utils/paymentHelpers";
+
 interface ThisMonthTabProps {
   searchQuery: string;
   onSearch: (query: string) => void;
@@ -23,7 +23,6 @@ const ThisMonthTab: React.FC<ThisMonthTabProps> = ({
   searchQuery,
   onSearch,
   selectedCalendarYear,
-  onCalendarYearChange,
   onSelectionChange,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -187,12 +186,8 @@ const ThisMonthTab: React.FC<ThisMonthTabProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <CalendarYearSelector
-          selectedYear={selectedCalendarYear}
-          onYearChange={onCalendarYearChange}
-        />
-      </div>
+      {/* Calendar year selector has been removed, but we still receive the props */}
+      
       <DataTable
         isLoading={isLoading}
         columns={columns}

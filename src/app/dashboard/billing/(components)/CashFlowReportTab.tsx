@@ -18,7 +18,12 @@ import {
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCashFlowReport } from "@/hooks/billing/useCashFlowReport";
-import { ALL_YEARS } from "@/lib/constants";
+
+// Define props interface to receive the shared state
+interface CashFlowReportTabProps {
+  selectedCalendarYear: string;
+  onCalendarYearChange: (value: string) => void;
+}
 
 const MONTHS = [
   "Jan",
@@ -35,18 +40,19 @@ const MONTHS = [
   "Dec",
 ];
 
-const CashFlowReportTab = () => {
+const CashFlowReportTab = ({ 
+  selectedCalendarYear, 
+  onCalendarYearChange 
+}: CashFlowReportTabProps) => {
   const {
     cashFlowData,
     isLoading,
     selectedCompany,
     setSelectedCompany,
-    selectedYear,
-    setSelectedYear,
     companies,
     reportDate,
     handleGeneratePDF,
-  } = useCashFlowReport();
+  } = useCashFlowReport(selectedCalendarYear);
 
   if (isLoading) {
     return (
@@ -88,31 +94,13 @@ const CashFlowReportTab = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex flex-col space-y-2">
-                <Label htmlFor="year-select">Report Year</Label>
-                <Select value={selectedYear} onValueChange={setSelectedYear}>
-                  <SelectTrigger id="year-select" className="w-[180px]">
-                    <SelectValue placeholder="Select year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ALL_YEARS.map((yearOption) => (
-                      <SelectItem
-                        key={yearOption.value}
-                        value={yearOption.value}
-                      >
-                        {yearOption.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Calendar year selector removed from here */}
               {/* <Button onClick={handleGeneratePDF}>
                 <FileDown className="mr-2 h-4 w-4" />
                 Generate PDF
               </Button> */}
             </div>
           </div>
-
 
           <div className="text-muted-foreground text-sm space-y-2">
             <div className="flex flex-col space-y-1">

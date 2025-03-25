@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "@/hooks/shadcn/use-toast";
 import { getCashFlowData } from "@/lib/data/cashFlowReport";
+import { DEFAULT_YEAR } from "@/lib/constants";
 
 interface CashFlowEntry {
   name: string;
@@ -24,72 +25,59 @@ interface UseCashFlowReportOptions {
   initialCompany?: string;
 }
 
-export const useCashFlowReport = (options: UseCashFlowReportOptions = {}) => {
-  const {
-    initialYear = new Date().getFullYear().toString(),
-    initialCompany = "All",
-  } = options;
-
+export const useCashFlowReport = (calendarYear: string) => {
   const [cashFlowData, setCashFlowData] = useState<CashFlowEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedCompany, setSelectedCompany] = useState(initialCompany);
-  const [selectedYear, setSelectedYear] = useState(initialYear);
+  const [selectedCompany, setSelectedCompany] = useState("All");
   const [companies, setCompanies] = useState<string[]>(["All"]);
-  const [reportDate, setReportDate] = useState(new Date().toLocaleDateString());
-
-  const fetchCashFlowData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const data = (await getCashFlowData(
-        selectedYear,
-        selectedCompany
-      )) as CashFlowEntry[];
-      if (data) {
-        setCashFlowData(data);
-        // Get unique company names from data
-        const companyNames = [
-          "All",
-          ...Array.from(
-            new Set(data.map((item) => item.name).filter(Boolean))
-          ).sort(),
-        ];
-        setCompanies(companyNames);
-      }
-    } catch (error) {
-      console.error("Error fetching cash flow data:", error);
-      toast({
-        title: "Error fetching cash flow data",
-        description: "There was a problem loading the cash flow report.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedYear, selectedCompany]);
+  const [reportDate, setReportDate] = useState("");
 
   useEffect(() => {
-    fetchCashFlowData();
-  }, [fetchCashFlowData]);
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const data = await getCashFlowData(calendarYear, selectedCompany);
+        setCashFlowData(data);
+        
+        const uniqueCompanies = new Set(["All"]);
+        data.forEach((entry) => {
+          if (entry.name) uniqueCompanies.add(entry.name);
+        });
+        setCompanies(Array.from(uniqueCompanies));
+        
+        setReportDate(new Date().toLocaleDateString());
+      } catch (error) {
+        console.error("Error fetching cash flow data:", error);
+        toast({
+          title: "Error fetching cash flow data",
+          description: "There was a problem loading the cash flow report.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [calendarYear, selectedCompany]);
 
   const handleGeneratePDF = useCallback(() => {
     window.open(
-      `/api/reports/cash-flow-pdf?year=${selectedYear}&company=${selectedCompany}`,
+      `/api/reports/cash-flow-pdf?year=${calendarYear}&company=${selectedCompany}`,
       "_blank"
     );
-  }, [selectedYear, selectedCompany]);
+  }, [calendarYear, selectedCompany]);
 
   const refreshData = useCallback(() => {
-    fetchCashFlowData();
-    setReportDate(new Date().toLocaleDateString());
-  }, [fetchCashFlowData]);
+    // Implement refresh logic
+    console.log("Refreshing data...");
+  }, []);
 
   return {
     cashFlowData,
     isLoading,
     selectedCompany,
     setSelectedCompany,
-    selectedYear,
-    setSelectedYear,
     companies,
     reportDate,
     handleGeneratePDF,
