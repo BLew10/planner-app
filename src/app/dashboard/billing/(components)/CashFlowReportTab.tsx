@@ -40,9 +40,9 @@ const MONTHS = [
   "Dec",
 ];
 
-const CashFlowReportTab = ({ 
-  selectedCalendarYear, 
-  onCalendarYearChange 
+const CashFlowReportTab = ({
+  selectedCalendarYear,
+  onCalendarYearChange,
 }: CashFlowReportTabProps) => {
   const {
     cashFlowData,
@@ -159,13 +159,7 @@ const CashFlowReportTab = ({
                                 </div>
                               )}
                               {monthData.actual !== undefined && (
-                                <div
-                                  className={
-                                    monthData.isCredit ? "text-purple-600" : ""
-                                  }
-                                >
-                                  {monthData.actual.toFixed(2)}
-                                </div>
+                                <div>{monthData.actual.toFixed(2)}</div>
                               )}
                             </div>
                           )}

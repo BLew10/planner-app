@@ -11,7 +11,6 @@ interface CashFlowEntry {
     [month: string]: {
       projected?: number;
       actual?: number;
-      isCredit?: boolean;
     };
   };
   yearTotal: {
@@ -38,13 +37,13 @@ export const useCashFlowReport = (calendarYear: string) => {
       try {
         const data = await getCashFlowData(calendarYear, selectedCompany);
         setCashFlowData(data);
-        
+
         const uniqueCompanies = new Set(["All"]);
         data.forEach((entry) => {
           if (entry.name) uniqueCompanies.add(entry.name);
         });
         setCompanies(Array.from(uniqueCompanies));
-        
+
         setReportDate(new Date().toLocaleDateString());
       } catch (error) {
         console.error("Error fetching cash flow data:", error);

@@ -174,7 +174,7 @@ export async function GET(request: NextRequest) {
               y: startY - 12,
               size: 8,
               font: helveticaFont,
-              color: monthData.isCredit ? rgb(0.5, 0, 0.5) : rgb(0, 0, 0), // Purple for credits
+              color: rgb(0, 0, 0), // Purple for credits
             });
           }
         }
