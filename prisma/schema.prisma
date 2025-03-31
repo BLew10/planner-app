@@ -110,6 +110,7 @@ model CalendarEdition {
   AdvertisementPurchase     AdvertisementPurchase[]
   AdvertisementPurchaseSlot AdvertisementPurchaseSlot[]
   user                      User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events                    Event[]                     @relation("CalendarEditionToEvent")
   purchases                 PurchaseOverview[]          @relation("CalendarEditionToPurchaseOverview")
 }
 
@@ -285,4 +286,15 @@ model AdvertisementPurchaseSlot {
   calendar                CalendarEdition       @relation(fields: [calendarId], references: [id], onDelete: Cascade)
   contact                 Contact               @relation(fields: [contactId], references: [id], onDelete: Cascade)
   purchaseOverview        PurchaseOverview?     @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+}
+
+model Event {
+  id              String            @id @default(dbgenerated("(gen_random_uuid())::text"))
+  name            String
+  description     String?
+  date            String
+  isYearly        Boolean           @default(true)
+  year            Int?
+  isDeleted       Boolean           @default(false)
+  calendarEdition CalendarEdition[] @relation("CalendarEditionToEvent")
 }

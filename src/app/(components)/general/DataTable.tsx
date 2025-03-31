@@ -60,8 +60,13 @@ interface DataTableProps<TData> {
   data: TData[];
   title?: string;
   filterOptions?: { value: string; label: string }[];
+  defaultFilterValue?: string;
+  secondFilterOptions?: { value: string; label: string }[];
+  defaultSecondFilterValue?: string;
   filterPlaceholder?: string;
+  secondFilterPlaceholder?: string;
   onFilterChange?: (value: string) => void;
+  onSecondFilterChange?: (value: string) => void;
   searchPlaceholder?: string;
   onSearch?: (value: string) => void;
   onAdd?: () => void;
@@ -85,8 +90,13 @@ export function DataTable<TData extends { id?: string }>({
   data,
   title = "Data",
   filterOptions,
+  secondFilterOptions,
+  defaultFilterValue,
+  defaultSecondFilterValue,
   filterPlaceholder = "Filter...",
+  secondFilterPlaceholder = "Filter...",
   onFilterChange,
+  onSecondFilterChange,
   searchPlaceholder = "Search...",
   onSearch,
   onAdd,
@@ -232,12 +242,26 @@ export function DataTable<TData extends { id?: string }>({
             <Button type="submit">Search</Button>
           </form>
           {filterOptions && (
-            <Select onValueChange={onFilterChange}>
+            <Select onValueChange={onFilterChange} defaultValue={defaultFilterValue}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder={filterPlaceholder} />
               </SelectTrigger>
               <SelectContent>
                 {filterOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {secondFilterOptions && (
+            <Select onValueChange={onSecondFilterChange} defaultValue={defaultSecondFilterValue}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder={secondFilterPlaceholder} />
+              </SelectTrigger>
+              <SelectContent>
+                {secondFilterOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>

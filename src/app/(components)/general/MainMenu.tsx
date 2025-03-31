@@ -26,6 +26,7 @@ import {
   FileText,
   DollarSign,
   CreditCard,
+  InfoIcon,
   Sun,
   Moon,
 } from "lucide-react";
@@ -50,6 +51,11 @@ const menuItems = [
     icon: Calendar,
     label: "Calendar Editions",
     urlPath: "/dashboard/calendar-editions",
+  },
+  {
+    icon: InfoIcon,
+    label: "Events",
+    urlPath: "/dashboard/events",
   },
 ];
 
