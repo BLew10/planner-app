@@ -78,18 +78,38 @@ const CustomCalendarExport = () => {
 
             const [eventMonth, eventDay] = event.date.split("-").map(Number);
 
-            // Check for yearly events
+            // For multi-day events - only include on start and end dates
+            if (event.isMultiDay && event.endDate) {
+              const [endMonth, endDay] = event.endDate.split("-").map(Number);
+
+              // Check if this is the start date
+              if (eventMonth - 1 === month && eventDay === day) {
+                return true;
+              }
+
+              // Check if this is the end date
+              if (endMonth - 1 === month && endDay === day) {
+                return true;
+              }
+
+              // Skip all dates in between
+              return false;
+            }
+
+            // For single-day events (yearly)
             if (
               event.isYearly &&
+              !event.isMultiDay &&
               eventMonth - 1 === month &&
               eventDay === day
             ) {
               return true;
             }
 
-            // Check for one-time events
+            // For single-day events (one-time)
             if (
               !event.isYearly &&
+              !event.isMultiDay &&
               event.year === year &&
               eventMonth - 1 === month &&
               eventDay === day
@@ -100,7 +120,29 @@ const CustomCalendarExport = () => {
             return false;
           }) || [];
 
-        calendarDays.push({ day, events: dayEvents });
+        // Add markers for multi-day events (start) and (end)
+        const eventsWithMarkers = dayEvents.map((event) => {
+          if (!event.isMultiDay) return event;
+
+          const [eventMonth, eventDay] =
+            event.date?.split("-").map(Number) || [];
+          const [endMonth, endDay] = (event.endDate || "")
+            .split("-")
+            .map(Number);
+          const eventObj = { ...event };
+
+          if (eventMonth - 1 === month && eventDay === day) {
+            eventObj.name = `${eventObj.name}`;
+          }
+          // Mark end day
+          else if (endMonth - 1 === month && endDay === day) {
+            eventObj.name = `${eventObj.name}`;
+          }
+
+          return eventObj;
+        });
+
+        calendarDays.push({ day, events: eventsWithMarkers });
       }
 
       return calendarDays;
@@ -243,7 +285,7 @@ const CustomCalendarExport = () => {
   }
   .bullet {
     display: inline-block;
-    width: 10px;
+    min-width: 10px;
     margin-right: 4px;
     text-align: center;
   }

@@ -10,6 +10,10 @@ export interface EventFormData {
   isYearly: boolean;
   year?: number | null;
   calendarEditionIds: string[];
+  isMultiDay: boolean;
+  endDate?: string;
+  startTime?: string;
+  endTime?: string;
 }
 
 const upsertEvent = async (
@@ -45,6 +49,10 @@ const upsertEvent = async (
       date: formData.date,
       isYearly: formData.isYearly,
       year: formData.isYearly ? null : formData.year || null,
+      isMultiDay: formData.isMultiDay,
+      endDate: formData.endDate || null,
+      startTime: formData.startTime || null,
+      endTime: formData.endTime || null,
     };
 
     await prisma.$transaction(async (tx) => {

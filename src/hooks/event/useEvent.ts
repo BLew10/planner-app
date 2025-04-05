@@ -15,6 +15,10 @@ interface EventData {
   isYearly: boolean;
   year?: number | null;
   calendarEditionIds: string[];
+  isMultiDay: boolean;
+  endDate?: string;
+  startTime?: string;
+  endTime?: string;
 }
 
 interface UseEventProps {
@@ -50,6 +54,10 @@ export function useEvent({ id }: UseEventProps) {
               year: data.year,
               calendarEditionIds:
                 data.calendarEditions?.map((cal) => cal.id).filter((id): id is string => id !== undefined) || [],
+              isMultiDay: data.isMultiDay ?? false,
+              endDate: data.endDate || "",
+              startTime: data.startTime || "",
+              endTime: data.endTime || "",
             });
           }
         }

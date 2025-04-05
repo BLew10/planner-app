@@ -23,26 +23,41 @@ import { useEvent } from "@/hooks/event/useEvent";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { useRouter } from "next/navigation";
 
-const formSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().optional(),
-  date: z.string().regex(/^\d{2}-\d{2}$/, "Date must be in MM-DD format"),
-  isYearly: z.boolean(),
-  year: z
-    .union([z.number().min(2000).max(2100), z.null()])
-    .nullable(),
-  calendarEditionIds: z
-    .array(z.string())
-    .min(1, "Select at least one calendar edition"),
-}).superRefine((data, ctx) => {
-  if (!data.isYearly && data.year === null) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Year is required for non-yearly events",
-      path: ["year"],
-    });
-  }
-});
+const formSchema = z
+  .object({
+    name: z.string().min(1, "Name is required"),
+    description: z.string().optional(),
+    date: z.string().regex(/^\d{2}-\d{2}$/, "Date must be in MM-DD format"),
+    isYearly: z.boolean(),
+    year: z.union([z.number().min(2000).max(2100), z.null()]).nullable(),
+    calendarEditionIds: z
+      .array(z.string())
+      .min(1, "Select at least one calendar edition"),
+    isMultiDay: z.boolean(),
+    endDate: z
+      .string()
+      .regex(/^\d{2}-\d{2}$/, "End date must be in MM-DD format")
+      .optional(),
+    startTime: z.string().optional(),
+    endTime: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.isYearly && data.year === null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Year is required for non-yearly events",
+        path: ["year"],
+      });
+    }
+
+    if (data.isMultiDay && !data.endDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "End date is required for multi-day events",
+        path: ["endDate"],
+      });
+    }
+  });
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -53,6 +68,10 @@ const DEFAULT_VALUES: FormValues = {
   isYearly: true,
   year: null,
   calendarEditionIds: [],
+  isMultiDay: false,
+  endDate: "",
+  startTime: "",
+  endTime: "",
 };
 
 interface CalendarEventFormProps {
@@ -71,6 +90,7 @@ export default function CalendarEventForm({ id }: CalendarEventFormProps) {
   });
 
   const watchIsYearly = form.watch("isYearly");
+  const watchIsMultiDay = form.watch("isMultiDay");
 
   useEffect(() => {
     if (event) {
@@ -81,6 +101,10 @@ export default function CalendarEventForm({ id }: CalendarEventFormProps) {
         isYearly: event.isYearly || true,
         year: event.year || null,
         calendarEditionIds: event.calendarEditionIds || [],
+        isMultiDay: event.isMultiDay || false,
+        endDate: event.endDate || "",
+        startTime: event.startTime || "",
+        endTime: event.endTime || "",
       });
     }
   }, [event, form]);
@@ -169,10 +193,12 @@ export default function CalendarEventForm({ id }: CalendarEventFormProps) {
                     <FormLabel required>Calendar Editions</FormLabel>
                     <FormControl>
                       <MultiSelect
-                        options={calendarEditions?.map(calendar => ({
-                          label: calendar.name || "",
-                          value: calendar.id || "",
-                        })) || []}
+                        options={
+                          calendarEditions?.map((calendar) => ({
+                            label: calendar.name || "",
+                            value: calendar.id || "",
+                          })) || []
+                        }
                         defaultValue={field.value || []}
                         onValueChange={field.onChange}
                         placeholder="Select calendar editions"
@@ -188,10 +214,35 @@ export default function CalendarEventForm({ id }: CalendarEventFormProps) {
 
               <FormField
                 control={form.control}
+                name="isMultiDay"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">
+                        Multi-Day Event
+                      </FormLabel>
+                      <FormDescription>
+                        If enabled, this event spans multiple days
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
                 name="date"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel required>Date (MM-DD)</FormLabel>
+                    <FormLabel required>
+                      {watchIsMultiDay ? "Start Date (MM-DD)" : "Date (MM-DD)"}
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="12-25"
@@ -220,29 +271,73 @@ export default function CalendarEventForm({ id }: CalendarEventFormProps) {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="isYearly"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">
-                        Yearly Recurring
-                      </FormLabel>
+              {watchIsMultiDay && (
+                <FormField
+                  control={form.control}
+                  name="endDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel required>End Date (MM-DD)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="12-26"
+                          {...field}
+                          onChange={(e) => {
+                            // Format as MM-DD
+                            let value = e.target.value.replace(/[^0-9-]/g, "");
+
+                            // Auto-add the dash
+                            if (value.length === 2 && !value.includes("-")) {
+                              value = value + "-";
+                            }
+
+                            // Limit to 5 characters (MM-DD)
+                            if (value.length <= 5) {
+                              field.onChange(value);
+                            }
+                          }}
+                        />
+                      </FormControl>
                       <FormDescription>
-                        If enabled, this event will appear on the same date
-                        every year
+                        Enter end date in MM-DD format
                       </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="startTime"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Time</FormLabel>
+                      <FormControl>
+                        <Input placeholder="10:00 AM" {...field} />
+                      </FormControl>
+                      <FormDescription>Optional start time</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="endTime"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>End Time</FormLabel>
+                      <FormControl>
+                        <Input placeholder="2:00 PM" {...field} />
+                      </FormControl>
+                      <FormDescription>Optional end time</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               {!watchIsYearly && (
                 <FormField

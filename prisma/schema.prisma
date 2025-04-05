@@ -296,5 +296,9 @@ model Event {
   isYearly        Boolean           @default(true)
   year            Int?
   isDeleted       Boolean           @default(false)
+  isMultiDay      Boolean           @default(false)
+  endDate         String?
+  startTime       String?
+  endTime         String?
   calendarEdition CalendarEdition[] @relation("CalendarEditionToEvent")
 }

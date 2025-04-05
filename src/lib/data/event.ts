@@ -33,6 +33,10 @@ export const getEventById = async (
         date: true,
         isYearly: true,
         year: true,
+        isMultiDay: true,
+        endDate: true,
+        startTime: true,
+        endTime: true,
         calendarEdition: {
           select: {
             id: true,
@@ -101,6 +105,10 @@ export const getAllEvents = async (
           date: true,
           isYearly: true,
           year: true,
+          isMultiDay: true,
+          endDate: true,
+          startTime: true,
+          endTime: true,
           _count: {
             select: {
               calendarEdition: true,

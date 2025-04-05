@@ -53,13 +53,42 @@ export const EventsTable = ({
 
   const formatDate = (
     dateStr: string | undefined,
+    endDateStr: string | undefined,
     isYearly: boolean | undefined,
-    year: number | undefined
+    year: number | undefined,
+    isMultiDay: boolean | undefined,
+    startTime: string | undefined,
+    endTime: string | undefined
   ) => {
     if (!dateStr) return "";
 
     const [month, day] = dateStr.split("-");
-    return isYearly ? `${month}/${day} (Yearly)` : `${month}/${day}/${year}`;
+
+    let dateDisplay = isYearly ? `${month}/${day}` : `${month}/${day}/${year}`;
+
+    // For multi-day events
+    if (isMultiDay && endDateStr) {
+      const [endMonth, endDay] = endDateStr.split("-");
+      const endDateDisplay = isYearly
+        ? `${endMonth}/${endDay}`
+        : `${endMonth}/${endDay}/${year}`;
+      dateDisplay = `${dateDisplay} - ${endDateDisplay}`;
+    }
+
+    // Add time if provided
+    const timeDisplay = [];
+    if (startTime) timeDisplay.push(`Start: ${startTime}`);
+    if (endTime) timeDisplay.push(`End: ${endTime}`);
+
+    if (timeDisplay.length > 0) {
+      dateDisplay += ` (${timeDisplay.join(", ")})`;
+    }
+
+    if (isYearly && !isMultiDay) {
+      dateDisplay += " (Yearly)";
+    }
+
+    return dateDisplay;
   };
 
   const columns: ColumnDef<
@@ -74,7 +103,15 @@ export const EventsTable = ({
       header: "Date",
       cell: ({ row }) => {
         const event = row.original;
-        return formatDate(event.date, event.isYearly, event.year || undefined);
+        return formatDate(
+          event.date,
+          event.endDate ?? undefined,
+          event.isYearly,
+          event.year || undefined,
+          event.isMultiDay,
+          event.startTime ?? undefined,
+          event.endTime ?? undefined
+        );
       },
     },
     {
@@ -82,9 +119,14 @@ export const EventsTable = ({
       header: "Type",
       cell: ({ row }) => {
         const event = row.original;
+        let badgeText = "One-time";
+        if (event.isYearly) badgeText = "Yearly";
+        if (event.isMultiDay)
+          badgeText = event.isYearly ? "Multi-day Yearly" : "Multi-day";
+
         return (
           <Badge variant={event.isYearly ? "default" : "outline"}>
-            {event.isYearly ? "Yearly" : "One-time"}
+            {badgeText}
           </Badge>
         );
       },
@@ -120,12 +162,15 @@ export const EventsTable = ({
     },
   ];
 
-
   return (
     <>
       <div className="flex items-center justify-between mb-4 bg-gray-100 p-4 rounded-md">
         <h1 className="text-2xl font-bold">Calendar Events</h1>
-        <Button variant="outline" className="flex items-center gap-2" onClick={() => router.push("/dashboard/events/export")}>
+        <Button
+          variant="outline"
+          className="flex items-center gap-2"
+          onClick={() => router.push("/dashboard/events/export")}
+        >
           Proof <Download className="h-4 w-4" />
         </Button>
       </div>
@@ -141,7 +186,10 @@ export const EventsTable = ({
         filterPlaceholder="Select Year"
         onFilterChange={onYearChange}
         defaultSecondFilterValue={selectedCalendarEdition}
-        secondFilterOptions={[...calendarEditions, { id: "all", name: "All Calendar Editions" }].map((calendar) => ({
+        secondFilterOptions={[
+          ...calendarEditions,
+          { id: "all", name: "All Calendar Editions" },
+        ].map((calendar) => ({
           value: calendar.id || "",
           label: `${calendar.name} (${calendar.code || "N/A"})`,
         }))}
