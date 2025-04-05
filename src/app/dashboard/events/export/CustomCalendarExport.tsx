@@ -223,10 +223,10 @@ const CustomCalendarExport = () => {
   }
   .events-container {
     position: absolute;
-    bottom: 4px;
+    bottom: 8px;
     left: 0;
     right: 0;
-    padding: 0 4px;
+    padding: 2px 4px;
   }
   .custom-events-list {
     margin: 0;
@@ -249,14 +249,14 @@ const CustomCalendarExport = () => {
   }
   .split-events-container {
     position: absolute;
-    bottom: 4px; /* Reduced bottom space */
+    bottom: 8px; /* Reduced bottom space */
     left: 0;
     right: 0;
-    padding: 0 4px;
+    padding: 2px 4px;
     max-height: calc(50% - 18px); /* Limit height to prevent overflow */
   }
   .split-custom-event-item {
-    font-size: 9px;
+    font-size: 8px;
     margin: 0; /* Remove margin to save space */
     line-height: 1.1; /* Tighter line height */
     white-space: nowrap;
@@ -417,7 +417,7 @@ const CustomCalendarExport = () => {
                     ? `
                   <div class="events-container">
                     <div class="custom-events-list">
-                      ${[...dayData.events, ...dayData.events]
+                      ${dayData.events
                         .map(
                           (event: any) => `
                         <div class="custom-event-item"><span class="bullet">•</span> ${
@@ -489,9 +489,13 @@ const CustomCalendarExport = () => {
       const topIndex = 4 * 7 + j;
       const bottomIndex = 5 * 7 + j;
 
-      const topDayData = calendarData[topIndex];
+      const topDayData = calendarData[topIndex] || {
+        events: [{ name: "test" }, { name: "test" }],
+      };
       const bottomDayData =
-        bottomIndex < calendarData.length ? calendarData[bottomIndex] : null;
+        bottomIndex < calendarData.length
+          ? calendarData[bottomIndex]
+          : { events: [{ name: "test" }, { name: "test" }] };
 
       if (!topDayData && !bottomDayData) {
         html += "<td class='calendar-day'></td>";
@@ -509,39 +513,37 @@ const CustomCalendarExport = () => {
                   topDayData &&
                   topDayData.events &&
                   topDayData.events.length > 0
-                    ? `
-                       <div class="events-container">
-                  <div class="custom-events-list">
-                    <div class="custom-event-item"><span class="bullet">•</span> ${
-                      topDayData.events[0]?.name || "test"
-                    }</div>
-                   </div>
-                   </div>
-                   `
+                    ? `<div class="events-container">
+                        <div class="custom-events-list">
+                          ${[{ name: "test" }, { name: "test" }]
+                            .map(
+                              (event: any) =>
+                                `<div class="custom-event-item"><span class="bullet">•</span> ${
+                                  event.name || ""
+                                }</div>`
+                            )
+                            .join("")}
+                        </div>
+                      </div>`
                     : ""
                 }
               </div>
               ${
-                bottomDayData
-                  ? `<div class="split-day-bottom">
-                    ${
-                      bottomDayData.day
-                        ? `<div class="day-number split-day-number">${bottomDayData.day}</div>`
-                        : ""
-                    }
-                    ${
-                      bottomDayData.events && bottomDayData.events.length > 0
-                        ? `<div class="events-container">
-                  <div class="custom-events-list">
-                    <div class="custom-event-item"><span class="bullet">•</span> ${
-                      bottomDayData.events[0]?.name || "test"
-                    }</div>
-                   </div>
-                   </div>
-                   `
-                        : ""
-                    }
-                  </div>`
+                bottomDayData &&
+                bottomDayData.events &&
+                bottomDayData.events.length > 0
+                  ? `<div class="events-container">
+                      <div class="custom-events-list">
+                        ${[{ name: "test" }, { name: "test" }]
+                          .map(
+                            (event: any) =>
+                              `<div class="custom-event-item"><span class="bullet">•</span> ${
+                                event.name || ""
+                              }</div>`
+                          )
+                          .join("")}
+                      </div>
+                    </div>`
                   : ""
               }
             </div>
