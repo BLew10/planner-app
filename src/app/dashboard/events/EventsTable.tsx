@@ -84,10 +84,6 @@ export const EventsTable = ({
       dateDisplay += ` (${timeDisplay.join(", ")})`;
     }
 
-    if (isYearly && !isMultiDay) {
-      dateDisplay += " (Yearly)";
-    }
-
     return dateDisplay;
   };
 
@@ -164,16 +160,13 @@ export const EventsTable = ({
 
   return (
     <>
-      <div className="flex items-center justify-between mb-4 bg-gray-100 p-4 rounded-md">
-        <h1 className="text-2xl font-bold">Calendar Events</h1>
-        <Button
-          variant="outline"
-          className="flex items-center gap-2"
-          onClick={() => router.push("/dashboard/events/export")}
-        >
-          Proof <Download className="h-4 w-4" />
-        </Button>
-      </div>
+      <Button
+        variant="outline"
+        className="ml-auto flex items-center gap-2 mb-4"
+        onClick={() => router.push("/dashboard/events/export")}
+      >
+        Export Calendar Events PDF <Download className="h-4 w-4" />
+      </Button>
       <DataTable
         columns={columns}
         data={events || []}

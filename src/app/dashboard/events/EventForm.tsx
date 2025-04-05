@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -22,27 +22,40 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useEvent } from "@/hooks/event/useEvent";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { useRouter } from "next/navigation";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ALL_YEARS } from "@/lib/constants";
 
 const formSchema = z
   .object({
-    name: z.string().min(1, "Name is required"),
+    id: z.string().optional(),
+    name: z.string().min(1, { message: "Name is required" }),
     description: z.string().optional(),
-    date: z.string().regex(/^\d{2}-\d{2}$/, "Date must be in MM-DD format"),
-    isYearly: z.boolean(),
-    year: z.union([z.number().min(2000).max(2100), z.null()]).nullable(),
     calendarEditionIds: z
       .array(z.string())
-      .min(1, "Select at least one calendar edition"),
-    isMultiDay: z.boolean(),
-    endDate: z
+      .min(1, { message: "At least one calendar edition is required" }),
+    isMultiDay: z.boolean().default(false),
+    date: z
       .string()
-      .regex(/^\d{2}-\d{2}$/, "End date must be in MM-DD format")
-      .optional(),
+      .regex(/^\d{2}-\d{2}$/, { message: "Date must be in MM-DD format" }),
     startTime: z.string().optional(),
     endTime: z.string().optional(),
+    year: z.string().optional(),
+    endDate: z
+      .string()
+      .regex(/^\d{2}-\d{2}$/, { message: "End date must be in MM-DD format" })
+      .optional()
+      .or(z.literal("")),
+    isYearly: z.boolean().default(false),
   })
   .superRefine((data, ctx) => {
-    if (!data.isYearly && data.year === null) {
+    // Year validation
+    if (!data.isYearly && !data.year) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Year is required for non-yearly events",
@@ -50,6 +63,7 @@ const formSchema = z
       });
     }
 
+    // End date validation for multi-day events
     if (data.isMultiDay && !data.endDate) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -62,16 +76,17 @@ const formSchema = z
 type FormValues = z.infer<typeof formSchema>;
 
 const DEFAULT_VALUES: FormValues = {
+  id: undefined,
   name: "",
   description: "",
-  date: "",
-  isYearly: true,
-  year: null,
   calendarEditionIds: [],
   isMultiDay: false,
+  date: "",
   endDate: "",
   startTime: "",
   endTime: "",
+  year: new Date().getFullYear().toString(),
+  isYearly: false,
 };
 
 interface CalendarEventFormProps {
@@ -92,14 +107,29 @@ export default function CalendarEventForm({ id }: CalendarEventFormProps) {
   const watchIsYearly = form.watch("isYearly");
   const watchIsMultiDay = form.watch("isMultiDay");
 
+  // Clear year field when yearly is checked
+  useEffect(() => {
+    if (watchIsYearly) {
+      form.setValue("year", "");
+    }
+  }, [watchIsYearly, form]);
+
+  // Clear endDate field when multi-day is unchecked
+  useEffect(() => {
+    if (!watchIsMultiDay) {
+      form.setValue("endDate", "");
+    }
+  }, [watchIsMultiDay, form]);
+
   useEffect(() => {
     if (event) {
       form.reset({
+        id: event.id || undefined,
         name: event.name || "",
         description: event.description || "",
         date: event.date || "",
-        isYearly: event.isYearly || true,
-        year: event.year || null,
+        isYearly: event.isYearly || false,
+        year: event.year ? event.year.toString() : undefined,
         calendarEditionIds: event.calendarEditionIds || [],
         isMultiDay: event.isMultiDay || false,
         endDate: event.endDate || "",
@@ -110,11 +140,27 @@ export default function CalendarEventForm({ id }: CalendarEventFormProps) {
   }, [event, form]);
 
   const onSubmit = async (data: FormValues) => {
-    const success = await saveEvent(data);
-    if (success) {
-      router.push("/dashboard/events");
+    console.log("Form data:", data);
+    try {
+      // If not multi-day, ensure endDate is undefined to avoid validation issues
+      const formattedData = {
+        ...data,
+        endDate: data.isMultiDay ? data.endDate : undefined,
+        year: data.year ? parseInt(data.year, 10) : undefined,
+      };
+
+      const success = await saveEvent(formattedData);
+      if (success) {
+        router.push("/dashboard/events");
+      }
+    } catch (error) {
+      console.error("Error saving event:", error);
     }
   };
+
+  useEffect(() => {
+    console.log("Form errors:", form.formState.errors);
+  }, [form.formState.errors]);
 
   if (isLoading) {
     return (
@@ -211,30 +257,85 @@ export default function CalendarEventForm({ id }: CalendarEventFormProps) {
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={form.control}
-                name="isMultiDay"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">
-                        Multi-Day Event
-                      </FormLabel>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="isYearly"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">
+                          Yearly Event
+                        </FormLabel>
+                        <FormDescription>
+                          If enabled, this event occurs every year on the same
+                          date
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="isMultiDay"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">
+                          Multi-Day Event
+                        </FormLabel>
+                        <FormDescription>
+                          If enabled, this event spans multiple days
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              {!watchIsYearly && (
+                <FormField
+                  control={form.control}
+                  name="year"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel required>Year</FormLabel>
+                      <FormControl>
+                        <Select
+                          value={field.value || ""}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select year" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ALL_YEARS.map((year) => (
+                              <SelectItem key={year.value} value={year.value}>
+                                {year.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
                       <FormDescription>
-                        If enabled, this event spans multiple days
+                        Select the specific year for this one-time event
                       </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               <FormField
                 control={form.control}
                 name="date"
@@ -338,35 +439,6 @@ export default function CalendarEventForm({ id }: CalendarEventFormProps) {
                   )}
                 />
               </div>
-
-              {!watchIsYearly && (
-                <FormField
-                  control={form.control}
-                  name="year"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel required>Year</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="2024"
-                          {...field}
-                          value={field.value || ""}
-                          onChange={(e) => {
-                            field.onChange(
-                              e.target.value ? parseInt(e.target.value) : null
-                            );
-                          }}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Enter the specific year for this one-time event
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
             </div>
 
             <div className="flex gap-2 justify-end">

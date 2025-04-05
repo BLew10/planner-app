@@ -4,12 +4,10 @@ import prisma from "@/lib/prisma/prisma";
 import { Event, CalendarEdition, Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 
-
 export const getEventById = async (
   id: string
 ): Promise<
-  | (Partial<Event> & { calendarEditions?: Partial<CalendarEdition>[] })
-  | null
+  (Partial<Event> & { calendarEditions?: Partial<CalendarEdition>[] }) | null
 > => {
   const session = await auth();
   const userId = session?.user?.id;
@@ -58,12 +56,12 @@ export const getEventById = async (
   }
 };
 
-
 export const getAllEvents = async (
   calendarEditionId: string | null = null,
   page: number | null = null,
   pageSize: number | null = null,
-  search: string | null = null
+  search: string | null = null,
+  year: string | null = null
 ): Promise<{
   data: (Partial<Event> & { calendarEditionCodes?: string })[] | null;
   totalItems: number;
@@ -92,6 +90,9 @@ export const getAllEvents = async (
             },
           },
         ],
+      }),
+      ...(year && {
+        OR: [{ isYearly: true }, { year: parseInt(year, 10) }],
       }),
     };
 
@@ -126,8 +127,6 @@ export const getAllEvents = async (
       }),
       prisma.event.count({ where }),
     ]);
-
-
 
     return {
       data: events,

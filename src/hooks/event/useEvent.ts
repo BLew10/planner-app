@@ -9,6 +9,7 @@ import upsertEvent from "@/actions/events/upsertEvent";
 import { CalendarEdition } from "@prisma/client";
 
 interface EventData {
+  id?: string;
   name: string;
   description?: string;
   date: string;
@@ -47,6 +48,7 @@ export function useEvent({ id }: UseEventProps) {
           const data = await getEventById(id);
           if (data) {
             setEvent({
+              id: data.id,
               name: data.name || "",
               description: data.description || "",
               date: data.date || "",

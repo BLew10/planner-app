@@ -14,11 +14,30 @@ import {
 import { Label } from "@/components/ui/label";
 import { useEvents } from "@/hooks/event/useEvents";
 import { ALL_YEARS, DEFAULT_YEAR } from "@/lib/constants";
-import { FileDown, Loader, Loader2 } from "lucide-react";
+import { ArrowLeft, FileDown, Loader, Loader2 } from "lucide-react";
 import { getAllCalendars } from "@/lib/data/calendarEdition";
 import { CalendarEdition } from "@prisma/client";
+import { useRouter } from "next/navigation";
+
+// Create a reusable back button component
+const BackButton = () => {
+  const router = useRouter();
+
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() => router.back()}
+      className="flex items-center gap-1"
+    >
+      <ArrowLeft className="h-4 w-4" />
+      <span>Back</span>
+    </Button>
+  );
+};
 
 const CustomCalendarExport = () => {
+  const router = useRouter();
   const [selectedYear, setSelectedYear] = useState<string>(DEFAULT_YEAR);
   const [calendarEdition, setCalendarEdition] = useState<string>("");
   const [isExporting, setIsExporting] = useState<boolean>(false);
@@ -138,11 +157,11 @@ const CustomCalendarExport = () => {
 
           // Use HTML encoding to ensure the colon is properly displayed
           if (eventMonth - 1 === month && eventDay === day) {
-            eventObj.name = `Start\u00A0: ${eventObj.name}`;  // \u00A0 is a non-breaking space
+            eventObj.name = `Start\u00A0: ${eventObj.name}`; // \u00A0 is a non-breaking space
           }
           // Mark end day
           else if (endMonth - 1 === month && endDay === day) {
-            eventObj.name = `End: ${eventObj.name}`;  // \u00A0 is a non-breaking space
+            eventObj.name = `End: ${eventObj.name}`; // \u00A0 is a non-breaking space
           }
 
           return eventObj;
@@ -559,8 +578,11 @@ const CustomCalendarExport = () => {
   return (
     <div className="container mx-auto py-8 px-4">
       <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Custom Calendar Export</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <div className="flex items-center gap-2">
+            <BackButton />
+            <CardTitle>Custom Calendar Export</CardTitle>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-6 mb-4">
