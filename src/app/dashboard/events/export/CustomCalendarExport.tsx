@@ -63,14 +63,20 @@ const CustomCalendarExport = () => {
     setIsExporting(true);
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const firstDayOfMonth = new Date(year, month, 1).getDay();
+
+    // Calculate if we need split cells
+    const totalCells = firstDayOfMonth + daysInMonth;
+    const needsSplitCells = totalCells > 35; // 5 rows x 7 days
+
     const calendarDays = [];
 
     try {
+      // Fill empty cells for days before the 1st of the month
       for (let i = 0; i < firstDayOfMonth; i++) {
         calendarDays.push({ day: "", events: [] });
       }
 
-      // Add days of the month with their events
+      // Fill all days of the month
       for (let day = 1; day <= daysInMonth; day++) {
         const dayEvents =
           events?.filter((event) => {
@@ -92,7 +98,6 @@ const CustomCalendarExport = () => {
                 return true;
               }
 
-              // Skip all dates in between
               return false;
             }
 
@@ -120,7 +125,7 @@ const CustomCalendarExport = () => {
             return false;
           }) || [];
 
-        // Add markers for multi-day events (start) and (end)
+        // Add markers for multi-day events
         const eventsWithMarkers = dayEvents.map((event) => {
           if (!event.isMultiDay) return event;
 
@@ -131,261 +136,37 @@ const CustomCalendarExport = () => {
             .map(Number);
           const eventObj = { ...event };
 
+          // Use HTML encoding to ensure the colon is properly displayed
           if (eventMonth - 1 === month && eventDay === day) {
-            eventObj.name = `${eventObj.name}`;
+            eventObj.name = `Start\u00A0: ${eventObj.name}`;  // \u00A0 is a non-breaking space
           }
           // Mark end day
           else if (endMonth - 1 === month && endDay === day) {
-            eventObj.name = `${eventObj.name}`;
+            eventObj.name = `End: ${eventObj.name}`;  // \u00A0 is a non-breaking space
           }
 
           return eventObj;
         });
 
-        calendarDays.push({ day, events: eventsWithMarkers });
-      }
-
-      return calendarDays;
-    } catch (error) {
-      console.error("Error generating calendar data:", error);
-      return [];
-    }
-  };
-
-  const exportPDF = async () => {
-    const yearNum = parseInt(selectedYear);
-    const tempDiv = document.createElement("div");
-    // Basic container class, specific styles will be added per page
-    tempDiv.className = "calendar-export-container-base";
-    document.body.appendChild(tempDiv);
-
-    const opt = {
-      margin: 0,
-      filename: `calendar-${selectedYear}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        width: 1056, // Ensure dimensions match page size (11in * 96dpi approx)
-        height: 816, // Ensure dimensions match page size (8.5in * 96dpi approx)
-        windowWidth: 1056,
-        windowHeight: 816,
-        useCORS: true, // Might help if external resources are used
-      },
-      jsPDF: {
-        unit: "in",
-        format: "letter",
-        orientation: "landscape",
-      },
-      // Remove explicit pagebreak option - we handle it manually
-    };
-
-    // Get the worker instance which manages the PDF generation process
-    const worker = html2pdf().set(opt);
-
-    // Define the styles once to reuse
-    const styles = `
-     <style>
-  .calendar-export-container {
-    font-family: Arial, sans-serif;
-    width: 11in;
-    height: 8.5in;
-    padding: 0;
-    margin: 0;
-    box-sizing: border-box;
-  }
-  .calendar-month {
-    width: 100%;
-    height: 100%;
-    page-break-after: always;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-  }
-  .month-header {
-    position: relative;
-    text-align: center;
-    font-size: 18px;
-    font-weight: bold;
-    color: #333;
-    background-color: #c8e6dc;
-    height: 34px; /* Increased height */
-    display: flex;
-    align-items: center; /* Vertical centering */
-    justify-content: center; /* Horizontal centering */
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  .edition-info {
-    position: absolute;
-    left: 10px;
-    font-size: 12px;
-    font-weight: normal;
-    font-style: italic;
-  }
-  .month-title {
-    font-weight: bold;
-  }
-  .calendar-grid {
-    width: 100%;
-    flex: 1; /* Take remaining space */
-    border-collapse: collapse;
-    table-layout: fixed;
-    margin: 0;
-    padding: 0;
-    height: calc(100% - 34px); /* Subtract header height */
-  }
-  .day-header {
-    background-color: #e9e2c0;
-    padding: 3px;
-    text-align: center;
-    font-weight: bold;
-    font-size: 14px;
-    border: 1px solid #ddd;
-    height: 24px;
-  }
-  .calendar-day {
-    border: 1px solid #ddd;
-    vertical-align: top;
-    width: 14.28%;
-    padding: 0;
-    position: relative;
-    height: calc((100% - 24px) / 5); /* Evenly distribute height across 5 rows */
-  }
-  .day-number {
-    position: absolute;
-    top: 2px;
-    right: 4px;
-    font-weight: bold;
-    font-size: 16px;
-    margin: 0;
-    padding: 0;
-    z-index: 2;
-  }
-  .events-container {
-    position: absolute;
-    bottom: 8px;
-    left: 0;
-    right: 0;
-    padding: 2px 4px;
-  }
-  .custom-events-list {
-    margin: 0;
-    padding: 0 0 0 4px;
-  }
-  .custom-event-item {
-    margin: 2px 0;
-    padding: 0;
-    font-size: 11px;
-    line-height: 1.2;
-    text-align: left;
-    display: flex;
-    align-items: center;
-  }
-  .bullet {
-    display: inline-block;
-    min-width: 10px;
-    margin-right: 4px;
-    text-align: center;
-  }
-  .split-events-container {
-    position: absolute;
-    bottom: 8px; /* Reduced bottom space */
-    left: 0;
-    right: 0;
-    padding: 2px 4px;
-    max-height: calc(50% - 18px); /* Limit height to prevent overflow */
-  }
-  .split-custom-event-item {
-    font-size: 8px;
-    margin: 0; /* Remove margin to save space */
-    line-height: 1.1; /* Tighter line height */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%; /* Ensure text truncates rather than wraps */
-  }
-  .split-day-container {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-  }
-  .split-day-top {
-    border-bottom: 1px solid #ddd;
-    position: relative;
-    height: 50%;
-    padding: 0;
-    box-sizing: border-box; /* Ensure padding is included in height */
-  }
-  .split-day-bottom {
-    position: relative;
-    height: 50%;
-    padding: 0;
-    box-sizing: border-box; /* Ensure padding is included in height */
-  }
-  .split-day-number {
-    position: absolute;
-    font-size: 14px;
-    top: 1px;
-    right: 3px;
-    font-weight: bold;
-  }
-  /* Fix for the last row specifically */
-  tr:last-child .split-day-container {
-    height: 100%;
-  }
-  
-  tr:last-child .split-day-top,
-  tr:last-child .split-day-bottom {
-    overflow: visible; /* Prevent clipping in the last row */
-  }
-  </style>
-    `;
-
-    for (let m = 0; m < 12; m++) {
-      const calendarData = generateCalendarData(yearNum, m);
-      const monthHtml = renderCalendarMonth(yearNum, m, calendarData);
-
-      // Set the content for the current month ONLY, wrapped in a container with correct dimensions
-      // Add the base class here for styling the container itself
-      tempDiv.className = "calendar-export-container";
-      tempDiv.innerHTML = `
-          ${styles}
-          ${monthHtml}
-      `;
-
-      // Add the current div content to the PDF object
-      // This renders the content and appends it to the internal PDF structure
-      await worker.from(tempDiv).toContainer().toCanvas().toPdf();
-
-      // Add a new page for the next month, unless it's the last one
-      if (m < 11) {
-        // Access the jsPDF instance managed by the worker and add a page
-        await worker.get("pdf").then((pdf: any) => {
-          // Use 'any' or define a type for the jsPDF instance if available
-          pdf.addPage();
+        calendarDays.push({
+          day,
+          events: eventsWithMarkers,
+          // Flag for split cell rendering in the last row if needed
+          isSplitCandidate: needsSplitCells && calendarDays.length >= 28,
         });
       }
+
+      return { calendarDays, needsSplitCells };
+    } catch (error) {
+      console.error("Error generating calendar data:", error);
+      return { calendarDays: [], needsSplitCells: false };
     }
-
-    await worker.save();
-
-    // Clean up
-    document.body.removeChild(tempDiv);
-    setIsExporting(false);
   };
 
   const renderCalendarMonth = (
     year: number,
     month: number,
-    calendarData: any[]
+    calendarData: { calendarDays: any[]; needsSplitCells: boolean }
   ) => {
     const dayHeaders = [
       "Sunday",
@@ -396,8 +177,6 @@ const CustomCalendarExport = () => {
       "Friday",
       "Saturday",
     ];
-
-    // Get the selected edition name
     const selectedEditionObj = calendarEditions.find(
       (ed) => ed.id === calendarEdition
     );
@@ -405,9 +184,7 @@ const CustomCalendarExport = () => {
       ? `${selectedEditionObj.name}`
       : "Community Calendar";
 
-    // Debug log
-
-    const monthContent = `
+    return `
       <div class="calendar-month">
         <div class="month-header">
           <span class="edition-info">${year} ${editionName}</span>
@@ -422,100 +199,52 @@ const CustomCalendarExport = () => {
             </tr>
           </thead>
           <tbody>
-            ${renderCalendarRows(calendarData, month)}
+            ${renderCalendarRows(
+              calendarData.calendarDays,
+              calendarData.needsSplitCells
+            )}
           </tbody>
         </table>
       </div>
     `;
-
-    return monthContent;
   };
 
-  const renderCalendarRows = (calendarData: any[], month: number) => {
+  const renderCalendarRows = (
+    calendarDays: any[],
+    needsSplitCells: boolean
+  ) => {
     let html = "";
-    const rows = Math.ceil(calendarData.length / 7);
 
-    // If we need 6 rows, we'll compress to 5
-    const needsCompression = rows > 5;
+    // Calculate how many complete rows we can have
+    const completeRows = needsSplitCells ? 4 : 5;
 
-    // For normal 5 or fewer row calendars
-    if (!needsCompression) {
-      for (let i = 0; i < calendarData.length; i += 7) {
-        html += "<tr>";
-        for (let j = 0; j < 7; j++) {
-          const dayData = calendarData[i + j];
-          if (!dayData) {
-            html += '<td class="calendar-day"></td>';
-          } else {
-            html += `
-              <td class="calendar-day">
-                ${
-                  dayData.day
-                    ? `<div class="day-number">${dayData.day}</div>`
-                    : ""
-                }
-                ${
-                  dayData.events && dayData.events.length > 0
-                    ? `
-                  <div class="events-container">
-                    <div class="custom-events-list">
-                      ${dayData.events
-                        .map(
-                          (event: any) => `
-                        <div class="custom-event-item"><span class="bullet">•</span> ${
-                          event.name || ""
-                        }</div>
-                      `
-                        )
-                        .join("")}
-                    </div>
-                  </div>
-                `
-                    : ""
-                }
-              </td>
-            `;
-          }
-        }
-        html += "</tr>";
-      }
-      return html;
-    }
+    // Generate the first 4 or 5 rows normally
+    for (let rowIndex = 0; rowIndex < completeRows; rowIndex++) {
+      const startIndex = rowIndex * 7;
 
-    // For 6-row calendars that need compression
-    // We'll do 4 normal rows and then the last row will contain split cells
-    for (let rowIndex = 0; rowIndex < 4; rowIndex++) {
       html += "<tr>";
       for (let j = 0; j < 7; j++) {
-        const dataIndex = rowIndex * 7 + j;
-        const dayData = calendarData[dataIndex];
+        const dayData = calendarDays[startIndex + j];
         if (!dayData) {
           html += '<td class="calendar-day"></td>';
         } else {
           html += `
             <td class="calendar-day">
-              ${
-                dayData.day
-                  ? `<div class="day-number">${dayData.day}</div>`
-                  : ""
-              }
+              <div class="day-number">${dayData.day}</div>
               ${
                 dayData.events && dayData.events.length > 0
-                  ? `
-                <div class="events-container">
-                  <div class="custom-events-list">
+                  ? `<div class="events-container">
+                  <ul class="custom-events-list">
                     ${dayData.events
                       .map(
-                        (event: any) => `
-                      <div class="custom-event-item"><span class="bullet">•</span> ${
-                        event.name || ""
-                      }</div>
-                    `
+                        (event: any) =>
+                          `<li class="custom-event-item">
+                        <span class="bullet">•</span>${event.name || ""}
+                      </li>`
                       )
                       .join("")}
-                  </div>
-                </div>
-              `
+                  </ul>
+                </div>`
                   : ""
               }
             </td>
@@ -525,131 +254,307 @@ const CustomCalendarExport = () => {
       html += "</tr>";
     }
 
-    // Last row with split cells - only changing the event rendering part
-    html += "<tr>";
-    for (let j = 0; j < 7; j++) {
-      const topIndex = 4 * 7 + j;
-      const bottomIndex = 5 * 7 + j;
+    // If we need split cells, render the last row with two dates per cell
+    if (needsSplitCells) {
+      const startIndex = 28; // 4 rows x 7 days
 
-      const topDayData = calendarData[topIndex] || {
-        events: [{ name: "test" }, { name: "test" }],
-      };
-      const bottomDayData =
-        bottomIndex < calendarData.length
-          ? calendarData[bottomIndex]
-          : { events: [{ name: "test" }, { name: "test" }] };
+      html += "<tr>";
+      for (let j = 0; j < 7; j++) {
+        const topDayData = calendarDays[startIndex + j];
+        const bottomDayData = calendarDays[startIndex + j + 7];
 
-      if (!topDayData && !bottomDayData) {
-        html += "<td class='calendar-day'></td>";
-      } else {
-        html += `
-          <td class="calendar-day">
-            <div class="split-day-container">
-              <div class="split-day-top">
-                ${
-                  topDayData?.day
-                    ? `<div class="day-number split-day-number">${topDayData.day}</div>`
-                    : ""
-                }
-                ${
-                  topDayData &&
-                  topDayData.events &&
-                  topDayData.events.length > 0
-                    ? `<div class="events-container">
-                        <div class="custom-events-list">
-                          ${[{ name: "test" }, { name: "test" }]
-                            .map(
-                              (event: any) =>
-                                `<div class="custom-event-item"><span class="bullet">•</span> ${
-                                  event.name || ""
-                                }</div>`
-                            )
-                            .join("")}
-                        </div>
-                      </div>`
-                    : ""
-                }
-              </div>
+        html += '<td class="calendar-day split-day">';
+
+        // Render top half
+        if (topDayData) {
+          html += `
+            <div class="split-day-top">
+              <div class="split-day-number">${topDayData.day}</div>
               ${
-                bottomDayData &&
-                bottomDayData.events &&
-                bottomDayData.events.length > 0
-                  ? `<div class="events-container">
-                      <div class="custom-events-list">
-                        ${[{ name: "test" }, { name: "test" }]
-                          .map(
-                            (event: any) =>
-                              `<div class="custom-event-item"><span class="bullet">•</span> ${
-                                event.name || ""
-                              }</div>`
-                          )
-                          .join("")}
-                      </div>
-                    </div>`
+                topDayData.events && topDayData.events.length > 0
+                  ? `<div class="split-events-container">
+                  <ul class="split-events-list">
+                    ${topDayData.events
+                      .map(
+                        (event: any) =>
+                          `<li class="split-event-item">
+                        <span class="bullet">•</span>${event.name || ""}
+                      </li>`
+                      )
+                      .join("")}
+                  </ul>
+                </div>`
                   : ""
               }
             </div>
-          </td>`;
+          `;
+        } else {
+          html += '<div class="split-day-top"></div>';
+        }
+
+        // Render bottom half
+        if (bottomDayData) {
+          html += `
+            <div class="split-day-bottom">
+              <div class="split-day-number">${bottomDayData.day}</div>
+              ${
+                bottomDayData.events && bottomDayData.events.length > 0
+                  ? `<div class="split-events-container">
+                  <ul class="split-events-list">
+                    ${bottomDayData.events
+                      .map(
+                        (event: any) =>
+                          `<li class="split-event-item">
+                        <span class="bullet">•</span>${event.name || ""}
+                      </li>`
+                      )
+                      .join("")}
+                  </ul>
+                </div>`
+                  : ""
+              }
+            </div>
+          `;
+        } else {
+          html += '<div class="split-day-bottom"></div>';
+        }
+
+        html += "</td>";
       }
+      html += "</tr>";
     }
-    html += "</tr>";
 
     return html;
   };
 
-  // Only updating the split cell and event styles
-  const styles = `
+  const exportPDF = async () => {
+    const yearNum = parseInt(selectedYear);
+    const tempDiv = document.createElement("div");
+    tempDiv.className = "calendar-export-container-base";
+    document.body.appendChild(tempDiv);
+
+    const opt = {
+      margin: 0,
+      filename: `calendar-${selectedYear}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        width: 1056,
+        height: 816,
+        windowWidth: 1056,
+        windowHeight: 816,
+        useCORS: true,
+      },
+      jsPDF: {
+        unit: "in",
+        format: "letter",
+        orientation: "landscape",
+      },
+    };
+
+    const worker = html2pdf().set(opt);
+
+    // Updated CSS styles
+    const styles = `
     <style>
-    /* Reset all flexbox and complex positioning for split cells */
-    .split-day-container {
-      position: relative;
-      height: 100%;
-      width: 100%;
+    .calendar-export-container {
+      font-family: Arial, sans-serif;
+      width: 11in;
+      height: 8.5in;
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
     }
-    
+    .calendar-month {
+      width: 100%;
+      height: 100%;
+      page-break-after: always;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .month-header {
+      position: relative;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+      background-color: #c8e6dc;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    .edition-info {
+      position: absolute;
+      left: 10px;
+      font-size: 12px;
+      font-weight: normal;
+      font-style: italic;
+    }
+    .month-title {
+      font-weight: bold;
+    }
+    .calendar-grid {
+      width: 100%;
+      flex: 1;
+      border-collapse: collapse;
+      table-layout: fixed;
+      margin: 0;
+      padding: 0;
+      height: calc(100% - 34px);
+    }
+    .day-header {
+      background-color: #e9e2c0;
+      padding: 3px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 14px;
+      border: 1px solid #ddd;
+      height: 24px;
+    }
+    .calendar-day {
+      border: 1px solid #ddd;
+      vertical-align: top;
+      width: 14.28%;
+      position: relative;
+      padding: 0;
+    }
+    .day-number {
+      position: absolute;
+      top: 2px;
+      right: 5px;
+      font-weight: bold;
+      font-size: 14px;
+      margin: 0;
+      padding: 0;
+    }
+    .events-container {
+      position: absolute;
+      bottom: 5px;
+      left: 0;
+      right: 0;
+      padding: 2px 4px;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    .custom-events-list {
+      margin: 0;
+      padding: 0;
+      list-style-type: none;
+    }
+    .custom-event-item {
+      margin: 2px 0;
+      padding: 0;
+      font-size: 10px;
+      line-height: 1.1;
+      text-align: left;
+      display: flex;
+      align-items: flex-start;
+      word-wrap: break-word;
+      word-break: normal;
+      white-space: normal;
+      overflow: visible;
+    }
+    .bullet {
+      display: inline-block;
+      min-width: 10px;
+      margin-right: 3px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    /* Split day styles */
+    .split-day {
+      padding: 0;
+      position: relative;
+    }
     .split-day-top {
-      border-bottom: 1px solid #ddd;
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
       height: 50%;
+      border-bottom: 1px solid #ddd;
     }
-    
     .split-day-bottom {
       position: absolute;
       top: 50%;
       left: 0;
       right: 0;
       bottom: 0;
-      height: 50%;
     }
-    
     .split-day-number {
       position: absolute;
-      font-size: 12px;
-      top: 1px;
-      right: 3px;
+      top: 2px;
+      right: 5px;
       font-weight: bold;
+      font-size: 12px;
+      margin: 0;
+      padding: 0;
     }
-    
-    /* New direct event rendering approach for split cells */
-    .split-event-line {
+    .split-events-container {
       position: absolute;
       bottom: 2px;
-      left: 4px;
-      right: 4px;
-      font-size: 9px;
-      line-height: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      text-align: left;
-      padding: 0;
+      left: 0;
+      right: 0;
+      padding: 1px 4px;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    .split-events-list {
       margin: 0;
+      padding: 0;
+      list-style-type: none;
+    }
+    .split-event-item {
+      margin: 1px 0;
+      padding: 0;
+      font-size: 8px;
+      line-height: 1.1;
+      text-align: left;
+      display: flex;
+      align-items: flex-start;
+      word-wrap: break-word;
+      word-break: normal;
+      white-space: normal;
+      overflow: visible;
+    }
+    tr {
+      height: 20%;
+    }
+    tr:last-child {
+      height: 20%;
     }
     </style>
-  `;
+    `;
+
+    for (let m = 0; m < 12; m++) {
+      const calendarData = generateCalendarData(yearNum, m);
+      const monthHtml = renderCalendarMonth(yearNum, m, calendarData);
+
+      tempDiv.className = "calendar-export-container";
+      tempDiv.innerHTML = `
+          ${styles}
+          ${monthHtml}
+      `;
+
+      await worker.from(tempDiv).toContainer().toCanvas().toPdf();
+
+      if (m < 11) {
+        await worker.get("pdf").then((pdf: any) => {
+          pdf.addPage();
+        });
+      }
+    }
+
+    await worker.save();
+    document.body.removeChild(tempDiv);
+    setIsExporting(false);
+  };
 
   return (
     <div className="container mx-auto py-8 px-4">
