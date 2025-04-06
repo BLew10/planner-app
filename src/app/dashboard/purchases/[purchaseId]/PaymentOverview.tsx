@@ -1,151 +1,291 @@
+"use client";
 import React from "react";
-import styles from "./PaymentOverview.module.scss";
 import { usePaymentOverviewStore } from "@/store/paymentOverviewStore";
 import { formatDateToString } from "@/lib/helpers/formatDateToString";
 import { MONTHS } from "@/lib/constants";
 
+// Shadcn Components
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// Icons
+import {
+  DollarSign,
+  CreditCard,
+  Calendar,
+  ArrowDown,
+  ArrowUp,
+  Receipt,
+  Clock,
+  AlertCircle,
+  CheckCircle2,
+  Tag,
+  Landmark,
+  PercentIcon,
+} from "lucide-react";
+
 const PaymentOverview = () => {
   const paymentOverviewStore = usePaymentOverviewStore();
   const paymentsByYear = paymentOverviewStore.organziePaymentsByYear();
+  const years = Object.keys(paymentsByYear);
+
+  // Format currency
+  const formatCurrency = (value: number | undefined | null) => {
+    if (value === undefined || value === null) return "-";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(value);
+  };
 
   return (
-    <div>
-      <h2 className={styles.title}>Payment Overview</h2>
-      <div className={styles.infoContainer}>
-        <div className={styles.info}>
-          <p className={`${styles.infoName} ${styles.totalSale}`}>Total Sale:</p>
-          <p className={styles.infoValue}>${paymentOverviewStore.paymentOverview?.totalSale}</p>
+    <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Payment Overview
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Summary of all payment details and scheduled payments
+          </p>
         </div>
 
-        {paymentOverviewStore.paymentOverview?.additionalDiscount1 && (
-          <div className={styles.info}>
-            <p className={styles.infoName}>Additional Discount 1:</p>
-            <p className={styles.infoValueDiscount}>
-              -${paymentOverviewStore.paymentOverview?.additionalDiscount1}
-            </p>
-          </div>
-        )}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">Financial Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                {/* Left column - Main payment info */}
+                <div className="flex justify-between items-center py-2 border-b">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-primary" />
+                    <span className="font-semibold text-lg">Total Sale</span>
+                  </div>
+                  <span className="text-xl font-bold">
+                    {formatCurrency(
+                      paymentOverviewStore.paymentOverview?.totalSale
+                    )}
+                  </span>
+                </div>
 
-        {paymentOverviewStore.paymentOverview?.additionalDiscount2 && (
-          <div className={styles.info}>
-            <p className={styles.infoName}>Additional Discount 2:</p>
-            <p className={styles.infoValueDiscount}>
-              {" "}
-              -${paymentOverviewStore.paymentOverview?.additionalDiscount2}
-            </p>
-          </div>
-        )}
+                {/* Discounts & Deductions */}
+                {[
+                  {
+                    key: "additionalDiscount1",
+                    label: "Additional Discount 1",
+                    icon: <Tag className="h-4 w-4" />,
+                  },
+                  {
+                    key: "additionalDiscount2",
+                    label: "Additional Discount 2",
+                    icon: <Tag className="h-4 w-4" />,
+                  },
+                  {
+                    key: "additionalSales1",
+                    label: "Additional Sales 1",
+                    icon: <ArrowUp className="h-4 w-4" />,
+                  },
+                  {
+                    key: "additionalSales2",
+                    label: "Additional Sales 2",
+                    icon: <ArrowUp className="h-4 w-4" />,
+                  },
+                  {
+                    key: "trade",
+                    label: "Trade",
+                    icon: <ArrowDown className="h-4 w-4" />,
+                  },
+                  {
+                    key: "earlyPaymentDiscount",
+                    label: "Early Payment Discount",
+                    icon: <Clock className="h-4 w-4" />,
+                  },
+                  {
+                    key: "earlyPaymentDiscountPercent",
+                    label: "Early Payment Discount %",
+                    icon: <PercentIcon className="h-4 w-4" />,
+                  },
+                  {
+                    key: "amountPrepaid",
+                    label: "Amount Prepaid",
+                    icon: <CheckCircle2 className="h-4 w-4" />,
+                  },
+                ].map((item) => {
+                  const value =
+                    paymentOverviewStore.paymentOverview?.[
+                      item.key as keyof typeof paymentOverviewStore.paymentOverview
+                    ];
+                  if (!value) return null;
 
-        {paymentOverviewStore.paymentOverview?.additionalSales1 && (
-          <div className={styles.info}>
-            <p className={styles.infoName}>Additional Sales 1:</p>
-            <p className={styles.infoValueDiscount}>
-              -${paymentOverviewStore.paymentOverview?.additionalSales1}
-            </p>
-          </div>
-        )}
+                  return (
+                    <div
+                      key={item.key}
+                      className="flex justify-between items-center py-1.5 border-b border-dashed"
+                    >
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        {item.icon}
+                        <span>{item.label}</span>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className="font-medium text-destructive"
+                      >
+                        -{formatCurrency(value as number)}
+                      </Badge>
+                    </div>
+                  );
+                })}
 
-        {paymentOverviewStore.paymentOverview?.additionalSales2 && (
-          <div className={styles.info}>
-            <p className={styles.infoName}>Additional Sales 2:</p>
-            <p className={styles.infoValueDiscount}>
-              -${paymentOverviewStore.paymentOverview?.additionalSales2}
-            </p>
-          </div>
-        )}
+                {/* Net amount */}
+                <div className="flex justify-between items-center pt-2 mt-2 border-t-2">
+                  <div className="flex items-center gap-2">
+                    <Receipt className="h-5 w-5 text-primary" />
+                    <span className="font-semibold text-lg">Net</span>
+                  </div>
+                  <Badge className="text-lg py-1 px-3">
+                    {formatCurrency(paymentOverviewStore.paymentOverview?.net)}
+                  </Badge>
+                </div>
+              </div>
 
-        {paymentOverviewStore.paymentOverview?.trade && (
-          <div className={styles.info}>
-            <p className={styles.infoName}>Trade:</p>
-            <p className={styles.infoValueDiscount}>-${paymentOverviewStore.paymentOverview?.trade}</p>
-          </div>
-        )}
+              <div className="space-y-4">
+                {/* Right column - Payment method info */}
+                {paymentOverviewStore.paymentOverview?.paymentMethod && (
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <CreditCard className="h-4 w-4" />
+                      <span>Payment Method</span>
+                    </div>
+                    <span className="font-medium">
+                      {paymentOverviewStore.paymentOverview?.paymentMethod}
+                    </span>
+                  </div>
+                )}
 
-        {paymentOverviewStore.paymentOverview?.earlyPaymentDiscount && (
-          <div className={styles.info}>
-            <p className={styles.infoName}>Early Payment Discount:</p>
-            <p className={styles.infoValueDiscount}>
-              -${paymentOverviewStore.paymentOverview?.earlyPaymentDiscount}
-            </p>
-          </div>
-        )}
+                {paymentOverviewStore.paymentOverview?.checkNumber && (
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Landmark className="h-4 w-4" />
+                      <span>Check Number</span>
+                    </div>
+                    <span className="font-medium">
+                      {paymentOverviewStore.paymentOverview?.checkNumber}
+                    </span>
+                  </div>
+                )}
 
-        {paymentOverviewStore.paymentOverview?.earlyPaymentDiscountPercent && (
-          <div className={styles.info}>
-            <p className={styles.infoName}>Early Payment Discount Percent:</p>
-            <p className={styles.infoValueDiscount}>
-              -${paymentOverviewStore.paymentOverview?.earlyPaymentDiscountPercent}
-            </p>
-          </div>
-        )}
+                {paymentOverviewStore.paymentOverview?.lateFee && (
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>Late Fee</span>
+                    </div>
+                    <span className="font-medium">
+                      {formatCurrency(
+                        paymentOverviewStore.paymentOverview?.lateFee
+                      )}
+                    </span>
+                  </div>
+                )}
 
-        {paymentOverviewStore.paymentOverview?.amountPrepaid && (
-          <div className={styles.info}>
-            <p className={styles.infoName}>Amount Prepaid:</p>
-            <p className={styles.infoValueDiscount}>
-              -${paymentOverviewStore.paymentOverview?.amountPrepaid}
-            </p>
-          </div>
-        )}
+                {paymentOverviewStore.paymentOverview?.lateFeePercent && (
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <PercentIcon className="h-4 w-4" />
+                      <span>Late Fee Percent</span>
+                    </div>
+                    <span className="font-medium">
+                      {paymentOverviewStore.paymentOverview?.lateFeePercent}%
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-        <div className={`${styles.info} ${styles.net}`}>
-          <p className={styles.infoName}>Net:</p>
-          <p className={styles.infoValue}>${paymentOverviewStore.paymentOverview?.net}</p>
-        </div>
+        {years.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">Payment Schedule</CardTitle>
+              <CardDescription>
+                Payments organized by year and month
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue={years[0]} className="w-full">
+                <TabsList className="mb-4">
+                  {years.map((year) => (
+                    <TabsTrigger
+                      key={year}
+                      value={year}
+                      className="flex items-center gap-2"
+                    >
+                      <Calendar className="h-4 w-4" />
+                      {year}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
 
-        {paymentOverviewStore.paymentOverview?.paymentMethod && (
-          <div className={styles.info}>
-            <p className={styles.infoName}>Payment Method:</p>
-            <p className={styles.infoValue}>{paymentOverviewStore.paymentOverview?.paymentMethod}</p>
-          </div>
-        )}
-
-        {paymentOverviewStore.paymentOverview?.checkNumber && (
-          <div className={styles.info}>
-            <p className={styles.infoName}>Check Number:</p>
-            <p className={styles.infoValue}>{paymentOverviewStore.paymentOverview?.checkNumber}</p>
-          </div>
-        )}
-
-        {paymentOverviewStore.paymentOverview?.lateFee && (
-          <div className={styles.info}>
-            <p className={styles.infoName}>Late Fee:</p>
-            <p className={styles.infoValue}>${paymentOverviewStore.paymentOverview?.lateFee}</p>
-          </div>
-        )}
-
-        {paymentOverviewStore.paymentOverview?.lateFeePercent && (
-          <div className={styles.info}>
-            <p className={styles.infoName}>Late Fee Percent:</p>
-            <p className={styles.infoValue}>
-              {paymentOverviewStore.paymentOverview?.lateFeePercent}%
-            </p>
-          </div>
+                {years.map((year) => (
+                  <TabsContent key={year} value={year} className="mt-0">
+                    <ScrollArea className="h-[300px] rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[120px]">Month</TableHead>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Due Date</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {paymentsByYear[year as any].map((payment) => (
+                            <TableRow key={formatDateToString(payment.dueDate)}>
+                              <TableCell className="font-medium">
+                                {MONTHS[payment.month - 1]}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="font-mono">
+                                  {formatCurrency(Number(payment.amount))}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                                  {formatDateToString(payment.dueDate)}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </ScrollArea>
+                  </TabsContent>
+                ))}
+              </Tabs>
+            </CardContent>
+          </Card>
         )}
       </div>
-      {Object.keys(paymentsByYear).map((year) => (
-        <div key={year} className={styles.tableWrapper}>
-          <h3 className={styles.year}>{year}</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Month</th>
-                <th>Amount</th>
-                <th>Due Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paymentsByYear[year as any].map((payment) => (
-                <tr key={formatDateToString(payment.dueDate)}>
-                  <td>{MONTHS[payment.month - 1]}</td>
-                  <td>${Number(payment.amount).toFixed(2)}</td>
-                  <td>{formatDateToString(payment.dueDate)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ))}
     </div>
   );
 };

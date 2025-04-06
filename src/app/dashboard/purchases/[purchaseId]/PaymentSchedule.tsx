@@ -1,15 +1,31 @@
 import React, { useEffect, useState } from "react";
-import styles from "./PaymentSchedule.module.scss";
 import { usePaymentOverviewStore } from "@/store/paymentOverviewStore";
 import { MONTHS } from "@/lib/constants";
-import CheckboxInput from "@/app/(components)/form/CheckboxInput";
-import MoneyInput from "@/app/(components)/form/MoneyInput";
 import { ScheduledPayment } from "@/store/paymentOverviewStore";
 import { useToast } from "@/hooks/shadcn/use-toast";
 
+// Shadcn Components
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// Icons
+import { CalendarDays, ArrowRight, DollarSign, Check } from "lucide-react";
+
 const currentYear = new Date().getFullYear();
 let upcomingYears = [currentYear, currentYear + 1, currentYear + 2];
-
 
 interface PaymentScheduleProps {
   onNext: () => void;
@@ -43,17 +59,15 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
     if (paymentYears) {
       paymentYears?.forEach((year) => {
         MONTHS.forEach((_, monthIndex) => {
-   
-            const dueDate = generateDueDates(year, monthIndex);
-            const payment =
-              paymentStore.paymentOverview.scheduledPayments?.find(
-                (p) => p.month === monthIndex + 1 && p.year === year && p.checked
-              );
-            if (paymentStore.paymentOverview.scheduledPayments && payment) {
-              payments.push({ ...payment, dueDate, checked: true });
-            } else {
-              payments.push({ month: monthIndex + 1, year, amount: null, dueDate, checked: false });
-            }
+          const dueDate = generateDueDates(year, monthIndex);
+          const payment = paymentStore.paymentOverview.scheduledPayments?.find(
+            (p) => p.month === monthIndex + 1 && p.year === year && p.checked
+          );
+          if (paymentStore.paymentOverview.scheduledPayments && payment) {
+            payments.push({ ...payment, dueDate, checked: true });
+          } else {
+            payments.push({ month: monthIndex + 1, year, amount: null, dueDate, checked: false });
+          }
         });
       });
       paymentStore.updateKeyValue("scheduledPayments", payments);
@@ -97,14 +111,15 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
 
     if (splitPaymentsEqually) {
       const checkedScheduledPayments = paymentStore.paymentOverview.scheduledPayments?.filter(p => p.checked)
-      if (!checkedScheduledPayments) {
+      if (!checkedScheduledPayments || checkedScheduledPayments.length === 0) {
         return toast({
-          title: "Please select at least one payment",
+          title: "Error",
+          description: "Please select at least one payment month",
           variant: "destructive",
         });
       }
 
-      const equalAmount =Math.round((totalNet / checkedScheduledPayments?.length) * 100) / 100;
+      const equalAmount = Math.round((totalNet / checkedScheduledPayments?.length) * 100) / 100;
       payments = checkedScheduledPayments?.map(
         (payment) => ({
           ...payment,
@@ -116,14 +131,15 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
         paymentStore.paymentOverview.scheduledPayments?.filter(
           (p) => p.amount !== null && !isNaN(p.amount as number) && p.amount > 0
         ) || null;
-    }
-
-    if (!payments) {
-      toast({
-        title: "Please enter a valid amount for each payment",
-        variant: "destructive",
-      });
-      return;
+      
+      if (!payments || payments.length === 0) {
+        toast({
+          title: "Error",
+          description: "Please enter a valid amount for at least one month",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     // Verify that the total payments equal the net amount
@@ -145,7 +161,8 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
       onNext();
     } else {
       toast({
-        title: "Total payments do not match the net amount",
+        title: "Error",
+        description: "Total payments do not match the net amount",
         variant: "destructive",
       });
     }
@@ -156,22 +173,17 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
     year: number,
     isChecked: boolean
   ) => {
-    const index = paymentStore.paymentOverview.scheduledPayments?.findIndex(
-      (p) => p.month === month && p.year === year && p.checked
-    );
-    if (index !== -1 && !isChecked) {
-      const updatedPayments = [
-        ...(paymentStore.paymentOverview.scheduledPayments || []),
-      ];
-      updatedPayments.splice(index, 1);
-      paymentStore.updateKeyValue("scheduledPayments", updatedPayments);
-    } else if (!index || (index === -1 && isChecked)) {
-      const updatedPayments = [
-        ...(paymentStore.paymentOverview.scheduledPayments || []),
-        { month, year, amount: null, dueDate: generateDueDates(year, month-1), checked: isChecked },
-      ];
-      paymentStore.updateKeyValue("scheduledPayments", updatedPayments);
+    const scheduledPayments = [...(paymentStore.paymentOverview.scheduledPayments || [])];
+    const paymentIndex = scheduledPayments.findIndex(p => p.month === month && p.year === year);
+    
+    if (paymentIndex !== -1) {
+      scheduledPayments[paymentIndex] = {
+        ...scheduledPayments[paymentIndex],
+        checked: isChecked
+      };
     }
+    
+    paymentStore.updateKeyValue("scheduledPayments", scheduledPayments);
   };
 
   const handleInputChange = (
@@ -179,109 +191,175 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
     year: number,
     amount: number | null
   ) => {
-    const index = paymentStore.paymentOverview.scheduledPayments?.findIndex((p) => p.month === month && p.year === year);
-    if (index !== -1) {
-      const updatedPayments = [...(paymentStore.paymentOverview.scheduledPayments || [])];
-      updatedPayments[index] = { ...updatedPayments[index], amount };
-      paymentStore.updateKeyValue("scheduledPayments", updatedPayments);
-    } else if ((!index && amount) || (index === -1 && amount)) {
-      const updatedPayments = [
-        ...paymentStore.paymentOverview.scheduledPayments,
-        { month, year, amount, dueDate: generateDueDates(year, month-1) },
-      ];
-      paymentStore.updateKeyValue("scheduledPayments", updatedPayments);
+    const scheduledPayments = [...(paymentStore.paymentOverview.scheduledPayments || [])];
+    const paymentIndex = scheduledPayments.findIndex(p => p.month === month && p.year === year);
+    
+    if (paymentIndex !== -1) {
+      scheduledPayments[paymentIndex] = {
+        ...scheduledPayments[paymentIndex],
+        amount
+      };
+      paymentStore.updateKeyValue("scheduledPayments", scheduledPayments);
     }
   };
 
+  if (!paymentYears) return null;
+
   return (
-    <section>
-      <h2 className={styles.title}>Payment Schedule</h2>
-      <p className={styles.description}>
-        Select how you want to split the total of{" "}
-        <span className={styles.net}>${paymentStore.paymentOverview.net}</span>
-      </p>
-      <div className={styles.splitPayments}>
-        <div className={styles.radioGroup}>
-          <input
-            type="radio"
-            name="payment-schedule"
-            checked={splitPaymentsEqually === true}
-            onChange={() => handleSplitPaymentsEquallyChange(true)}
-          />
-          <label>Split payments equally</label>
-        </div>
-        <div className={styles.radioGroup}>
-          <input
-            type="radio"
-            name="payment-schedule"
-            checked={splitPaymentsEqually === false}
-            onChange={() => handleSplitPaymentsEquallyChange(false)}
-          />
-          <label>Enter custom monthly amounts</label>
-        </div>
-      </div>
-      <div className={styles.paymentSchedule}>
-        {paymentYears?.map((year, i) => (
-          <div key={year} className={styles.year}>
-            <p className={styles.yearText}>{year}</p>
-            <div className={styles.months}>
-              {MONTHS.map((month, index) => {
-                return (
-                  <div key={`${year}-${month}`} className={styles.month}>
-                    {splitPaymentsEqually ? (
-                      <CheckboxInput
-                        labelLocation="top"
-                        name="payment-schedule"
-                        label={MONTHS[index]}
-                        onChange={(e) =>
-                          handleCheckboxChange(
-                            index + 1,
-                            year,
-                            e.target.checked
-                          )
-                        }
-                        checked={paymentStore.paymentOverview.scheduledPayments?.some(
-                          (p) => p.month === index + 1 && p.year === year && p.checked
-                        )}
-                      />
-                    ) : (
-                      <MoneyInput
-                        name="payment-amount"
-                        type="text"
-                        label={MONTHS[index]}
-                        onChange={(e) =>
-                          handleInputChange(
-                            index + 1,
-                            year,
-                            Number(e.target.value)
-                          )
-                        }
-                        value={
-                          paymentStore.paymentOverview.scheduledPayments?.find(
-                              (p) => p.month === index + 1 && p.year === year
-                            )
-                            ?.amount?.toString() || ""
-                        }
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+    <Card className="max-w-5xl mx-auto shadow-sm">
+      <CardHeader>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <CardTitle className="text-2xl">Payment Schedule</CardTitle>
+            <CardDescription>
+              Plan how to split the total payment across months
+            </CardDescription>
           </div>
-        ))}
-      </div>
-      <button
-        onClick={onSubmit}
-        className={styles.next}
-        disabled={
-          !paymentStore.paymentOverview.scheduledPayments ||
-          paymentStore.paymentOverview.scheduledPayments.length === 0
-        }
-      >
-        Next
-      </button>
-    </section>
+          <div className="px-4 py-2 bg-primary/10 rounded-md border border-primary/20 flex items-center">
+            <span className="text-sm font-medium mr-2">Total:</span>
+            <span className="text-xl font-bold text-primary flex items-center">
+              <DollarSign className="h-4 w-4 mr-0.5" /> 
+              {paymentStore.paymentOverview.net?.toFixed(2)}
+            </span>
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent>
+        <div className="space-y-6">
+          <RadioGroup 
+            value={splitPaymentsEqually ? "equal" : "custom"}
+            onValueChange={(value) => handleSplitPaymentsEquallyChange(value === "equal")}
+            className="flex flex-col sm:flex-row gap-4"
+          >
+            <div className="flex items-start gap-2">
+              <RadioGroupItem value="equal" id="equal" />
+              <Label htmlFor="equal" className="font-medium cursor-pointer">
+                Split payments equally
+              </Label>
+            </div>
+            <div className="flex items-start gap-2">
+              <RadioGroupItem value="custom" id="custom" />
+              <Label htmlFor="custom" className="font-medium cursor-pointer">
+                Enter custom monthly amounts
+              </Label>
+            </div>
+          </RadioGroup>
+          
+          <Separator />
+          
+          <Tabs defaultValue={paymentYears[0].toString()} className="w-full">
+            <TabsList className="mb-6 h-auto p-1">
+              {paymentYears.map((year) => (
+                <TabsTrigger 
+                  key={year} 
+                  value={year.toString()}
+                  className="flex items-center gap-1.5 px-4 py-2"
+                >
+                  <CalendarDays className="h-4 w-4" />
+                  {year}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            
+            {paymentYears.map((year) => (
+              <TabsContent key={year} value={year.toString()} className="mt-0">
+                <ScrollArea className="h-[500px] rounded-md border p-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2">
+                    {MONTHS.map((month, index) => {
+                      const payment = paymentStore.paymentOverview.scheduledPayments?.find(
+                        p => p.month === index + 1 && p.year === year
+                      );
+                      const isChecked = payment?.checked || false;
+                      
+                      return (
+                        <Card 
+                          key={`${year}-${month}`} 
+                          className={`overflow-hidden transition-all duration-150 ${
+                            splitPaymentsEqually 
+                              ? "cursor-pointer hover:border-primary/50" 
+                              : ""
+                          } ${
+                            splitPaymentsEqually && isChecked 
+                              ? "border-primary bg-primary/5" 
+                              : ""
+                          }`}
+                          onClick={() => {
+                            if (splitPaymentsEqually) {
+                              handleCheckboxChange(index + 1, year, !isChecked);
+                            }
+                          }}
+                        >
+                          <CardHeader className={`py-3 px-4 ${
+                            splitPaymentsEqually && isChecked 
+                              ? "bg-primary/10" 
+                              : "bg-muted/20"
+                          }`}>
+                            <div className="flex items-center justify-between">
+                              <CardTitle className="text-base">{month}</CardTitle>
+                              {splitPaymentsEqually && isChecked && (
+                                <Check className="h-4 w-4 text-primary" />
+                              )}
+                            </div>
+                          </CardHeader>
+                          <CardContent className="pt-4 pb-3 px-4">
+                            {splitPaymentsEqually ? (
+                              <div className="text-sm text-muted-foreground">
+                                {isChecked 
+                                  ? "Included in payment plan" 
+                                  : "Click to include in payment plan"}
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                <Label htmlFor={`amount-${year}-${index}`}>
+                                  Payment amount
+                                </Label>
+                                <div className="relative">
+                                  <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                  <Input
+                                    id={`amount-${year}-${index}`}
+                                    type="number"
+                                    step="0.01" 
+                                    placeholder="0.00"
+                                    className="pl-8"
+                                    value={payment?.amount?.toString() || ""}
+                                    onChange={(e) => 
+                                      handleInputChange(
+                                        index + 1, 
+                                        year, 
+                                        e.target.value ? Number(e.target.value) : null
+                                      )
+                                    }
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
+      </CardContent>
+      
+      <CardFooter className="flex justify-end border-t p-6">
+        <Button 
+          onClick={onSubmit}
+          size="lg"
+          className="gap-2"
+          disabled={
+            !paymentStore.paymentOverview.scheduledPayments ||
+            paymentStore.paymentOverview.scheduledPayments.length === 0
+          }
+        >
+          Continue <ArrowRight className="h-4 w-4" />
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
 
