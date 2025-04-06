@@ -10,6 +10,8 @@ export interface ScheduledPayment {
   checked?: boolean;
 }
 
+export type PaymentMethod = 'Check' | 'Credit Card' | 'Cash';
+
 export interface PaymentOverview {
   id: string;
   purchaseId: string;
@@ -25,7 +27,7 @@ export interface PaymentOverview {
   earlyPaymentDiscount?: number;
   earlyPaymentDiscountPercent?: number;
   amountPrepaid?: number;
-  paymentMethod?: string;
+  paymentMethod?: PaymentMethod;
   checkNumber?: string;
   paymentDueOn?: number;
   paymentOnLastDay: boolean;
@@ -34,7 +36,7 @@ export interface PaymentOverview {
   deliveryMethod: string;
   cardType: string;
   cardNumber?: string;
-  cardExpirationDate?: Date;
+  cardExpiration?: string;
   invoiceMessage?: string;
   statementMessage?: string;
   scheduledPayments: ScheduledPayment[];

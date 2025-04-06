@@ -33,7 +33,6 @@ const PurchasesPage = () => {
     totalItems,
     page,
     setPage,
-    search,
     setSearch,
     year,
     setYear,

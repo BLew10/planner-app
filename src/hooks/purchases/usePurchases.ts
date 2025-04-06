@@ -23,6 +23,7 @@ export const usePurchases = (
   const fetchPurchases = useCallback(async () => {
     setIsLoading(true);
     try {
+      console.log(year, page, itemsPerPage, search);
       // The existing function doesn't support pagination and search directly,
       // so we might need to adapt it or filter client-side temporarily
       const result = await getPurchaseTableData(
@@ -56,7 +57,7 @@ export const usePurchases = (
     } finally {
       setIsLoading(false);
     }
-  }, [year, search]);
+  }, [year, search, page, itemsPerPage]);
 
   useEffect(() => {
     fetchPurchases();

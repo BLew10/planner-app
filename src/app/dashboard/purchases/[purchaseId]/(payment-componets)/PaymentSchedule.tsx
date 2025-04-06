@@ -66,7 +66,13 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
           if (paymentStore.paymentOverview.scheduledPayments && payment) {
             payments.push({ ...payment, dueDate, checked: true });
           } else {
-            payments.push({ month: monthIndex + 1, year, amount: null, dueDate, checked: false });
+            payments.push({
+              month: monthIndex + 1,
+              year,
+              amount: null,
+              dueDate,
+              checked: false,
+            });
           }
         });
       });
@@ -102,6 +108,11 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
 
   const handleSplitPaymentsEquallyChange = (splitEqually: boolean) => {
     setSplitPaymentsEqually(splitEqually);
+    const scheduledPayments = paymentStore.paymentOverview.scheduledPayments;
+    scheduledPayments?.forEach((payment) => {
+      payment.amount = null;
+    });
+    paymentStore.updateKeyValue("scheduledPayments", scheduledPayments);
     paymentStore.updateKeyValue("splitPaymentsEqually", splitEqually);
   };
 
@@ -110,8 +121,11 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
     let payments: ScheduledPayment[] | null = [];
 
     if (splitPaymentsEqually) {
-      const checkedScheduledPayments = paymentStore.paymentOverview.scheduledPayments?.filter(p => p.checked)
-      if (!checkedScheduledPayments || checkedScheduledPayments.length === 0) {
+      const checkedScheduledPayments =
+        paymentStore.paymentOverview.scheduledPayments?.filter(
+          (p) => p.checked
+        );
+      if (!checkedScheduledPayments || checkedScheduledPayments.length === 0 && paymentStore.paymentOverview.net && paymentStore.paymentOverview.net > 0) {
         return toast({
           title: "Error",
           description: "Please select at least one payment month",
@@ -119,20 +133,19 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
         });
       }
 
-      const equalAmount = Math.round((totalNet / checkedScheduledPayments?.length) * 100) / 100;
-      payments = checkedScheduledPayments?.map(
-        (payment) => ({
-          ...payment,
-          amount: equalAmount,
-        })
-      );
+      const equalAmount =
+        Math.round((totalNet / checkedScheduledPayments?.length) * 100) / 100;
+      payments = checkedScheduledPayments?.map((payment) => ({
+        ...payment,
+        amount: equalAmount,
+      }));
     } else {
       payments =
         paymentStore.paymentOverview.scheduledPayments?.filter(
           (p) => p.amount !== null && !isNaN(p.amount as number) && p.amount > 0
         ) || null;
-      
-      if (!payments || payments.length === 0) {
+
+      if ((!payments || payments.length === 0) && paymentStore.paymentOverview.net && paymentStore.paymentOverview.net > 0) {
         toast({
           title: "Error",
           description: "Please enter a valid amount for at least one month",
@@ -173,16 +186,20 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
     year: number,
     isChecked: boolean
   ) => {
-    const scheduledPayments = [...(paymentStore.paymentOverview.scheduledPayments || [])];
-    const paymentIndex = scheduledPayments.findIndex(p => p.month === month && p.year === year);
-    
+    const scheduledPayments = [
+      ...(paymentStore.paymentOverview.scheduledPayments || []),
+    ];
+    const paymentIndex = scheduledPayments.findIndex(
+      (p) => p.month === month && p.year === year
+    );
+
     if (paymentIndex !== -1) {
       scheduledPayments[paymentIndex] = {
         ...scheduledPayments[paymentIndex],
-        checked: isChecked
+        checked: isChecked,
       };
     }
-    
+
     paymentStore.updateKeyValue("scheduledPayments", scheduledPayments);
   };
 
@@ -191,13 +208,17 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
     year: number,
     amount: number | null
   ) => {
-    const scheduledPayments = [...(paymentStore.paymentOverview.scheduledPayments || [])];
-    const paymentIndex = scheduledPayments.findIndex(p => p.month === month && p.year === year);
-    
+    const scheduledPayments = [
+      ...(paymentStore.paymentOverview.scheduledPayments || []),
+    ];
+    const paymentIndex = scheduledPayments.findIndex(
+      (p) => p.month === month && p.year === year
+    );
+
     if (paymentIndex !== -1) {
       scheduledPayments[paymentIndex] = {
         ...scheduledPayments[paymentIndex],
-        amount
+        amount,
       };
       paymentStore.updateKeyValue("scheduledPayments", scheduledPayments);
     }
@@ -218,18 +239,20 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
           <div className="px-4 py-2 bg-primary/10 rounded-md border border-primary/20 flex items-center">
             <span className="text-sm font-medium mr-2">Total:</span>
             <span className="text-xl font-bold text-primary flex items-center">
-              <DollarSign className="h-4 w-4 mr-0.5" /> 
+              <DollarSign className="h-4 w-4 mr-0.5" />
               {paymentStore.paymentOverview.net?.toFixed(2)}
             </span>
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent>
         <div className="space-y-6">
-          <RadioGroup 
+          <RadioGroup
             value={splitPaymentsEqually ? "equal" : "custom"}
-            onValueChange={(value) => handleSplitPaymentsEquallyChange(value === "equal")}
+            onValueChange={(value) =>
+              handleSplitPaymentsEquallyChange(value === "equal")
+            }
             className="flex flex-col sm:flex-row gap-4"
           >
             <div className="flex items-start gap-2">
@@ -245,14 +268,14 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
               </Label>
             </div>
           </RadioGroup>
-          
+
           <Separator />
-          
+
           <Tabs defaultValue={paymentYears[0].toString()} className="w-full">
             <TabsList className="mb-6 h-auto p-1">
               {paymentYears.map((year) => (
-                <TabsTrigger 
-                  key={year} 
+                <TabsTrigger
+                  key={year}
                   value={year.toString()}
                   className="flex items-center gap-1.5 px-4 py-2"
                 >
@@ -261,27 +284,28 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
                 </TabsTrigger>
               ))}
             </TabsList>
-            
+
             {paymentYears.map((year) => (
               <TabsContent key={year} value={year.toString()} className="mt-0">
                 <ScrollArea className="h-[500px] rounded-md border p-2">
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2">
                     {MONTHS.map((month, index) => {
-                      const payment = paymentStore.paymentOverview.scheduledPayments?.find(
-                        p => p.month === index + 1 && p.year === year
-                      );
+                      const payment =
+                        paymentStore.paymentOverview.scheduledPayments?.find(
+                          (p) => p.month === index + 1 && p.year === year
+                        );
                       const isChecked = payment?.checked || false;
-                      
+
                       return (
-                        <Card 
-                          key={`${year}-${month}`} 
+                        <Card
+                          key={`${year}-${month}`}
                           className={`overflow-hidden transition-all duration-150 ${
-                            splitPaymentsEqually 
-                              ? "cursor-pointer hover:border-primary/50" 
+                            splitPaymentsEqually
+                              ? "cursor-pointer hover:border-primary/50"
                               : ""
                           } ${
-                            splitPaymentsEqually && isChecked 
-                              ? "border-primary bg-primary/5" 
+                            splitPaymentsEqually && isChecked
+                              ? "border-primary bg-primary/5"
                               : ""
                           }`}
                           onClick={() => {
@@ -290,13 +314,17 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
                             }
                           }}
                         >
-                          <CardHeader className={`py-3 px-4 ${
-                            splitPaymentsEqually && isChecked 
-                              ? "bg-primary/10" 
-                              : "bg-muted/20"
-                          }`}>
+                          <CardHeader
+                            className={`py-3 px-4 ${
+                              splitPaymentsEqually && isChecked
+                                ? "bg-primary/10"
+                                : "bg-muted/20"
+                            }`}
+                          >
                             <div className="flex items-center justify-between">
-                              <CardTitle className="text-base">{month}</CardTitle>
+                              <CardTitle className="text-base">
+                                {month}
+                              </CardTitle>
                               {splitPaymentsEqually && isChecked && (
                                 <Check className="h-4 w-4 text-primary" />
                               )}
@@ -305,8 +333,8 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
                           <CardContent className="pt-4 pb-3 px-4">
                             {splitPaymentsEqually ? (
                               <div className="text-sm text-muted-foreground">
-                                {isChecked 
-                                  ? "Included in payment plan" 
+                                {isChecked
+                                  ? "Included in payment plan"
                                   : "Click to include in payment plan"}
                               </div>
                             ) : (
@@ -319,15 +347,17 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
                                   <Input
                                     id={`amount-${year}-${index}`}
                                     type="number"
-                                    step="0.01" 
+                                    step="0.01"
                                     placeholder="0.00"
                                     className="pl-8"
                                     value={payment?.amount?.toString() || ""}
-                                    onChange={(e) => 
+                                    onChange={(e) =>
                                       handleInputChange(
-                                        index + 1, 
-                                        year, 
-                                        e.target.value ? Number(e.target.value) : null
+                                        index + 1,
+                                        year,
+                                        e.target.value
+                                          ? Number(e.target.value)
+                                          : null
                                       )
                                     }
                                   />
@@ -345,9 +375,9 @@ const PaymentSchedule = ({ onNext }: PaymentScheduleProps) => {
           </Tabs>
         </div>
       </CardContent>
-      
+
       <CardFooter className="flex justify-end border-t p-6">
-        <Button 
+        <Button
           onClick={onSubmit}
           size="lg"
           className="gap-2"

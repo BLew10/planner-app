@@ -15,8 +15,12 @@ const defaultYear =
 const ITEMS_PER_PAGE = 10;
 
 const PaymentsPage = () => {
-  const [showPaymentScheduleModal, setShowPaymentScheduleModal] = useState(false);
-  const [paymentOverview, setPaymentOverview] = useState({ id: "", companyName: "" });
+  const [showPaymentScheduleModal, setShowPaymentScheduleModal] =
+    useState(false);
+  const [paymentOverview, setPaymentOverview] = useState({
+    id: "",
+    companyName: "",
+  });
   const searchParams = useSearchParams();
 
   // Initialize the year from URL or default
@@ -30,7 +34,6 @@ const PaymentsPage = () => {
     totalItems,
     page,
     setPage,
-    search,
     setSearch,
     year,
     setYear,

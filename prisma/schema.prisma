@@ -183,9 +183,6 @@ model PaymentOverview {
   lateFee                     Decimal?
   lateFeePercent              Decimal?
   deliveryMethod              String?
-  cardType                    String?
-  cardNumber                  String?
-  cardExpirationDate          DateTime?
   invoiceMessage              String?
   statementMessage            String?
   purchaseId                  String?             @unique
@@ -235,6 +232,9 @@ model Payment {
   paymentOverviewId String
   wasPrepaid        Boolean             @default(false)
   userId            String
+  cardType          String?
+  cardNumber        String?
+  cardExpiration    String?
   contact           Contact             @relation(fields: [contactId], references: [id], onDelete: Cascade)
   paymentOverview   PaymentOverview     @relation(fields: [paymentOverviewId], references: [id], onDelete: Cascade)
   purchase          PurchaseOverview    @relation(fields: [purchaseId], references: [id], onDelete: Cascade)

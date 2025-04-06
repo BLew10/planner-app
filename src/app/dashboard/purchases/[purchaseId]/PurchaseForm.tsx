@@ -14,9 +14,9 @@ import PurchaseDetails from "./PurchaseDetails";
 import PurchaseOverview from "./PurchaseOverview";
 import { FUTURE_YEARS } from "@/lib/constants";
 import { upsertPurchase } from "@/actions/purchases/upsertPurchase";
-import PaymentOverview from "./PaymentOverview";
-import PaymentDetails from "./PaymentDetails";
-import PaymentSchedule from "./PaymentSchedule";
+import PaymentOverview from "./(payment-componets)/PaymentOverview";
+import PaymentDetails from "./(payment-componets)/PaymentDetails";
+import PaymentSchedule from "./(payment-componets)/PaymentSchedule";
 import { toast } from "@/hooks/shadcn/use-toast";
 
 // shadcn components

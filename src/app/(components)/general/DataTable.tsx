@@ -235,6 +235,10 @@ export function DataTable<TData extends { id?: string }>({
     setRowToDelete(null);
   };
 
+  const handlePageChange = (page: number) => {
+    onPageChange?.(page);
+  };
+
   return (
     <>
       <Card className="w-full">
@@ -476,74 +480,91 @@ export function DataTable<TData extends { id?: string }>({
             {!noPagination && (
               <div className="ml-auto">
                 <Pagination>
-                  <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      onClick={() =>
-                        currentPage > 1 && onPageChange?.(currentPage - 1)
-                      }
-                      aria-disabled={currentPage === 1}
-                    />
-                  </PaginationItem>
-
-                  {/* First Page */}
-                  {currentPage > 2 && (
+                  <PaginationContent className="flex items-center gap-2">
                     <PaginationItem>
-                      <PaginationLink onClick={() => onPageChange?.(1)}>
-                        1
-                      </PaginationLink>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        disabled={currentPage === 1}
+                        onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+                        className="cursor-pointer w-fit"
+                      >
+                        <PaginationPrevious className="h-4 w-fit" />
+                      </Button>
                     </PaginationItem>
-                  )}
 
-                  {/* Left Ellipsis */}
-                  {currentPage > 3 && (
-                    <PaginationItem>
-                      <PaginationEllipsis />
-                    </PaginationItem>
-                  )}
-
-                  {/* Current Page and Surrounding Pages */}
-                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter((page) => Math.abs(page - currentPage) <= 1)
-                    .map((page) => (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          onClick={() => onPageChange?.(page)}
-                          isActive={currentPage === page}
+                    {/* First Page */}
+                    {currentPage > 2 && (
+                      <PaginationItem>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePageChange(1)}
+                          className="cursor-pointer"
                         >
-                          {page}
-                        </PaginationLink>
+                          1
+                        </Button>
                       </PaginationItem>
-                    ))}
+                    )}
 
-                  {/* Right Ellipsis */}
-                  {currentPage < totalPages - 2 && (
+                    {/* Left Ellipsis */}
+                    {currentPage > 3 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+
+                    {/* Current Page and Surrounding Pages */}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter((page) => Math.abs(page - currentPage) <= 1)
+                      .map((page) => (
+                        <PaginationItem key={page}>
+                          <Button
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => handlePageChange(page)}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </Button>
+                        </PaginationItem>
+                      ))}
+
+                    {/* Right Ellipsis */}
+                    {currentPage < totalPages - 2 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+
+                    {/* Last Page */}
+                    {currentPage < totalPages - 1 && (
+                      <PaginationItem>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePageChange(totalPages)}
+                          className="cursor-pointer"
+                        >
+                          {totalPages}
+                        </Button>
+                      </PaginationItem>
+                    )}
+
                     <PaginationItem>
-                      <PaginationEllipsis />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        disabled={currentPage === totalPages}
+                        onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                        className="cursor-pointer w-fit"
+                      >
+                        <PaginationNext className="h-4 w-fit" />
+                      </Button>
                     </PaginationItem>
-                  )}
-
-                  {/* Last Page */}
-                  {currentPage < totalPages - 1 && (
-                    <PaginationItem>
-                      <PaginationLink onClick={() => onPageChange?.(totalPages)}>
-                        {totalPages}
-                      </PaginationLink>
-                    </PaginationItem>
-                  )}
-
-                  <PaginationItem>
-                    <PaginationNext
-                      onClick={() =>
-                        currentPage < totalPages &&
-                        onPageChange?.(currentPage + 1)
-                      }
-                      aria-disabled={currentPage === totalPages}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
+                  </PaginationContent>
+                </Pagination>
+              </div>
             )}
           </div>
         </CardContent>

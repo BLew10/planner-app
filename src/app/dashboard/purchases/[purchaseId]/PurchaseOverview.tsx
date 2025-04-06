@@ -83,8 +83,8 @@ const PurchaseOverview = ({
                       <TableHead className="w-[80px] font-medium">
                         Qty
                       </TableHead>
-                      <TableHead className="font-medium">Package</TableHead>
-                      <TableHead className="text-right font-medium">
+                      <TableHead className="w-[200px] font-medium">Package</TableHead>
+                      <TableHead className="w-[150px] text-right font-medium">
                         Total Amount
                       </TableHead>
                       <TableHead colSpan={12} className="font-medium">

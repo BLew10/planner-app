@@ -35,7 +35,7 @@ export interface UpsertPaymentData {
   deliveryMethod?: string;
   cardType?: string;
   cardNumber?: string;
-  cardExpirationDate?: Date;
+  cardExpiration?: Date;
   invoiceMessage?: string;
   statementMessage?: string;
   scheduledPayments: ScheduledPayment[];
@@ -76,7 +76,7 @@ export async function upsertPaymentOverview(
       deliveryMethod,
       cardType,
       cardNumber,
-      cardExpirationDate,
+      cardExpiration,
       invoiceMessage,
       statementMessage,
       scheduledPayments,
@@ -115,9 +115,6 @@ export async function upsertPaymentOverview(
           lateFee,
           lateFeePercent,
           deliveryMethod,
-          cardType,
-          cardNumber,
-          cardExpirationDate,
           invoiceMessage,
           statementMessage,
           splitPaymentsEqually,
@@ -147,9 +144,6 @@ export async function upsertPaymentOverview(
           lateFee,
           lateFeePercent,
           deliveryMethod,
-          cardType,
-          cardNumber,
-          cardExpirationDate,
           invoiceMessage,
           statementMessage,
           splitPaymentsEqually,
@@ -173,6 +167,9 @@ export async function upsertPaymentOverview(
             amount: amountPrepaid,
             checkNumber,
             paymentMethod,
+            cardType,
+            cardNumber,
+            cardExpiration,
           },
         });
       } else {
@@ -184,6 +181,9 @@ export async function upsertPaymentOverview(
             amount: amountPrepaid,
             checkNumber,
             paymentMethod,
+            cardType,
+            cardNumber,
+            cardExpiration,
             purchaseId: purchaseOverviewId,
             wasPrepaid: true,
             paymentDate: formatDateToString(new Date()),
