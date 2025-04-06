@@ -1,16 +1,35 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Advertisement } from "@prisma/client";
-import TextInput from "@/app/(components)/form/TextInput";
+import { Advertisement, CalendarEdition } from "@prisma/client";
+import { PurchaseOverviewModel } from "@/lib/models/purchaseOverview";
+import { usePurchasesStore } from "@/store/purchaseStore";
+import { motion } from "framer-motion";
 import PurchaseNonDayType from "./PurchaseNonDayType";
 import PurchaseDayType from "./PurchaseDayType";
-import styles from "./PurchaseDetails.module.scss";
-import { usePurchasesStore } from "@/store/purchaseStore";
-import { PurchaseOverviewModel } from "@/lib/models/purchaseOverview";
-import { CalendarEdition } from "@prisma/client";
-import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
 import { useToast } from "@/hooks/shadcn/use-toast";
+
+// shadcn components
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { ChevronRight, MapPin, AlertCircle, Check } from "lucide-react";
+
 interface PurchaseProps {
   advertisementTypes: Partial<Advertisement>[];
   calendars: Partial<CalendarEdition>[];
@@ -30,7 +49,7 @@ export interface AdvertisementPurchaseData {
   slots?: { slot: number; month: number | null; date: string | null }[];
 }
 
-const Purchase: React.FC<PurchaseProps> = ({
+const PurchaseDetails: React.FC<PurchaseProps> = ({
   advertisementTypes,
   purchase = null,
   calendars,
@@ -40,14 +59,18 @@ const Purchase: React.FC<PurchaseProps> = ({
 }) => {
   const purchaseStore = usePurchasesStore();
   const { toast } = useToast();
+
   const [selectedCalendars, setSelectedCalendars] = useState<
     Partial<CalendarEdition>[]
   >([]);
+
   const [activeModalData, setActiveModalData] = useState<{
     data?: AdvertisementPurchaseData;
     isOpenDayType: boolean;
     isOpenNonDayType: boolean;
   }>({ isOpenDayType: false, isOpenNonDayType: false });
+
+  const [formErrors, setFormErrors] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
     if (purchase) {
@@ -71,7 +94,7 @@ const Purchase: React.FC<PurchaseProps> = ({
                 slot.advertisementPurchase?.advertisementId === adId
             )
             .map((slot) => ({
-              slot: slot.slot ?? 0, // Using 0 as a default, adjust as necessary
+              slot: slot.slot ?? 0,
               month: slot.month ?? 0,
               date: slot.date || null,
             }));
@@ -108,6 +131,11 @@ const Purchase: React.FC<PurchaseProps> = ({
     field: "quantity" | "charge",
     value: string
   ) => {
+    // Clear the error state when user makes changes
+    if (formErrors[`${adId}-${calendarId}`]) {
+      setFormErrors((prev) => ({ ...prev, [`${adId}-${calendarId}`]: false }));
+    }
+
     if (field === "quantity") {
       purchaseStore.setQuantity(calendarId, adId, value);
     } else if (field === "charge") {
@@ -119,16 +147,18 @@ const Purchase: React.FC<PurchaseProps> = ({
   const onContinue = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const purchaseData = purchaseStore.purchaseOverview;
+    const newErrors: { [key: string]: boolean } = {};
+    let hasErrors = false;
+
     for (const calendarId in purchaseData) {
       const calendarData = purchaseData[calendarId];
       for (const adId in calendarData) {
         const adType = advertisementTypes.find((ad) => ad.id === adId);
         const adData = calendarData[adId];
-        // If perMonth is 0, we don't need to check for slots (Extra Cases is the ad type)
         let { slots, quantity, charge } = adData;
 
-        if (!adType?.perMonth == null || adType?.perMonth === undefined || adType?.perMonth === 0) {
-          // Extra Cases is the ad type and am using quantity as the slot number to set the quantity to easily implement it on Dashboard
+        if (!adType?.perMonth || adType?.perMonth === 0) {
+          // Extra Cases is the ad type and am using quantity as the slot number
           adData.slots = [
             {
               slot: Number(quantity),
@@ -138,28 +168,35 @@ const Purchase: React.FC<PurchaseProps> = ({
           ];
           slots = adData.slots;
         }
-        
-        if ((quantity !== "" || charge !== "") && (!slots || slots.length === 0)) {
-          const ad = advertisementTypes.find((ad) => ad.id === adId);
+
+        if (
+          (quantity !== "" || charge !== "") &&
+          (!slots || slots.length === 0)
+        ) {
+          const errorKey = `${adId}-${calendarId}`;
+          newErrors[errorKey] = true;
+          hasErrors = true;
+
           const calendar = calendars.find(
             (calendar) => calendar.id === calendarId
           );
-          const errorAd = document.getElementById(`${adId}-${calendarId}`);
-          const placeErrorButton = document.getElementById(
-            `button-${adId}-${calendarId}`
-          );
-          errorAd?.scrollIntoView({ behavior: "smooth", block: "center" });
-          placeErrorButton?.classList.add(styles.pulse);
+          const ad = advertisementTypes.find((ad) => ad.id === adId);
+
           toast({
-            title: `Please select at least one slot in the calendar ${calendar?.name} for the advertisement ${ad?.name}.`,
+            title: "Missing placement information",
+            description: `Please select at least one slot in the calendar ${calendar?.name} for the advertisement ${ad?.name}.`,
             variant: "destructive",
           });
-          return;
         }
       }
     }
-    purchaseStore.updateTotal();
-    onNext();
+
+    setFormErrors(newErrors);
+
+    if (!hasErrors) {
+      purchaseStore.updateTotal();
+      onNext();
+    }
   };
 
   const openDayTypeModal = (
@@ -199,117 +236,211 @@ const Purchase: React.FC<PurchaseProps> = ({
   };
 
   return (
-    <AnimateWrapper>
-      <form onSubmit={onContinue} className={styles.form}>
-        <div className={styles.formWrapper}>
-          <div className={styles.header}>
-            <div className={styles.empty}></div>
-            {selectedCalendars?.map((calendar) => (
-              <div key={calendar.id}>
-                <h3 className={styles.calendarName}>{calendar.name}</h3>
-                {selectedCalendars.length > 1 && (
-                  <button
-                    className={styles.deleteCalendar}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (calendar.id) {
-                        purchaseStore.removeCalendarId(calendar.id);
-                      }
-                    }}
-                  >
-                    Delete Calendar
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-          <div className={styles.body} key={purchase?.id}>
-            {advertisementTypes
-              ?.filter((at) => at.id != undefined)
-              .map((ad) => {
-                return (
-                  <div key={ad.id}>
-                    <div key={`${ad.id}`} className={styles.advertisementType}>
-                      <h3 className={styles.advertisementName}>{ad.name}</h3>
-                      {selectedCalendars?.map((calendar) => {
-                        const data = purchaseStore.getByCalendarIdAdId(
-                          calendar.id!,
-                          ad.id!
-                        );
-                        return (
-                          <div
-                            key={`${ad.id}-${calendar.id}`}
-                            className={styles.inputGroup}
-                            id={`${ad.id}-${calendar.id}`}
-                          >
-                            <TextInput
-                              label="Quantity"
-                              name={`quantity-${ad.id}`}
-                              type="number"
-                              pattern="[0-9]*"
-                              placeholder="Quantity"
-                              min="0"
-                              isRequired={(data.perMonth != null || data.perMonth != undefined) && (data.slots && data.slots.length > 0)}
-                              value={data.quantity}
-                              onChange={(e) =>
-                                handleInputChange(
-                                  calendar.id as string,
-                                  ad.id as string,
-                                  "quantity",
-                                  e.target.value
-                                )
-                              }
-                            />
-                            <TextInput
-                              label="Charge"
-                              name={`charge-${ad.id}`}
-                              type="text"
-                              pattern="[0-9.]*"
-                              min="0"
-                              isRequired={(data.perMonth != null || data.perMonth != undefined) && (data.slots && data.slots.length > 0)}
-                              placeholder="Charge"
-                              value={data.charge}
-                              onChange={(e) =>
-                                handleInputChange(
-                                  calendar.id as string,
-                                  ad.id as string,
-                                  "charge",
-                                  e.target.value
-                                )
-                              }
-                            />
-                            {ad.perMonth !== 0 && (
-                              <button
-                                type="button"
-                                className={styles.placeButton}
-                                id={`button-${ad.id}-${calendar.id}`}
-                                onClick={(e) => {
-                                  e.currentTarget.classList.remove(
-                                    styles.pulse
-                                  );
-                                  if (ad.isDayType) {
-                                    openDayTypeModal(ad, calendar.id as string);
-                                  } else {
-                                    openNonDayTypeModal(
-                                      ad,
-                                      calendar.id as string
-                                    );
-                                  }
-                                }}
-                              >
-                                Place
-                              </button>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className={styles.divider}></div>
-                  </div>
-                );
-              })}
-          </div>
-        </div>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <form onSubmit={onContinue} className="space-y-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="overflow-x-auto">
+              <Table className="border-collapse">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[200px] bg-muted/50 sticky left-0 z-10">
+                      Advertisement Type
+                    </TableHead>
+                    {selectedCalendars.map((calendar) => (
+                      <TableHead 
+                        key={calendar.id} 
+                        className="min-w-[300px] border-l-2 border-l-muted"
+                      >
+                        <div className="font-medium text-primary">
+                          {calendar.name}
+                        </div>
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {advertisementTypes
+                    ?.filter((at) => at.id !== undefined)
+                    .map((ad, index) => (
+                      <TableRow 
+                        key={ad.id} 
+                        className={`${
+                          index % 2 === 0 
+                            ? "bg-white" 
+                            : "bg-slate-400/10"
+                        }`}
+                        noHoverState={true}
+                      >
+                        <TableCell className="font-medium sticky left-0 z-10">
+                          {ad.name}
+                        </TableCell>
+                        {selectedCalendars?.map((calendar) => {
+                          const data = purchaseStore.getByCalendarIdAdId(
+                            calendar.id!,
+                            ad.id!
+                          );
+                          const hasError =
+                            formErrors[`${ad.id}-${calendar.id}`];
+
+                          const needsPlacement =
+                            ad.perMonth !== 0 &&
+                            (data.quantity !== "" || data.charge !== "") &&
+                            (!data.slots || data.slots.length === 0);
+
+                          return (
+                            <TableCell
+                              key={`${ad.id}-${calendar.id}`}
+                              className={`relative border-l-2 border-l-muted ${
+                                hasError ? "bg-destructive/10" : ""
+                              }`}
+                              id={`${ad.id}-${calendar.id}`}
+                            >
+                              <div className="flex flex-col gap-3 md:flex-row md:items-end">
+                                <div className="space-y-2">
+                                  <Label
+                                    htmlFor={`quantity-${ad.id}-${calendar.id}`}
+                                  >
+                                    Quantity
+                                  </Label>
+                                  <Input
+                                    id={`quantity-${ad.id}-${calendar.id}`}
+                                    type="number"
+                                    value={data.quantity}
+                                    onChange={(e) =>
+                                      handleInputChange(
+                                        calendar.id as string,
+                                        ad.id as string,
+                                        "quantity",
+                                        e.target.value
+                                      )
+                                    }
+                                    className={`w-24 ${
+                                      hasError ? "border-destructive" : ""
+                                    }`}
+                                    min="0"
+                                    placeholder="0"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label
+                                    htmlFor={`charge-${ad.id}-${calendar.id}`}
+                                  >
+                                    Charge
+                                  </Label>
+                                  <Input
+                                    id={`charge-${ad.id}-${calendar.id}`}
+                                    type="text"
+                                    pattern="[0-9.]*"
+                                    value={data.charge}
+                                    onChange={(e) =>
+                                      handleInputChange(
+                                        calendar.id as string,
+                                        ad.id as string,
+                                        "charge",
+                                        e.target.value
+                                      )
+                                    }
+                                    className={`w-24 ${
+                                      hasError ? "border-destructive" : ""
+                                    }`}
+                                    placeholder="$0.00"
+                                  />
+                                </div>
+
+                                {ad.perMonth !== 0 && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          type="button"
+                                          variant={
+                                            data.slots?.length 
+                                              ? "add" 
+                                              : needsPlacement 
+                                                ? "destructive" 
+                                                : "outline"
+                                          }
+                                          size="sm"
+                                          className={`mt-2 md:mt-0 min-w-[90px] ${
+                                            needsPlacement ? "animate-pulse" : ""
+                                          }`}
+                                          onClick={() => {
+                                            if (ad.isDayType) {
+                                              openDayTypeModal(
+                                                ad,
+                                                calendar.id as string
+                                              );
+                                            } else {
+                                              openNonDayTypeModal(
+                                                ad,
+                                                calendar.id as string
+                                              );
+                                            }
+                                          }}
+                                        >
+                                          {data.slots?.length ? (
+                                            <>
+                                              <Check className="h-4 w-4 mr-1" />
+                                              {data.slots.length} Placed
+                                            </>
+                                          ) : (
+                                            <>
+                                              {needsPlacement ? "Required" : "Place"}
+                                            </>
+                                          )}
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        {needsPlacement
+                                          ? "Placement required before continuing"
+                                          : data.slots?.length
+                                          ? `${data.slots.length} slots placed`
+                                          : "Place advertisement position"}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+
+                                {hasError && (
+                                  <div className="absolute -top-2 -right-2">
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <div className="p-1 bg-destructive text-destructive-foreground rounded-full">
+                                            <AlertCircle className="h-4 w-4" />
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          Please select at least one slot
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </div>
+                                )}
+                              </div>
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <Button type="submit" className="flex items-center gap-1">
+                Continue <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {activeModalData.isOpenNonDayType && (
           <PurchaseNonDayType
             data={activeModalData.data}
@@ -338,12 +469,9 @@ const Purchase: React.FC<PurchaseProps> = ({
             isOpen={activeModalData.isOpenDayType}
           />
         )}
-        <button type="submit" className={styles.submitButton}>
-          {purchase?.id ? "Update" : "Create"}
-        </button>
       </form>
-    </AnimateWrapper>
+    </motion.div>
   );
 };
 
-export default Purchase;
+export default PurchaseDetails;
