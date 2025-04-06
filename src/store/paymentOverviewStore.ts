@@ -45,7 +45,7 @@ interface PaymentStore {
   paymentOverview: PaymentOverview;
   addPaymentOverview: (newOverview: PaymentOverview) => void;
   updateKeyValue: (key: keyof PaymentOverview, value: any) => void;
-  organziePaymentsByYear: () => { [key: number]: ScheduledPayment[] }
+  organziePaymentsByYear: () => { [key: number]: ScheduledPayment[] };
   calculateNet: () => void;
   reset: () => void;
 }
@@ -81,7 +81,7 @@ export const usePaymentOverviewStore = create<PaymentStore>((set, get) => ({
 
     return groupedPayments || {};
   },
-  
+
   calculateNet: () => {
     const overview = get().paymentOverview;
     const {
@@ -96,21 +96,27 @@ export const usePaymentOverviewStore = create<PaymentStore>((set, get) => ({
       trade,
     } = overview;
 
-    // Calculate net
-    const earlyDiscount = earlyPaymentDiscount ? earlyPaymentDiscount :  ((earlyPaymentDiscountPercent || 0)/ 100) * totalSale 
+    // Calculate net - ensure all values are numbers
+    const numTotalSale = Number(totalSale || 0);
+    const numAmountPrepaid = Number(amountPrepaid || 0);
+    const earlyDiscount = earlyPaymentDiscount
+      ? Number(earlyPaymentDiscount)
+      : (Number(earlyPaymentDiscountPercent || 0) / 100) * numTotalSale;
+
     const net =
-      totalSale -
-      (amountPrepaid || 0) -
+      numTotalSale -
+      numAmountPrepaid -
       earlyDiscount -
-      (additionalDiscount1 || 0) -
-      (additionalDiscount2 || 0) -
-      (additionalSales1 || 0) -
-      (additionalSales2 || 0) -
-      (trade || 0);
+      Number(additionalDiscount1 || 0) -
+      Number(additionalDiscount2 || 0) +
+      Number(additionalSales1 || 0) +
+      Number(additionalSales2 || 0) -
+      Number(trade || 0);
+
     set({
       paymentOverview: {
         ...overview,
-        net: net
+        net: net,
       },
     });
   },

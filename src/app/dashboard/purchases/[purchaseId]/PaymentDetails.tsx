@@ -233,7 +233,7 @@ const PaymentDetails = ({ onNext, paymentOverview }: PaymentDetailsProps) => {
                       onChange={(e) =>
                         paymentOverviewStore.updateKeyValue(
                           "additionalDiscount1",
-                          e.target.value
+                          Number(e.target.value)
                         )
                       }
                     />
@@ -259,7 +259,7 @@ const PaymentDetails = ({ onNext, paymentOverview }: PaymentDetailsProps) => {
                       onChange={(e) =>
                         paymentOverviewStore.updateKeyValue(
                           "additionalDiscount2",
-                          e.target.value
+                          Number(e.target.value)
                         )
                       }
                     />
@@ -285,7 +285,7 @@ const PaymentDetails = ({ onNext, paymentOverview }: PaymentDetailsProps) => {
                       onChange={(e) =>
                         paymentOverviewStore.updateKeyValue(
                           "additionalSales1",
-                          e.target.value
+                          Number(e.target.value)
                         )
                       }
                     />
@@ -311,7 +311,7 @@ const PaymentDetails = ({ onNext, paymentOverview }: PaymentDetailsProps) => {
                       onChange={(e) =>
                         paymentOverviewStore.updateKeyValue(
                           "additionalSales2",
-                          e.target.value
+                          Number(e.target.value)
                         )
                       }
                     />
@@ -335,7 +335,7 @@ const PaymentDetails = ({ onNext, paymentOverview }: PaymentDetailsProps) => {
                       onChange={(e) =>
                         paymentOverviewStore.updateKeyValue(
                           "trade",
-                          e.target.value
+                          Number(e.target.value)
                         )
                       }
                     />
@@ -369,7 +369,7 @@ const PaymentDetails = ({ onNext, paymentOverview }: PaymentDetailsProps) => {
                         onChange={(e) => {
                           paymentOverviewStore.updateKeyValue(
                             "earlyPaymentDiscount",
-                            e.target.value
+                            Number(e.target.value)
                           );
                           paymentOverviewStore.updateKeyValue(
                             "earlyPaymentDiscountPercent",
@@ -402,7 +402,7 @@ const PaymentDetails = ({ onNext, paymentOverview }: PaymentDetailsProps) => {
                           onChange={(e) => {
                             paymentOverviewStore.updateKeyValue(
                               "earlyPaymentDiscountPercent",
-                              e.target.value
+                              Number(e.target.value)
                             );
                             paymentOverviewStore.updateKeyValue(
                               "earlyPaymentDiscount",
@@ -449,7 +449,7 @@ const PaymentDetails = ({ onNext, paymentOverview }: PaymentDetailsProps) => {
                       onChange={(e) =>
                         paymentOverviewStore.updateKeyValue(
                           "amountPrepaid",
-                          e.target.value
+                          Number(e.target.value)
                         )
                       }
                     />
@@ -677,7 +677,7 @@ const PaymentDetails = ({ onNext, paymentOverview }: PaymentDetailsProps) => {
                         onChange={(e) => {
                           paymentOverviewStore.updateKeyValue(
                             "lateFee",
-                            e.target.value
+                            Number(e.target.value)
                           );
                           paymentOverviewStore.updateKeyValue(
                             "lateFeePercent",
@@ -708,7 +708,7 @@ const PaymentDetails = ({ onNext, paymentOverview }: PaymentDetailsProps) => {
                           onChange={(e) => {
                             paymentOverviewStore.updateKeyValue(
                               "lateFeePercent",
-                              e.target.value
+                              Number(e.target.value)
                             );
                             paymentOverviewStore.updateKeyValue(
                               "lateFee",

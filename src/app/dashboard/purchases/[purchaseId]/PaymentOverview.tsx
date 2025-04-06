@@ -93,48 +93,61 @@ const PaymentOverview = () => {
                     key: "additionalDiscount1",
                     label: "Additional Discount 1",
                     icon: <Tag className="h-4 w-4" />,
+                    isNegative: true,
                   },
                   {
                     key: "additionalDiscount2",
                     label: "Additional Discount 2",
                     icon: <Tag className="h-4 w-4" />,
+                    isNegative: true,
                   },
                   {
                     key: "additionalSales1",
                     label: "Additional Sales 1",
                     icon: <ArrowUp className="h-4 w-4" />,
+                    isNegative: false,
                   },
                   {
                     key: "additionalSales2",
                     label: "Additional Sales 2",
                     icon: <ArrowUp className="h-4 w-4" />,
+                    isNegative: false,
                   },
                   {
                     key: "trade",
                     label: "Trade",
                     icon: <ArrowDown className="h-4 w-4" />,
+                    isNegative: true,
                   },
                   {
                     key: "earlyPaymentDiscount",
                     label: "Early Payment Discount",
                     icon: <Clock className="h-4 w-4" />,
+                    isNegative: true,
                   },
                   {
                     key: "earlyPaymentDiscountPercent",
                     label: "Early Payment Discount %",
                     icon: <PercentIcon className="h-4 w-4" />,
+                    isNegative: true,
                   },
                   {
                     key: "amountPrepaid",
                     label: "Amount Prepaid",
                     icon: <CheckCircle2 className="h-4 w-4" />,
+                    isNegative: true,
                   },
                 ].map((item) => {
-                  const value =
+                  let value =
                     paymentOverviewStore.paymentOverview?.[
                       item.key as keyof typeof paymentOverviewStore.paymentOverview
                     ];
                   if (!value) return null;
+
+                  if (item.key === "earlyPaymentDiscountPercent") {
+                    value = (value as number) / 100 * paymentOverviewStore.paymentOverview?.totalSale;
+                    item.label = `Early Payment Discount (${paymentOverviewStore.paymentOverview?.earlyPaymentDiscountPercent}%)`;
+                  }
 
                   return (
                     <div
@@ -147,9 +160,12 @@ const PaymentOverview = () => {
                       </div>
                       <Badge
                         variant="outline"
-                        className="font-medium text-destructive"
+                        className={`font-medium ${
+                          item.isNegative ? "text-destructive" : "text-primary"
+                        }`}
                       >
-                        -{formatCurrency(value as number)}
+                        {item.isNegative ? "-" : ""}
+                        {formatCurrency(value as number)}
                       </Badge>
                     </div>
                   );
