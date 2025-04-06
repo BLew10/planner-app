@@ -189,7 +189,7 @@ export const flagLatePayments = async (userId: string) => {
   });
   if (user) {
     const alreadyFlaggedToday = billingUpdatedAlready(user?.billingUpdated);
-    if (alreadyFlaggedToday) {
+    if (!alreadyFlaggedToday) {
       await prisma.user.update({
         where: {
           id: userId,
