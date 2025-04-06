@@ -16,6 +16,7 @@ interface AllPaymentsTabProps {
   isLoading: boolean;
   searchQuery: string;
   onSearch: (value: string) => void;
+  itemsPerPage: number;
   selectedPayments: Partial<PaymentOverviewModel>[];
   onSelectedRowsChange: (rows: string[]) => void;
   currentPage: number;
@@ -30,6 +31,7 @@ const AllPaymentsTab: React.FC<AllPaymentsTabProps> = ({
   isLoading,
   searchQuery,
   onSearch,
+  itemsPerPage,
   selectedPayments,
   onSelectedRowsChange,
   currentPage,
@@ -166,7 +168,7 @@ const AllPaymentsTab: React.FC<AllPaymentsTabProps> = ({
         onSearch={onSearch}
         selectedRows={selectedPayments.map((payment) => payment.id as string)}
         onSelectedRowsChange={onSelectedRowsChange}
-        itemsPerPage={10}
+        itemsPerPage={itemsPerPage}
         totalItems={totalItems}
         currentPage={currentPage}
         onPageChange={onPageChange}

@@ -3,10 +3,8 @@ import React, { useState, useEffect, useMemo } from "react";
 import { getOwedPayments } from "@/lib/data/paymentOverview";
 import { PaymentOverviewModel } from "@/lib/models/paymentOverview";
 import InvoiceSending from "./InvoiceSending";
-import { ScheduledPayment } from "@prisma/client";
 import PaymentScheduleModal from "./PaymentScheduleModal";
 import { INVOICE_TYPES, InvoiceType, DEFAULT_YEAR } from "@/lib/constants";
-import { Row } from "@tanstack/react-table";
 
 // shadcn components
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,11 +15,10 @@ import {
   Select,
   SelectContent,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Info, Calendar, Mail, MousePointer, ExternalLink } from "lucide-react";
+import { Info, Calendar, Mail, MousePointer } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -35,40 +32,42 @@ import AllPaymentsTab from "./(components)/AllPaymentsTab";
 import ThisMonthTab from "./(components)/ThisMonthTab";
 import CalendarYearSelector from "./(components)/CalendarYearSelector";
 
-const getNextPaymentDate = (scheduledPayments: ScheduledPayment[] | null) => {
-  if (!scheduledPayments || scheduledPayments.length === 0) {
-    return { dueDate: "", isLate: false };
-  }
+// const getNextPaymentDate = (scheduledPayments: ScheduledPayment[] | null) => {
+//   if (!scheduledPayments || scheduledPayments.length === 0) {
+//     return { dueDate: "", isLate: false };
+//   }
 
-  // Sort the unpaid payments by due date
-  const unpaidPayments = scheduledPayments
-    .filter((payment) => !payment.isPaid)
-    .sort((a, b) => {
-      // Convert string dates to Date objects for proper comparison
-      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-    });
+//   // Sort the unpaid payments by due date
+//   const unpaidPayments = scheduledPayments
+//     .filter((payment) => !payment.isPaid)
+//     .sort((a, b) => {
+//       // Convert string dates to Date objects for proper comparison
+//       return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+//     });
 
-  if (unpaidPayments.length === 0) {
-    return { dueDate: "", isLate: false };
-  }
+//   if (unpaidPayments.length === 0) {
+//     return { dueDate: "", isLate: false };
+//   }
 
-  // Return the earliest unpaid payment
-  return {
-    dueDate: unpaidPayments[0].dueDate,
-    isLate: unpaidPayments[0].isLate,
-  };
-};
+//   // Return the earliest unpaid payment
+//   return {
+//     dueDate: unpaidPayments[0].dueDate,
+//     isLate: unpaidPayments[0].isLate,
+//   };
+// };
 
-// Format date to M-D-YY
-const formatDate = (dateString: string | Date | null | undefined): string => {
-  if (!dateString) return "-";
+// // Format date to M-D-YY
+// const formatDate = (dateString: string | Date | null | undefined): string => {
+//   if (!dateString) return "-";
 
-  const date = new Date(dateString);
-  const month = date.getMonth() + 1; // getMonth() is 0-based
-  const day = date.getDate();
-  const year = date.getFullYear().toString();
-  return `${month}-${day}-${year}`;
-};
+//   const date = new Date(dateString);
+//   const month = date.getMonth() + 1; // getMonth() is 0-based
+//   const day = date.getDate();
+//   const year = date.getFullYear().toString();
+//   return `${month}-${day}-${year}`;
+// };
+
+const ITEMS_PER_PAGE = 5;
 
 const BillingPage = () => {
   const [owedPayments, setOwedPayments] = useState<
@@ -115,7 +114,7 @@ const BillingPage = () => {
         selectedCalendarYear,
         searchQuery,
         currentPageNum,
-        null
+        ITEMS_PER_PAGE
       );
 
       setOwedPayments(data);
@@ -297,6 +296,7 @@ const BillingPage = () => {
                       )
                     );
                   }}
+                  itemsPerPage={ITEMS_PER_PAGE}
                   totalItems={totalItems}
                   currentPage={allPaymentsPage}
                   onPageChange={setAllPaymentsPage}
