@@ -29,30 +29,87 @@ export const getPaymentById = async (
 };
 
 export const getPaymentsByCalendarEditionYear = async (
-  calendarEditionYear: string
-) => {
+  calendarEditionYear: string,
+  page: number = 1,
+  itemsPerPage: number = 10,
+  searchQuery: string = ""
+): Promise<{ payments: Partial<PaymentModel>[]; total: number }> => {
+  const session = await auth();
+  if (!session) {
+    return { payments: [], total: 0 };
+  }
+
+  const userId = session.user.id;
+  const year = Number(calendarEditionYear);
+
   try {
-    const session = await auth();
-    const userId = session?.user?.id;
-    await flagLatePayments(userId);
-    const payments = await prisma.payment.findMany({
-      where: {
-        userId,
-        purchase: {
-          calendarEditionYear: Number(calendarEditionYear),
-        },
+    const where = {
+      userId,
+      purchase: {
+        calendarEditionYear: year,
       },
-      include: {
-        contact: {
-          include: {
-            contactContactInformation: true,
+      OR: [
+        {
+          contact: {
+            contactContactInformation: {
+              company: { contains: searchQuery, mode: "insensitive" as const },
+            },
           },
         },
-      },
-    });
-    return payments;
-  } catch (e) {
-    return null;
+        {
+          contact: {
+            contactContactInformation: {
+              firstName: {
+                contains: searchQuery,
+                mode: "insensitive" as const,
+              },
+            },
+          },
+        },
+        {
+          contact: {
+            contactContactInformation: {
+              lastName: { contains: searchQuery, mode: "insensitive" as const },
+            },
+          },
+        },
+        {
+          checkNumber: { contains: searchQuery, mode: "insensitive" as const },
+        },
+        {
+          paymentMethod: {
+            contains: searchQuery,
+            mode: "insensitive" as const,
+          },
+        },
+      ],
+    };
+
+    const [payments, total] = await Promise.all([
+      prisma.payment.findMany({
+        where,
+        include: {
+          contact: {
+            include: {
+              contactContactInformation: true,
+              contactTelecomInformation: true,
+            },
+          },
+          purchase: true,
+        },
+        orderBy: {
+          paymentDate: "desc",
+        },
+        skip: (page - 1) * itemsPerPage,
+        take: itemsPerPage,
+      }),
+      prisma.payment.count({ where }),
+    ]);
+
+    return { payments, total };
+  } catch (error) {
+    console.error("Error fetching payments:", error);
+    return { payments: [], total: 0 };
   }
 };
 

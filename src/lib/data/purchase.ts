@@ -93,9 +93,13 @@ export interface PurchaseTableData {
   total: number;
   amountPaid: number;
 }
+
 export const getPurchaseTableData = async (
-  calendarEditionYear: string
-): Promise<PurchaseTableData[] | null> => {
+  calendarEditionYear: string,
+  page: number,
+  itemsPerPage: number,
+  search: string
+): Promise<{ purchases: PurchaseTableData[]; total: number } | null> => {
   const session = await auth();
   if (!session) {
     return null;
@@ -103,69 +107,87 @@ export const getPurchaseTableData = async (
 
   const userId = session.user.id;
 
-  const purchases = await prisma.purchaseOverview.findMany({
-    where: {
+  try {
+    const where = {
       userId,
       calendarEditionYear: Number(calendarEditionYear),
       isDeleted: false,
-    },
-    select: {
-      id: true,
-      amountOwed: true,
-      createdAt: true,
-      calendarEditionYear: true,
-      paymentOverviewId: true,
-      paymentOverview: {
-        select: {
-          amountPaid: true,
-          net: true,
-          scheduledPayments: {
-            where: {
-              isLate: true,
-              lateFeeWaived: false,
-              lateFeeAddedToNet: true,
-            },
-          },
-        },
-      },
-      calendarEditions: {
-        select: {
-          code: true,
-        },
-      },
-      contact: {
+      OR: [
+        { contact: { contactContactInformation: { company: { contains: search, mode: 'insensitive' as const } } } },
+        { contact: { contactContactInformation: { firstName: { contains: search, mode: 'insensitive' as const } } } },
+        { contact: { contactContactInformation: { lastName: { contains: search, mode: 'insensitive' as const } } } },
+        { id: { contains: search, mode: 'insensitive' as const } }
+      ],
+    };
+
+    const [purchases, total] = await Promise.all([
+      prisma.purchaseOverview.findMany({
+        where,
         select: {
           id: true,
-          contactContactInformation: {
+          amountOwed: true,
+          createdAt: true,
+          calendarEditionYear: true,
+          paymentOverviewId: true,
+          paymentOverview: {
             select: {
-              company: true,
+              amountPaid: true,
+              net: true,
+              scheduledPayments: {
+                where: {
+                  isLate: true,
+                  lateFeeWaived: false,
+                  lateFeeAddedToNet: true,
+                },
+              },
+            },
+          },
+          calendarEditions: {
+            select: {
+              code: true,
+            },
+          },
+          contact: {
+            select: {
+              id: true,
+              contactContactInformation: {
+                select: {
+                  company: true,
+                },
+              },
             },
           },
         },
-      },
-    },
-  });
+        skip: (page - 1) * itemsPerPage,
+        take: itemsPerPage,
+      }),
+      prisma.purchaseOverview.count({ where }),
+    ]);
 
-  const allPurchases: PurchaseTableData[] = purchases.map((purchase) => {
-    const calendarsEditions = purchase.calendarEditions
-      .map((e) => e.code)
-      .join(", ");
+    const allPurchases: PurchaseTableData[] = purchases.map((purchase) => {
+      const calendarsEditions = purchase.calendarEditions
+        .map((e) => e.code)
+        .join(", ");
 
-    return {
-      id: purchase.id,
-      paymentOverviewId: purchase.paymentOverviewId || null,
-      amountOwed: parseFloat(purchase.amountOwed.toString()) || 0,
-      contactId: purchase.contact.id,
-      companyName: purchase.contact?.contactContactInformation?.company || "",
-      calendarEditionYear: purchase.calendarEditionYear,
-      calendarEditions: calendarsEditions,
-      purchasedOn: formatDateToString(purchase.createdAt),
-      total: Number(purchase.paymentOverview?.net || 0),
-      amountPaid: Number(purchase.paymentOverview?.amountPaid || 0),
-    };
-  });
+      return {
+        id: purchase.id,
+        paymentOverviewId: purchase.paymentOverviewId || null,
+        amountOwed: parseFloat(purchase.amountOwed.toString()) || 0,
+        contactId: purchase.contact.id,
+        companyName: purchase.contact?.contactContactInformation?.company || "",
+        calendarEditionYear: purchase.calendarEditionYear,
+        calendarEditions: calendarsEditions,
+        purchasedOn: formatDateToString(purchase.createdAt),
+        total: Number(purchase.paymentOverview?.net || 0),
+        amountPaid: Number(purchase.paymentOverview?.amountPaid || 0),
+      };
+    });
 
-  return allPurchases;
+    return { purchases: allPurchases, total };
+  } catch (error) {
+    console.error(`Error fetching purchases: ${error}`);
+    return { purchases: [], total: 0 };
+  }
 };
 
 export interface PurchaseByMonth {

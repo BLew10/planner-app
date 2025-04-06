@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit } from "lucide-react";
 import { ContactTableData } from "@/lib/data/contact";
-import { CATEGORIES } from "@/lib/constants";
 import DeleteButton from "@/app/(components)/general/DeleteButton";
 
 export const getContactColumns = (
