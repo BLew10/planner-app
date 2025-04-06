@@ -67,7 +67,7 @@ import CalendarYearSelector from "./(components)/CalendarYearSelector";
 //   return `${month}-${day}-${year}`;
 // };
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 10;
 
 const BillingPage = () => {
   const [owedPayments, setOwedPayments] = useState<
