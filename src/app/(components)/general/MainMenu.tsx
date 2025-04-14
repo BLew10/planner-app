@@ -29,6 +29,7 @@ import {
   InfoIcon,
   Sun,
   Moon,
+  Grid,
 } from "lucide-react";
 
 const menuItems = [
@@ -56,6 +57,11 @@ const menuItems = [
     icon: InfoIcon,
     label: "Events",
     urlPath: "/dashboard/events",
+  },
+  {
+    icon: Grid,
+    label: "Custom Calendar",
+    urlPath: "/dashboard/custom-calendar",
   },
 ];
 
