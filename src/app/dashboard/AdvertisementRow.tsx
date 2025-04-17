@@ -101,8 +101,10 @@ const AdvertisementRow: React.FC<AdvertisementRowProps> = ({
 
           return (
             <Card key={month} className="overflow-hidden">
-              <CardHeader className="py-1 px-2 bg-muted/30">
-                <CardTitle className="text-xs font-medium">{month}</CardTitle>
+              <CardHeader className="py-1 px-2 bg-primary">
+                <CardTitle className="text-xs font-medium text-primary-foreground">
+                  {month}
+                </CardTitle>
               </CardHeader>
               <CardContent className="p-2">
                 <div className="grid grid-cols-1 gap-1">

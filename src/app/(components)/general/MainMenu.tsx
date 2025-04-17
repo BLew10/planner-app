@@ -63,8 +63,8 @@ const menuItems = [
   },
   {
     icon: Grid,
-    label: "Custom Calendar",
-    urlPath: "/dashboard/custom-calendar",
+    label: "Calendar Layout",
+    urlPath: "/dashboard/layout",
   },
 ];
 

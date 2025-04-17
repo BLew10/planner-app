@@ -16,7 +16,6 @@ model User {
   username          String              @unique
   password          String
   billingUpdated    DateTime            @default(now())
-  accounts          Account[]
   addressBooks      AddressBook[]
   advertisements    Advertisement[]
   calendarEditions  CalendarEdition[]
@@ -24,25 +23,9 @@ model User {
   Payment           Payment[]
   paymentOverviews  PaymentOverview[]
   purchases         PurchaseOverview[]
+  layouts           Layout[]
+  calendarLayouts   CalendarLayout[]
   GridConfiguration GridConfiguration[]
-}
-
-model Account {
-  id                String  @id @default(uuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
 }
 
 model Contact {
@@ -114,6 +97,7 @@ model CalendarEdition {
   events                    Event[]                     @relation("CalendarEditionToEvent")
   purchases                 PurchaseOverview[]          @relation("CalendarEditionToPurchaseOverview")
   GridConfiguration         GridConfiguration[]
+  CalendarLayout            CalendarLayout[]
 }
 
 model Advertisement {
@@ -127,6 +111,7 @@ model Advertisement {
   purchases                 AdvertisementPurchase[]
   AdvertisementPurchaseSlot AdvertisementPurchaseSlot[]
   GridAssignment            GridAssignment[]
+  AdPlacement               AdPlacement[]
 }
 
 model AddressBook {
@@ -307,26 +292,67 @@ model Event {
   calendarEdition CalendarEdition[] @relation("CalendarEditionToEvent")
 }
 
-model GridConfiguration {
-  id           String           @id @default(uuid())
-  name         String
-  topRows      Int
-  bottomRows   Int
-  cols         Int
+model Layout {
+  id                String              @id @default(uuid())
+  name              String
+  description       String?
+  isDeleted         Boolean             @default(false)
+  userId            String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  adPlacements      AdPlacement[]
+  calendarLayouts   CalendarLayout[]
+  GridConfiguration GridConfiguration[]
+  GridAssignment    GridAssignment[]
+}
+
+model CalendarLayout {
+  id           String          @id @default(uuid())
+  layoutId     String
   calendarId   String
   calendarYear Int
-  isDeleted    Boolean          @default(false)
+  isDeleted    Boolean         @default(false)
   userId       String
-  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  calendar     CalendarEdition  @relation(fields: [calendarId], references: [id], onDelete: Cascade)
-  assignments  GridAssignment[]
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  calendar     CalendarEdition @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+  layout       Layout          @relation(fields: [layoutId], references: [id])
+
+  @@unique([calendarId, calendarYear])
+}
+
+model AdPlacement {
+  id              String        @id @default(uuid())
+  layoutId        String
+  advertisementId String
+  position        String // 'top' or 'bottom'
+  x               Float
+  y               Float
+  width           Float
+  height          Float
+  layout          Layout        @relation(fields: [layoutId], references: [id], onDelete: Cascade)
+  advertisement   Advertisement @relation(fields: [advertisementId], references: [id], onDelete: Cascade)
+}
+
+model GridConfiguration {
+  id           String          @id @default(uuid())
+  layoutId     String
+  calendarId   String
+  calendarYear Int
+  isDeleted    Boolean         @default(false)
+  userId       String
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  calendar     CalendarEdition @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+  layout       Layout          @relation(fields: [layoutId], references: [id])
+
+  @@unique([calendarId, calendarYear])
 }
 
 model GridAssignment {
-  id                  String            @id @default(uuid())
-  gridConfigurationId String
-  advertisementId     String
-  cells               String[]
-  gridConfiguration   GridConfiguration @relation(fields: [gridConfigurationId], references: [id], onDelete: Cascade)
-  advertisement       Advertisement     @relation(fields: [advertisementId], references: [id], onDelete: Cascade)
+  id              String        @id @default(uuid())
+  layoutId        String
+  advertisementId String
+  cells           String[]
+  layout          Layout        @relation(fields: [layoutId], references: [id], onDelete: Cascade)
+  advertisement   Advertisement @relation(fields: [advertisementId], references: [id], onDelete: Cascade)
 }

@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Canvas } from "./calendar/canvas-grid";
+import { Canvas } from "./layout-creator/canvas-grid";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +16,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useAdTypes } from "@/hooks/advertisment-type/useAdTypes";
-import { useCalendarEditions } from "@/hooks/calendar-edition/useCalendarEditions";
+import { useLayout } from "@/hooks/layout/useLayout";
 import {
   Select,
   SelectContent,
@@ -35,15 +37,17 @@ interface SavedArea {
   position: "top" | "bottom";
 }
 
-export function CustomizableGrid() {
-  const { adTypes, isLoading: adTypesLoading } = useAdTypes();
-  const { calendarEditions, isLoading: calendarsLoading } =
-    useCalendarEditions();
-  const [calendarId, setCalendarId] = useState<string>("");
-  const [calendarYear, setCalendarYear] = useState<number>(
-    new Date().getFullYear()
-  );
+interface CustomizableLayoutProps {
+  layoutId?: string;
+}
 
+export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
+  const router = useRouter();
+  const { adTypes, isLoading: adTypesLoading } = useAdTypes();
+  const { layout, isLoading: layoutLoading, createLayout, updateLayout } = useLayout(layoutId);
+
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [showDialog, setShowDialog] = useState(false);
   const [currentSelection, setCurrentSelection] = useState<{
     x: number;
@@ -54,6 +58,27 @@ export function CustomizableGrid() {
   } | null>(null);
   const [selectedAdTypeId, setSelectedAdTypeId] = useState<string>("");
   const [savedAreas, setSavedAreas] = useState<SavedArea[]>([]);
+
+  // Load layout data when editing
+  useEffect(() => {
+    if (layout) {
+      setName(layout.name);
+      setDescription(layout.description || "");
+      // Convert ad placements to savedAreas format
+      const areas = layout.adPlacements.map((placement) => ({
+        id: placement.id,
+        adTypeId: placement.advertisementId,
+        adTypeName: placement.advertisement.name,
+        slotNumber: 1,
+        x: placement.x,
+        y: placement.y,
+        width: placement.width,
+        height: placement.height,
+        position: placement.position as "top" | "bottom",
+      }));
+      setSavedAreas(areas);
+    }
+  }, [layout]);
 
   // Function to get the next available slot number for an ad type
   const getNextSlotNumber = (adTypeId: string) => {
@@ -107,23 +132,32 @@ export function CustomizableGrid() {
     setCurrentSelection(null);
   };
 
-  const handleSaveConfiguration = async () => {
-    if (!calendarId || savedAreas.length === 0) return;
+  const handleSaveLayout = async () => {
+    if (!name || savedAreas.length === 0) return;
 
-    // TODO: Save configuration to backend
-    console.log("Saving configuration:", {
-      calendarId,
-      calendarYear,
-      areas: savedAreas,
-    });
+    const layoutData = {
+      name,
+      description,
+      savedAreas: savedAreas.map((area) => ({
+        adTypeId: area.adTypeId,
+        position: area.position,
+        x: area.x,
+        y: area.y,
+        width: area.width,
+        height: area.height,
+      })),
+    };
+
+    if (layoutId) {
+      await updateLayout.mutateAsync(layoutData);
+    } else {
+      await createLayout.mutateAsync(layoutData);
+    }
+
+    router.push("/dashboard/layout");
   };
 
-  const handleCopyFromExisting = async () => {
-    // TODO: Implement copying from existing configuration
-    console.log("Copy from existing");
-  };
-
-  if (adTypesLoading || calendarsLoading) {
+  if (layoutLoading || adTypesLoading) {
     return <div>Loading...</div>;
   }
 
@@ -131,48 +165,37 @@ export function CustomizableGrid() {
     <div className="min-h-screen bg-gray-50 p-8 w-full">
       <div className="space-y-8 max-w-[1800px] mx-auto">
         <div className="w-full bg-white rounded-lg shadow-sm p-4">
-          <h1 className="text-2xl font-bold text-center">Calendar Layout</h1>
+          <h1 className="text-2xl font-bold text-center">
+            {layoutId ? "Edit Layout" : "Create New Layout"}
+          </h1>
         </div>
 
         <div className="grid grid-cols-[250px_1fr_250px] gap-6">
-          {/* Configuration Details */}
+          {/* Layout Details */}
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Configuration Details</CardTitle>
+                <CardTitle>Layout Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="calendar">Calendar Edition</Label>
-                  <Select value={calendarId} onValueChange={setCalendarId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select calendar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {calendarEditions?.map((calendar) => (
-                        <SelectItem key={calendar.id} value={calendar.id || ""}>
-                          {calendar.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="year">Calendar Year</Label>
+                  <Label htmlFor="name">Name</Label>
                   <Input
-                    id="year"
-                    type="number"
-                    value={calendarYear}
-                    onChange={(e) => setCalendarYear(Number(e.target.value))}
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter layout name"
                   />
                 </div>
-                <Button
-                  variant="outline"
-                  onClick={handleCopyFromExisting}
-                  className="w-full"
-                >
-                  Copy from Existing Layout
-                </Button>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Enter layout description"
+                  />
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -184,15 +207,15 @@ export function CustomizableGrid() {
           <div>
             <Card>
               <CardHeader>
-                <CardTitle>Save Configuration</CardTitle>
+                <CardTitle>Save Layout</CardTitle>
               </CardHeader>
               <CardContent>
                 <Button
                   className="w-full"
-                  onClick={handleSaveConfiguration}
-                  disabled={!calendarId || savedAreas.length === 0}
+                  onClick={handleSaveLayout}
+                  disabled={!name || savedAreas.length === 0}
                 >
-                  Save Configuration
+                  {layoutId ? "Update Layout" : "Save Layout"}
                 </Button>
               </CardContent>
             </Card>
@@ -253,7 +276,7 @@ export function CustomizableGrid() {
         </Card>
       </div>
 
-      {/* Name and Ad Type Selection Dialog */}
+      {/* Ad Type Selection Dialog */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent>
           <DialogHeader>
