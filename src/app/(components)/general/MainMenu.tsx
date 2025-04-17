@@ -30,7 +30,10 @@ import {
   Grid,
   Hammer,
   LayoutTemplate,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", urlPath: "/dashboard" },
@@ -49,21 +52,6 @@ const menuItems = [
     urlPath: "/dashboard/advertisement-types",
   },
   {
-    icon: Calendar,
-    label: "Calendar Editions",
-    urlPath: "/dashboard/calendar-editions",
-  },
-  {
-    icon: LayoutTemplate,
-    label: "Layouts",
-    urlPath: "/dashboard/layout",
-  },
-  {
-    icon: Hammer,
-    label: "Calendar Configurations",
-    urlPath: "/dashboard/calendar-configurations",
-  },
-  {
     icon: InfoIcon,
     label: "Events",
     urlPath: "/dashboard/events",
@@ -72,6 +60,7 @@ const menuItems = [
 
 const MainMenu: React.FC = () => {
   const { open } = useSidebar();
+  const [calendarExpanded, setCalendarExpanded] = React.useState(false);
 
   return (
     <Sidebar collapsible="icon">
@@ -109,6 +98,52 @@ const MainMenu: React.FC = () => {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
+          
+          <SidebarMenuItem>
+            <Collapsible
+              open={calendarExpanded}
+              onOpenChange={setCalendarExpanded}
+              className="w-full"
+            >
+              <CollapsibleTrigger asChild>
+                <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span>Calendar Editions</span>
+                  {calendarExpanded ? (
+                    <ChevronDown className="ml-auto h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="ml-auto h-4 w-4" />
+                  )}
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pl-6 space-y-1">
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <Link href="/dashboard/calendar-editions" className="mx-auto">
+                      <Calendar />
+                      <span>All Editions</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <Link href="/dashboard/layout" className="mx-auto">
+                      <LayoutTemplate />
+                      <span>Layouts</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <Link href="/dashboard/calendar-configurations" className="mx-auto">
+                      <Hammer />
+                      <span>Configurations</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </CollapsibleContent>
+            </Collapsible>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
       {open && (
