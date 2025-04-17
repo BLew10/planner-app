@@ -116,33 +116,45 @@ const MainMenu: React.FC = () => {
                   )}
                 </button>
               </CollapsibleTrigger>
-              <CollapsibleContent className="pl-6 space-y-1">
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <Link href="/dashboard/calendar-editions" className="mx-auto">
-                      <Calendar />
-                      <span>All Editions</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <Link href="/dashboard/layout" className="mx-auto">
-                      <LayoutTemplate />
-                      <span>Layouts</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <Link href="/dashboard/calendar-configurations" className="mx-auto">
-                      <Hammer />
-                      <span>Configurations</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+              <CollapsibleContent className="space-y-1">
+                <Link
+                  href="/dashboard/calendar-editions"
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+                >
+                  <span>List</span>
+                </Link>
+                <Link
+                  href="/dashboard/calendar-editions/add"
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+                >
+                  <span>Add New</span>
+                </Link>
+                <Link
+                  href="/dashboard/calendar-editions/displays"
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+                >
+                  <span>Displays</span>
+                </Link>
               </CollapsibleContent>
             </Collapsible>
+          </SidebarMenuItem>
+          
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link href="/dashboard/layout" className="mx-auto">
+                <LayoutTemplate />
+                <span>Layouts</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link href="/dashboard/calendar-configurations" className="mx-auto">
+                <Hammer />
+                <span>Configurations</span>
+              </Link>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
