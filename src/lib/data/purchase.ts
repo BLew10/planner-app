@@ -11,11 +11,11 @@ import { auth } from "@/auth";
 import { PurchaseOverviewModel } from "../models/purchaseOverview";
 import { AdvertisementPurchaseSlotModel } from "../models/advertisementPurchaseSlots";
 import { flagLatePayments } from "./paymentOverview";
-import { formatDateToString } from "../helpers/formatDateToString";
+import { formatDateToString } from "../helpers";
 
 export interface Purchase {
   id: string;
-  year: number;
+  calendarEditionYear: number;
   adPurchases: {
     id: string;
     charge: number;
@@ -36,7 +36,7 @@ export interface Purchase {
 
 export const getPurchaseByContactIdAndYear = async (
   contactId: string | undefined = "-1",
-  year: string
+  calendarEditionYear: string
 ): Promise<Partial<PurchaseOverviewModel> | null> => {
   const session = await auth();
   if (!session) {
@@ -49,7 +49,7 @@ export const getPurchaseByContactIdAndYear = async (
     where: {
       contactId: contactId,
       userId,
-      year: Number(year),
+      calendarEditionYear: Number(calendarEditionYear),
       isDeleted: false,
     },
     select: {
@@ -87,15 +87,19 @@ export interface PurchaseTableData {
   amountOwed: number;
   contactId: string;
   companyName: string;
-  year: number;
+  calendarEditionYear: number;
   calendarEditions: string;
   purchasedOn: string;
   total: number;
   amountPaid: number;
 }
+
 export const getPurchaseTableData = async (
-  year: string
-): Promise<PurchaseTableData[] | null> => {
+  calendarEditionYear: string,
+  page: number,
+  itemsPerPage: number,
+  search: string
+): Promise<{ purchases: PurchaseTableData[]; total: number } | null> => {
   const session = await auth();
   if (!session) {
     return null;
@@ -103,69 +107,87 @@ export const getPurchaseTableData = async (
 
   const userId = session.user.id;
 
-  const purchases = await prisma.purchaseOverview.findMany({
-    where: {
+  try {
+    const where = {
       userId,
-      year: Number(year),
+      calendarEditionYear: Number(calendarEditionYear),
       isDeleted: false,
-    },
-    select: {
-      id: true,
-      amountOwed: true,
-      createdAt: true,
-      year: true,
-      paymentOverviewId: true,
-      paymentOverview: {
-        select: {
-          amountPaid: true,
-          net: true,
-          scheduledPayments: {
-            where: {
-              isLate: true,
-              lateFeeWaived: false,
-              lateFeeAddedToNet: true,
-            },
-          },
-        },
-      },
-      calendarEditions: {
-        select: {
-          code: true,
-        },
-      },
-      contact: {
+      OR: [
+        { contact: { contactContactInformation: { company: { contains: search, mode: 'insensitive' as const } } } },
+        { contact: { contactContactInformation: { firstName: { contains: search, mode: 'insensitive' as const } } } },
+        { contact: { contactContactInformation: { lastName: { contains: search, mode: 'insensitive' as const } } } },
+        { id: { contains: search, mode: 'insensitive' as const } }
+      ],
+    };
+
+    const [purchases, total] = await Promise.all([
+      prisma.purchaseOverview.findMany({
+        where,
         select: {
           id: true,
-          contactContactInformation: {
+          amountOwed: true,
+          createdAt: true,
+          calendarEditionYear: true,
+          paymentOverviewId: true,
+          paymentOverview: {
             select: {
-              company: true,
+              amountPaid: true,
+              net: true,
+              scheduledPayments: {
+                where: {
+                  isLate: true,
+                  lateFeeWaived: false,
+                  lateFeeAddedToNet: true,
+                },
+              },
+            },
+          },
+          calendarEditions: {
+            select: {
+              code: true,
+            },
+          },
+          contact: {
+            select: {
+              id: true,
+              contactContactInformation: {
+                select: {
+                  company: true,
+                },
+              },
             },
           },
         },
-      },
-    },
-  });
+        skip: (page - 1) * itemsPerPage,
+        take: itemsPerPage,
+      }),
+      prisma.purchaseOverview.count({ where }),
+    ]);
 
-  const allPurchases: PurchaseTableData[] = purchases.map((purchase) => {
-    const calendarsEditions = purchase.calendarEditions
-      .map((e) => e.code)
-      .join(", ");
+    const allPurchases: PurchaseTableData[] = purchases.map((purchase) => {
+      const calendarsEditions = purchase.calendarEditions
+        .map((e) => e.code)
+        .join(", ");
 
-    return {
-      id: purchase.id,
-      paymentOverviewId: purchase.paymentOverviewId || null,
-      amountOwed: parseFloat(purchase.amountOwed.toString()) || 0,
-      contactId: purchase.contact.id,
-      companyName: purchase.contact?.contactContactInformation?.company || "",
-      year: purchase.year,
-      calendarEditions: calendarsEditions,
-      purchasedOn: formatDateToString(purchase.createdAt),
-      total: Number(purchase.paymentOverview?.net || 0),
-      amountPaid: Number(purchase.paymentOverview?.amountPaid || 0),
-    };
-  });
+      return {
+        id: purchase.id,
+        paymentOverviewId: purchase.paymentOverviewId || null,
+        amountOwed: parseFloat(purchase.amountOwed.toString()) || 0,
+        contactId: purchase.contact.id,
+        companyName: purchase.contact?.contactContactInformation?.company || "",
+        calendarEditionYear: purchase.calendarEditionYear,
+        calendarEditions: calendarsEditions,
+        purchasedOn: formatDateToString(purchase.createdAt),
+        total: Number(purchase.paymentOverview?.net || 0),
+        amountPaid: Number(purchase.paymentOverview?.amountPaid || 0),
+      };
+    });
 
-  return allPurchases;
+    return { purchases: allPurchases, total };
+  } catch (error) {
+    console.error(`Error fetching purchases: ${error}`);
+    return { purchases: [], total: 0 };
+  }
 };
 
 export interface PurchaseByMonth {
@@ -196,10 +218,10 @@ export interface PurchaseSlot {
 export const getPurchasesByMonthCalendarIdAndYear = async (
   monthIndex: number,
   calendarId: string,
-  year: string
+  calendarEditionYear: string
 ): Promise<PurchaseSlot[] | null> => {
   const session = await auth();
-  if (!session || !session.user || !calendarId || !year) {
+  if (!session || !session.user || !calendarId || !calendarEditionYear) {
     return null;
   }
 
@@ -210,7 +232,7 @@ export const getPurchasesByMonthCalendarIdAndYear = async (
       month: monthIndex,
       purchaseOverview: {
         userId,
-        year: Number(year),
+        calendarEditionYear: Number(calendarEditionYear),
       },
     },
     select: {
@@ -229,7 +251,7 @@ export const getPurchasesByMonthCalendarIdAndYear = async (
       },
       purchaseOverview: {
         select: {
-          year: true,
+          calendarEditionYear: true,
           contact: {
             select: {
               id: true,
@@ -287,7 +309,7 @@ export const getPurchasesByContactId = async (
     select: {
       id: true,
       calendarEditions: true,
-      year: true,
+      calendarEditionYear: true,
       adPurchases: {
         select: {
           id: true,
@@ -319,7 +341,7 @@ export const getPurchasesByContactId = async (
   const purchasesData: Partial<Purchase>[][] | null = purchases.map((p) => {
     return p.adPurchases.map((purchase) => ({
       id: purchase.id,
-      year: p.year,
+      calendarEditionYear: p.calendarEditionYear,
       calendarName: purchase.calendar.name,
       charge: parseFloat(purchase.charge.toString()),
       quantity: purchase.quantity,
@@ -344,13 +366,13 @@ export interface SlotInfo {
   advertisementId?: string;
 }
 
-export const getAllSlotsByYearAndCalendarId = async (
+export const getAllSlotsByCalendarEditionYearAndCalendarId = async (
   calendarId: string,
-  year: string,
+  calendarEditionYear: string,
   adTypeIds: (string | undefined)[]
 ): Promise<Record<string, SlotInfo[]> | null> => {
   const session = await auth();
-  if (!session || !calendarId || !year || !adTypeIds.length) {
+  if (!session || !calendarId || !calendarEditionYear || !adTypeIds.length) {
     return null;
   }
   const filteredAdTypeIds = adTypeIds.filter((id): id is string => !!id);
@@ -359,7 +381,7 @@ export const getAllSlotsByYearAndCalendarId = async (
       where: {
         isDeleted: false,
         calendarId,
-        year: Number(year),
+        calendarEditionYear: Number(calendarEditionYear),
         advertisementId: { in: filteredAdTypeIds },
       },
       include: {
@@ -401,7 +423,7 @@ export const getAllSlotsByYearAndCalendarId = async (
     return groupedSlots;
   } catch (error) {
     console.error(
-      `Error getting slots for calendar ${calendarId} and year ${year}: ${error}`
+      `Error getting slots for calendar ${calendarId} and calendar edition year ${calendarEditionYear}: ${error}`
     );
     return null;
   }
@@ -520,12 +542,12 @@ export const getPurchaseById = async (
   }
 };
 
-export const getTakenSlots = async (year: string, calendarId: string, contactId: string, adId: string) => {
+export const getTakenSlots = async (calendarEditionYear: string, calendarId: string, contactId: string, adId: string) => {
   try {
     const slots = await prisma.advertisementPurchaseSlot.findMany({
       where: {
         isDeleted: false,
-        year: Number(year),
+        calendarEditionYear: Number(calendarEditionYear),
         calendarId,
         advertisementId: adId,
         contactId: {
@@ -553,7 +575,7 @@ export const getTakenSlots = async (year: string, calendarId: string, contactId:
     return slots;
   } catch (error) {
     console.error(
-      `Error getting slots for calendar ${calendarId} and year ${year}: ${error}`
+      `Error getting slots for calendar ${calendarId} and calendar edition year ${calendarEditionYear}: ${error}`
     );
     return null;
   }

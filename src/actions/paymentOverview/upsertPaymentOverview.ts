@@ -35,7 +35,7 @@ export interface UpsertPaymentData {
   deliveryMethod?: string;
   cardType?: string;
   cardNumber?: string;
-  cardExpirationDate?: Date;
+  cardExpiration?: Date;
   invoiceMessage?: string;
   statementMessage?: string;
   scheduledPayments: ScheduledPayment[];
@@ -48,7 +48,7 @@ export async function upsertPaymentOverview(
     "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
   >,
   data: PaymentOverview,
-  year: string,
+  calendarEditionYear: string,
   contactId: string,
   purchaseOverviewId: string
 ) {
@@ -76,7 +76,7 @@ export async function upsertPaymentOverview(
       deliveryMethod,
       cardType,
       cardNumber,
-      cardExpirationDate,
+      cardExpiration,
       invoiceMessage,
       statementMessage,
       scheduledPayments,
@@ -115,23 +115,19 @@ export async function upsertPaymentOverview(
           lateFee,
           lateFeePercent,
           deliveryMethod,
-          cardType,
-          cardNumber,
-          cardExpirationDate,
           invoiceMessage,
           statementMessage,
           splitPaymentsEqually,
         },
       });
     } else {
-      // Create new payment
-      const invoiceNumber = await generateInvoiceNumber(prisma, year);
+      const invoiceNumber = await generateInvoiceNumber(prisma, calendarEditionYear);
       paymentOverview = await prisma.paymentOverview.create({
         data: {
           userId: session.user.id,
           invoiceNumber,
           contactId,
-          year: Number(year),
+          calendarEditionYear: Number(calendarEditionYear),
           totalSale,
           net: net || 0,
           additionalDiscount1,
@@ -148,9 +144,6 @@ export async function upsertPaymentOverview(
           lateFee,
           lateFeePercent,
           deliveryMethod,
-          cardType,
-          cardNumber,
-          cardExpirationDate,
           invoiceMessage,
           statementMessage,
           splitPaymentsEqually,
@@ -174,6 +167,9 @@ export async function upsertPaymentOverview(
             amount: amountPrepaid,
             checkNumber,
             paymentMethod,
+            cardType,
+            cardNumber,
+            cardExpiration,
           },
         });
       } else {
@@ -185,6 +181,9 @@ export async function upsertPaymentOverview(
             amount: amountPrepaid,
             checkNumber,
             paymentMethod,
+            cardType,
+            cardNumber,
+            cardExpiration,
             purchaseId: purchaseOverviewId,
             wasPrepaid: true,
             paymentDate: formatDateToString(new Date()),
@@ -197,18 +196,31 @@ export async function upsertPaymentOverview(
           paymentOverviewId: paymentOverview.id,
           wasPrepaid: true,
         },
-      })
+      });
     }
     for (const scheduledPayment of scheduledPayments) {
-      const { dueDate, month, year, amount } = scheduledPayment;
+      const { dueDate, month, amount } = scheduledPayment;
+
+      const dueDateString = formatDateToString(dueDate);
+      const dueDateObj = new Date(
+        Date.UTC(
+          dueDate.getFullYear(),
+          dueDate.getMonth(),
+          dueDate.getDate(),
+          12,
+          0,
+          0
+        )
+      );
       await prisma.scheduledPayment.create({
         data: {
           paymentOverviewId: paymentOverview.id,
-          dueDate: formatDateToString(dueDate),
+          dueDate: dueDateString, // Keep the string version for backward compatibility
+          dueDateTimeStamp: dueDateObj, // Store the proper Date object (YYYY-MM-DD)
           month: month,
-          year: year,
+          year: dueDate.getFullYear(),
           amount: amount || 0,
-          lateFee: lateFeeFinal
+          lateFee: lateFeeFinal,
         },
       });
     }
@@ -219,12 +231,12 @@ export async function upsertPaymentOverview(
   }
 }
 
-const generateInvoiceNumber = async (prisma: any, year: string) => {
-  const lastTwoDigits = year.slice(-2);
+const generateInvoiceNumber = async (prisma: any, calendarEditionYear : string) => {
+  const lastTwoDigits = calendarEditionYear.slice(-2);
   let count =
     (await prisma.paymentOverview.count({
       where: {
-        year: Number(year),
+        calendarEditionYear: Number(calendarEditionYear),
       },
     })) + 1;
 

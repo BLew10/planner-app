@@ -8,21 +8,23 @@ export interface AddressBookFormData {
   displayLevel: string;
 }
 
-const upsertAddressBook = async (formData: AddressBookFormData, id?: string | null) => {
+const upsertAddressBook = async (
+  formData: AddressBookFormData,
+  id?: string | null
+) => {
   try {
     const session = await auth();
-   
 
     const userId = session?.user?.id;
     const data = {
       ...formData,
       userId,
-    }
+    };
 
-    if (!data) return false
+    if (!data) return false;
     const addressBook = await prisma.addressBook.upsert({
       where: {
-        id: id || "-1", 
+        id: id || "-1",
       },
       update: data,
       create: data,

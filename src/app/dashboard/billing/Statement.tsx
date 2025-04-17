@@ -15,20 +15,22 @@ interface NextPayment {
   amount: number;
 }
 
-const formatDateToString = (dateInput: string | Date | null | undefined): string => {
+const formatDateToString = (
+  dateInput: string | Date | null | undefined
+): string => {
   if (!dateInput) return "";
-  
+
   try {
     const date = new Date(dateInput);
     if (isNaN(date.getTime())) return "";
-    
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     const year = date.getFullYear();
-    
+
     return `${month}-${day}-${year}`;
   } catch (error) {
-    console.error('Error formatting date:', error);
+    console.error("Error formatting date:", error);
     return "";
   }
 };
@@ -56,7 +58,7 @@ const generateStatementTable = (
   console.log(paymentOverview?.purchase?.createdAt);
   const firstRow = [
     formatDateToString(paymentOverview?.purchase?.createdAt as Date),
-    `${paymentOverview?.year} TOWN PLANNER`,
+    `${paymentOverview?.calendarEditionYear} Calendar`,
     `$${balance.toFixed(2)}`,
     `$${balance.toFixed(2)}`,
   ];
@@ -199,9 +201,14 @@ export const generateStatementPdf = async (
   doc.text(`Joyce Nazabal`, rightAlignedX, 45, {
     align: "right",
   });
-  doc.text(`${paymentOverview?.year} TOWN PLANNER`, rightAlignedX, 50, {
-    align: "right",
-  });
+  doc.text(
+    `${paymentOverview?.calendarEditionYear} Calendar`,
+    rightAlignedX,
+    50,
+    {
+      align: "right",
+    }
+  );
 
   doc.setFont("Times", "normal", "400");
   doc.text(
@@ -393,7 +400,7 @@ export const generateStatementPdf = async (
   )} will be charged for payments not received by the ${
     paymentOverview?.paymentOnLastDay ? "last day" : dueDay
   } of each month.`;
-  let footerText = `Thank you for Sponsoring your Town Planner Community Calendar. Please be aware payments are to be received no later than the ${
+  let footerText = `Thank you for Sponsoring your Community Calendar. Please be aware payments are to be received no later than the ${
     paymentOverview?.paymentOnLastDay ? " last day" : dueDay
   } of each month.${
     lateFee ? lateFeeMessage : ""

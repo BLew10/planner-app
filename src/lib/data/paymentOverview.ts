@@ -3,15 +3,18 @@
 import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
 import { PaymentOverviewModel } from "../models/paymentOverview";
-import { isLate } from "../helpers/isLate";
+import { isLate } from "../helpers";
 
 export const getPaymentOverviewById = async (
   id: string
 ): Promise<Partial<PaymentOverviewModel> | null> => {
   try {
+    const session = await auth();
+    const userId = session?.user?.id;
     const payment = await prisma.paymentOverview.findFirst({
       where: {
         id,
+        userId,
       },
       include: {
         purchase: true,
@@ -25,23 +28,99 @@ export const getPaymentOverviewById = async (
   }
 };
 
-export const getOwedPayments = async (year: string) => {
+export const getOwedPayments = async (
+  calendarYear: string = "all",
+  searchQuery: string = "",
+  page: number = 1,
+  pageSize: number | null = null
+): Promise<{
+  data: Partial<PaymentOverviewModel>[] | null;
+  totalItems: number;
+}> => {
   const session = await auth();
-  const userId = session?.user?.id;
-
-  if (!userId) {
-    console.error("User is not authenticated.");
-    return null;
+  if (!session) {
+    return { data: null, totalItems: 0 };
   }
+
+  const userId = session.user.id;
 
   try {
     await flagLatePayments(userId);
-    const payments = await prisma.paymentOverview.findMany({
-      where: {
-        userId,
-        year: Number(year),
-        isPaid: false,
+    
+    // Base query conditions
+    const whereConditions: any = {
+      userId,
+      isPaid: false,
+      purchase: {
+        isDeleted: false,
       },
+    };
+
+    // Add calendarYear filter if not "all"
+    if (calendarYear !== "all") {
+      whereConditions.purchase.calendarEditionYear = Number(calendarYear);
+    }
+
+    // Add search query condition if provided
+    if (searchQuery) {
+      whereConditions.OR = [
+        {
+          contact: {
+            contactContactInformation: {
+              firstName: {
+                contains: searchQuery,
+                mode: "insensitive",
+              },
+            },
+          },
+        },
+        {
+          contact: {
+            contactContactInformation: {
+              lastName: {
+                contains: searchQuery,
+                mode: "insensitive",
+              },
+            },
+          },
+        },
+        {
+          contact: {
+            contactContactInformation: {
+              company: {
+                contains: searchQuery,
+                mode: "insensitive",
+              },
+            },
+          },
+        },
+        {
+          contact: {
+            contactTelecomInformation: {
+              email: {
+                contains: searchQuery,
+                mode: "insensitive",
+              },
+            },
+          },
+        },
+        {
+          invoiceNumber: {
+            contains: searchQuery,
+            mode: "insensitive",
+          },
+        },
+      ];
+    }
+
+    // First get the total count for pagination
+    const totalItems = await prisma.paymentOverview.count({
+      where: whereConditions,
+    });
+
+    // Create base query options
+    const queryOptions: any = {
+      where: whereConditions,
       include: {
         contact: {
           include: {
@@ -57,6 +136,7 @@ export const getOwedPayments = async (year: string) => {
         payments: true,
         purchase: {
           include: {
+            calendarEditions: true,
             adPurchases: {
               include: {
                 calendar: true,
@@ -75,15 +155,29 @@ export const getOwedPayments = async (year: string) => {
           },
         },
         {
-          year: "asc", // Assuming the `PaymentOverview` model has a `year` field
+          purchase: {
+            calendarEditionYear: "asc",
+          },
         },
       ],
-    });
+    };
 
-    return payments;
+    // Add pagination parameters only if pageSize is provided
+    if (pageSize !== null) {
+      queryOptions.skip = (page - 1) * pageSize;
+      queryOptions.take = pageSize;
+    }
+
+    // Then get the data (paginated or all)
+    const payments = await prisma.paymentOverview.findMany(queryOptions);
+
+    return {
+      data: payments,
+      totalItems,
+    };
   } catch (e) {
     console.error("Error getting owed payments", e);
-    return null;
+    return { data: null, totalItems: 0 };
   }
 };
 
@@ -95,7 +189,7 @@ export const flagLatePayments = async (userId: string) => {
   });
   if (user) {
     const alreadyFlaggedToday = billingUpdatedAlready(user?.billingUpdated);
-    if (true) {
+    if (!alreadyFlaggedToday) {
       await prisma.user.update({
         where: {
           id: userId,
@@ -124,7 +218,9 @@ export const flagLatePayments = async (userId: string) => {
             },
             data: {
               net: {
-                increment: payment.lateFeeWaived ? 0 : Number(payment.lateFee || 0),
+                increment: payment.lateFeeWaived
+                  ? 0
+                  : Number(payment.lateFee || 0),
               },
             },
           });
@@ -149,4 +245,132 @@ const billingUpdatedAlready = (date: Date): boolean => {
     date.getMonth() === today.getMonth() &&
     date.getFullYear() === today.getFullYear()
   );
+};
+
+export const getThisMonthPayments = async (
+  calendarYear: string = "all",
+  searchQuery: string = "",
+  page: number = 1,
+  pageSize: number = 10
+): Promise<{
+  data: Partial<PaymentOverviewModel>[] | null;
+  totalItems: number;
+}> => {
+  const session = await auth();
+  if (!session) {
+    return { data: null, totalItems: 0 };
+  }
+
+  const userId = session.user.id;
+
+  // Get today's date as a proper Date object
+  const today = new Date();
+
+  // Base query conditions
+  const whereConditions: any = {
+    userId,
+    purchase: {
+      isDeleted: false,
+    },
+    scheduledPayments: {
+      some: {
+        isPaid: false,
+        // Use the correct field name with capitalized 'T'
+        // and pass a proper Date object
+        dueDateTimeStamp: {
+          lte: today,
+        },
+      },
+    },
+  };
+
+  // Add calendarYear filter if not "all"
+  if (calendarYear !== "all") {
+    whereConditions.purchase.calendarEditionYear = Number(calendarYear);
+  }
+
+  // Add search query condition if provided
+  if (searchQuery) {
+    whereConditions.contact = {
+      OR: [
+        {
+          contactContactInformation: {
+            firstName: {
+              contains: searchQuery,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          contactContactInformation: {
+            lastName: {
+              contains: searchQuery,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          contactContactInformation: {
+            company: {
+              contains: searchQuery,
+              mode: "insensitive",
+            },
+          },
+        },
+      ],
+    };
+  }
+
+  // First get the total count for pagination
+  const totalItems = await prisma.paymentOverview.count({
+    where: whereConditions,
+  });
+
+  // Then get the paginated data
+  const payments = await prisma.paymentOverview.findMany({
+    where: whereConditions,
+    include: {
+      contact: {
+        include: {
+          contactContactInformation: true,
+          contactTelecomInformation: true,
+        },
+      },
+      scheduledPayments: {
+        where: {
+          isPaid: false,
+          // Use the correct field name with capitalized 'T'
+          dueDateTimeStamp: {
+            lte: today,
+          },
+        },
+      },
+      purchase: {
+        include: {
+          calendarEditions: true,
+        },
+      },
+    },
+    orderBy: [
+      {
+        contact: {
+          contactContactInformation: {
+            company: "asc",
+          },
+        },
+      },
+      {
+        purchase: {
+          calendarEditionYear: "desc",
+        },
+      },
+    ],
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+  });
+
+  return {
+    data: payments,
+    totalItems,
+  };
 };

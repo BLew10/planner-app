@@ -19,7 +19,7 @@ const PaymentsPage = async ({ params: { id } }: { params: { id: string }}) => {
   }
 
   return (
-    <section className={styles.container}>
+    <section className="container mx-auto px-4 w-full mt-10">
       <Suspense fallback={<LoadingSpinner />}>
       <PaymentForm payment={payment} />
       </Suspense>

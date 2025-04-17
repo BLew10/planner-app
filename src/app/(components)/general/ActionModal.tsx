@@ -1,86 +1,48 @@
-import { Dialog, Transition } from "@headlessui/react";
-import { Fragment } from "react";
-import styles from "./ActionModal.module.scss";
+"use client"
+
+import React from "react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 
 interface ActionModalProps {
-  isOpen: boolean;
-  closeModal: () => void;
-  onAction: () => void;
-  title?: string;
-  text?: string;
-  actionText?: string;
+  isOpen: boolean
+  closeModal: () => void
+  onAction: () => void
+  title?: string
+  text?: string
+  actionText?: string
 }
 
 export default function ActionModal({
   isOpen,
   closeModal,
-  title,
-  text,
+  title = "Title" ,
+  text = "Lorem Ipsum",
   onAction,
   actionText = "Confirm",
 }: ActionModalProps) {
   return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-10" onClose={closeModal}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black/25" />
-        </Transition.Child>
-
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <Dialog.Panel
-                className={`w-full max-w-md transform overflow-hidden rounded-2xl p-6 text-left align-middle shadow-xl transition-all ${styles.modal}`}
-              >
-                {title && (
-                  <Dialog.Title
-                    as="h3"
-                    className={`text-lg font-medium leading-6 text-gray-900 ${styles.title}`}
-                  >
-                    {title}
-                  </Dialog.Title>
-                )}
-                <div className="mt-2">
-                  <p className={`${styles.text}`}>{text}</p>
-                </div>
-
-                <div className={`${styles.actionWrapper} mt-4`}>
-                <button
-                    type="button"
-                    className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                    onClick={onAction}
-                  >
-                    {actionText}
-                  </button>
-                  <button
-                    type="button"
-                    className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                    onClick={closeModal}
-                  >
-                    Close
-                  </button>
-                </div>
-              </Dialog.Panel>
-            </Transition.Child>
-          </div>
-        </div>
-      </Dialog>
-    </Transition>
-  );
+    <Dialog open={isOpen} onOpenChange={closeModal}>
+      <DialogContent className="sm:max-w-[425px]">
+        {title && (
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+          </DialogHeader>
+        )}
+        {text && <DialogDescription>{text}</DialogDescription>}
+        <DialogFooter className="sm:justify-start">
+          <Button type="submit" onClick={onAction}>
+            {actionText}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
 }

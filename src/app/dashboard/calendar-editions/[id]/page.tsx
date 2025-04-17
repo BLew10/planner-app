@@ -1,5 +1,4 @@
-import CalendarForm from "../CalendarForm";
-import styles from "./page.module.scss";
+import CalendarForm from "./CalendarForm";
 
 const CalendarEditionForm = async ({
   params,
@@ -13,10 +12,8 @@ const CalendarEditionForm = async ({
   }
 
   return (
-    <section className={styles.container}>
-      <CalendarForm
-      id={id}
-      />
+    <section className="container mx-auto px-4 w-full mt-10">
+      <CalendarForm id={id} />
     </section>
   );
 };

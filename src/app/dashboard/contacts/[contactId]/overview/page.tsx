@@ -6,12 +6,8 @@ const ContactOverviewPage = async ({
 }: {
   params: { contactId: string };
 }) => {
-  let  { contactId } = params;
-  return (
-    <section className={styles.container}>
-      <ContactOverview contactId={contactId} />
-    </section>
-  );
+  let { contactId } = params;
+  return <ContactOverview contactId={contactId} />;
 };
 
 export default ContactOverviewPage;

@@ -1,7 +1,0 @@
-@use "../../../styles/mixins.scss" as *;
-
-.deleteAction {
-  @include delete-link;
-  padding: 0.25rem;
-  align-self: self-start;
-}

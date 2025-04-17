@@ -1,164 +1,97 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
-import styles from "./page.module.scss";
-import Table from "@/app/(components)/general/Table";
-import { getPaymentsByYear } from "@/lib/data/payment";
-import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
-import deletePayment from "@/actions/payment/deletePayment";
+import { usePayments } from "@/hooks/payments/usePayments";
+import { PaymentsTable } from "./PaymentsTable";
 import PaymentScheduleModal from "../billing/PaymentScheduleModal";
-import DeleteButton from "@/app/(components)/general/DeleteButton";
-import { PaymentModel } from "@/lib/models/payment";
 import { ALL_YEARS } from "@/lib/constants";
-import { toast, ToastContainer } from "react-toastify";
-const columns = [
-  {
-    name: "Company Name",
-    size: "default",
-  },
-  {
-    name: "Amount",
-    size: "default",
-  },
-  {
-    name: "Payment Date",
-    size: "default",
-  },
-  {
-    name: "Payment Method",
-    size: "default",
-  },
-  {
-    name: "Check Number",
-    size: "default",
-  },
-  {
-    name: "Actions",
-    size: "default",
-  },
-];
 
-const nextYear = String(new Date().getFullYear() + 1);
+const nextYear = new Date().getFullYear() + 1;
+const defaultYear =
+  ALL_YEARS.find((year) => year.value === String(nextYear))?.value ||
+  ALL_YEARS[0].value;
+
+const ITEMS_PER_PAGE = 10;
+
 const PaymentsPage = () => {
   const [showPaymentScheduleModal, setShowPaymentScheduleModal] =
     useState(false);
-  const [payments, setPayments] = useState<Partial<PaymentModel>[] | null>([]);
   const [paymentOverview, setPaymentOverview] = useState({
     id: "",
     companyName: "",
   });
-  const [year, setYear] = useState(nextYear);
   const searchParams = useSearchParams();
-  const successNotify = () => toast.success("Successfully Deleted");
-  const errorNotify = () => toast.error("Something went wrong. Deletion failed");
 
-  useEffect(() => {
-    const yearParam = searchParams.get("year");
-    if (yearParam) {
-      setYear(yearParam);
-    }
-  }, []);
+  // Initialize the year from URL or default
+  const initialYear = searchParams.get("year") || defaultYear;
 
-  useEffect(() => {
-    const fetchPayments = async () => {
-      const payments = await getPaymentsByYear(year);
-      setPayments(payments);
-    };
-    fetchPayments();
-  }, [year]);
+  const {
+    payments,
+    isLoading,
+    selectedRows,
+    setSelectedRows,
+    totalItems,
+    page,
+    setPage,
+    setSearch,
+    year,
+    setYear,
+    handleDelete,
+    handleDeleteSelected,
+  } = usePayments({
+    itemsPerPage: ITEMS_PER_PAGE,
+    initialYear,
+  });
 
-  const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setYear(e.target.value);
+  const handleSearch = (query: string) => {
+    setSearch(query);
+    setPage(1); // Reset to first page when search changes
+  };
+
+  const handleYearChange = (value: string) => {
+    setYear(value);
+    setPage(1); // Reset to first page when filter changes
   };
 
   const onPaymentClick = (paymentOverviewId: string, companyName: string) => {
     setPaymentOverview({
       id: paymentOverviewId,
-      companyName: companyName,
+      companyName,
     });
     setShowPaymentScheduleModal(true);
   };
 
-  const onDeletePayment = async (paymentId: string) => {
-    const deleted = await deletePayment(paymentId);
-    const newPayments = payments?.filter((p) => p.id !== paymentId);
-    setPayments(newPayments || null);
-    if (deleted) {
-      successNotify();
-    } else {
-      errorNotify();
-    }
-  };
-
-  const data = payments?.map((p) => {
-    return [
-      <button
-        className={styles.companyName}
-        key={p.id}
-        onClick={() =>
-          onPaymentClick(
-            p.paymentOverviewId || "",
-            p.contact?.contactContactInformation?.company || ""
-          )
-        }
-        dataset-search={`${p.contact?.contactContactInformation?.company}`}
-      >
-        {p.contact?.contactContactInformation?.company}
-      </button>,
-      `$${Number(p.amount).toFixed(2)}`,
-      p.paymentDate,
-      p.paymentMethod,
-      p.checkNumber,
-      <div className={styles.modWrapper} key={p.id}>
-        {!p.wasPrepaid ? (
-          <>
-            <Link
-              href={`/dashboard/payments/${p.id}?purchaseId=${p.purchaseId}&paymentOverviewId=${p.paymentOverviewId}`}
-              className={styles.paymentAction}
-            >
-              Edit
-            </Link>
-            <DeleteButton
-              title="Delete Purchase"
-              text={`Are you sure you want to delete ${p.contact?.contactContactInformation?.company}'s purchase for ${p.paymentOverview?.year}?`}
-              onDelete={() => {
-                onDeletePayment(p.id || "");
-              }}
-            />
-          </>
-        ) : (
-          <p className={styles.prepayment}>PREPAYMENT - CAN&apos;T EDIT HERE</p>
-        )}
-      </div>,
-    ];
-  });
-
   return (
-      <>
+    <>
+      {paymentOverview.id && (
         <PaymentScheduleModal
           isOpen={showPaymentScheduleModal}
           closeModal={() => setShowPaymentScheduleModal(false)}
           title={`Payment Details for ${paymentOverview.companyName} in ${year}`}
           paymentId={paymentOverview.id}
         />
+      )}
 
-        <AnimateWrapper>
-          <section className={styles.container}>
-            <ToastContainer />
-            <Table
-              tableName="Payments"
-              columns={columns}
-              data={data}
-              addPath={"/dashboard/purchases"}
-              filterOptions={ALL_YEARS}
-              filterValue={year}
-              handleFilterChange={handleYearChange}
-            />
-          </section>
-        </AnimateWrapper>
-      </>
+      <section className="container mx-auto px-4 w-full mt-10">
+        <PaymentsTable
+          payments={payments}
+          isLoading={isLoading}
+          selectedRows={selectedRows}
+          onSelectedRowsChange={setSelectedRows}
+          onDelete={handleDelete}
+          onDeleteSelected={handleDeleteSelected}
+          onSearch={handleSearch}
+          onPageChange={setPage}
+          totalItems={totalItems}
+          currentPage={page}
+          year={year}
+          onYearChange={handleYearChange}
+          filterOptions={ALL_YEARS}
+          onPaymentClick={onPaymentClick}
+        />
+      </section>
+    </>
   );
 };
 

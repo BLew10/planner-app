@@ -2,8 +2,6 @@
 
 import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 const deleteAdvertisementType = async (advertisementId: string) => {
   try {
@@ -12,7 +10,7 @@ const deleteAdvertisementType = async (advertisementId: string) => {
     const advertisement = await prisma.advertisement.findFirst({
       where: {
         id: advertisementId,
-        userId,
+        userId
       },
       select: {
         id: true,
@@ -25,6 +23,7 @@ const deleteAdvertisementType = async (advertisementId: string) => {
       await prisma.advertisement.update({
         where: {
           id: advertisementId,
+          userId,
         },
         data: {
           isDeleted: true,

@@ -9,8 +9,7 @@ import upsertAddressBook, {
   AddressBookFormData,
 } from "@/actions/address-book/upsertAddressBook";
 import AnimateWrapper from "@/app/(components)/general/AnimateWrapper";
-import { toast, ToastContainer } from "react-toastify";
-
+import { useToast } from "@/hooks/shadcn/use-toast";
 interface AddressBookFormProps {
   addressBookName?: string | null;
   displayLevel?: string | null;
@@ -22,12 +21,16 @@ const AddressBookForm = ({
   displayLevel,
   id,
 }: AddressBookFormProps) => {
+  const { toast } = useToast();
   const [bookName, setBookName] = useState(addressBookName);
   const [requestPending, setRequestPending] = useState(false);
   const [level, setLevel] = useState(displayLevel);
   const router = useRouter();
   const notifyFailed = () =>
-    toast.error("Something went wrong. Please try again.");
+      toast({
+        title: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
 
   const handleBookNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBookName(e.target.value);
@@ -56,7 +59,6 @@ const AddressBookForm = ({
 
   return (
     <AnimateWrapper>
-      <ToastContainer />
       <form onSubmit={handleSubmit} className={styles.form}>
         <h2 className={styles.heading}>Create New Address Book</h2>
         <p className={styles.instructions}>

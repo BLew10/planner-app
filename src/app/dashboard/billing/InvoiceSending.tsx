@@ -1,12 +1,11 @@
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import styles from "./InvoiceSending.module.scss";
 import InvoiceTotalStatement from "./InvoiceTotalStatement";
 import { PaymentOverviewModel } from "@/lib/models/paymentOverview";
 import { generateInvoiceTotalStatementPdf } from "./InvoiceTotalStatement";
 import { generateStatementPdf, getNextPayment } from "./Statement";
 import Statement from "./Statement";
-import { toast } from "react-toastify";
+import { useToast } from "@/hooks/shadcn/use-toast";
 
 interface InvoiceSendingProps {
   paymentOverviews: Partial<PaymentOverviewModel>[] | null;
@@ -21,9 +20,9 @@ export default function InvoiceSending({
   invoiceType,
   onSendInvoices,
 }: InvoiceSendingProps) {
+  console.log(paymentOverviews);
   const [checkedIds, setCheckedIds] = useState<string[]>([]);
-  const router = useRouter();
-
+  const { toast } = useToast();
   const handleSendInvoice = (event: React.ChangeEvent<HTMLInputElement>) => {
     const paymentId = event.target.value;
 
@@ -37,7 +36,10 @@ export default function InvoiceSending({
 
   const sendInvoices = async () => {
     if (checkedIds.length === 0) {
-      toast.error("No payments selected");
+      toast({
+        title: "No payments selected",
+        variant: "destructive",
+      });
       return;
     }
     for (const id of checkedIds) {
@@ -49,7 +51,10 @@ export default function InvoiceSending({
         await generateAndSendPdf(paymentOverview, customerEmail);
       }
     }
-    toast.success("Invoices sent");
+    toast({
+      title: "Invoices sent",
+      variant: "default",
+    });
     onSendInvoices();
   };
 
@@ -76,11 +81,11 @@ export default function InvoiceSending({
           body: JSON.stringify({
             attachment: {
               ContentType: "application/pdf",
-              Filename: `Invoice-${paymentOverview.year}.pdf`,
+              Filename: `Invoice-${paymentOverview.calendarEditionYear}.pdf`,
               Base64Content: base64data?.toString().split("base64,")[1], // Remove the prefix to get pure Base64 data
             },
             to: customerEmail,
-            subject: `Invoice for Calendar ${paymentOverview.year}`,
+            subject: `Invoice for Calendar ${paymentOverview.calendarEditionYear}`,
             text: `Next Payment: ${nextPayment.dueDate} ${nextPayment.amount}`,
           }),
           headers: {
@@ -89,7 +94,10 @@ export default function InvoiceSending({
         });
       };
     } catch (error) {
-      toast.error("Error sending invoices");
+      toast({
+        title: "Error sending invoices",
+        variant: "destructive",
+      });
     }
   };
   return (
@@ -110,7 +118,7 @@ export default function InvoiceSending({
             {paymentOverview.contact?.contactContactInformation?.firstName}{" "}
             {paymentOverview.contact?.contactContactInformation?.lastName}
           </p>
-          <p>{paymentOverview.year}</p>
+          <p>{paymentOverview.calendarEditionYear}</p>
 
           {invoiceType === "invoiceTotalSale" && (
             <InvoiceTotalStatement

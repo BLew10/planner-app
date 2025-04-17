@@ -235,7 +235,6 @@ const countryList = [
   "United Arab Emirates (the)",
   "United Kingdom of Great Britain and Northern Ireland (the)",
   "United States Minor Outlying Islands (the)",
-  "United States",
   "Uruguay",
   "Uzbekistan",
   "Vanuatu",
@@ -621,6 +620,12 @@ export const MONTHS = [
   "November",
   "December",
 ];
+
+const nextYear = new Date().getFullYear() + 1;
+
+export const DEFAULT_YEAR =
+  ALL_YEARS.find((year) => year.value === String(nextYear))?.value ||
+  ALL_YEARS[0].value;
 
 export type InvoiceType = "invoiceTotalSale" | "statements";
 

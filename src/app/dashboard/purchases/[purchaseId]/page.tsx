@@ -1,10 +1,9 @@
 import React, { Suspense } from "react";
-import LoadingSpinner from "@/app/(components)/general/LoadingSpinner";
 import PurchaseForm from "./PurchaseForm";
-import styles from "./page.module.scss";
 import { getAllAdvertisementTypes } from "@/lib/data/advertisementType";
 import { getAllCalendars } from "@/lib/data/calendarEdition";
 import { redirect } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const PurchaseOverviewPage = async ({
   params,
@@ -14,9 +13,13 @@ const PurchaseOverviewPage = async ({
   const { purchaseId } = params;
 
   const advertisementTypes = await getAllAdvertisementTypes();
-  const calendars = await getAllCalendars();
+  const { data: calendars } = await getAllCalendars();
 
-  if (!advertisementTypes || advertisementTypes.length === 0) {
+  if (
+    !advertisementTypes ||
+    !advertisementTypes.data ||
+    advertisementTypes.data.length === 0
+  ) {
     redirect("/dashboard/advertisement-types");
   }
 
@@ -25,16 +28,28 @@ const PurchaseOverviewPage = async ({
   }
 
   return (
-    <Suspense fallback={<LoadingSpinner />}>
-      <section className={styles.container}>
+    <Suspense fallback={<PurchaseFormSkeleton />}>
+      <div className="container py-6 space-y-6">
         <PurchaseForm
-          advertisementTypes={advertisementTypes}
+          advertisementTypes={advertisementTypes.data}
           purchaseId={purchaseId}
           calendars={calendars}
         />
-      </section>
+      </div>
     </Suspense>
   );
 };
+
+// Skeleton loader using shadcn components
+function PurchaseFormSkeleton() {
+  return (
+    <div className="container py-6 space-y-6">
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-[200px]" />
+        <Skeleton className="h-[400px] w-full" />
+      </div>
+    </div>
+  );
+}
 
 export default PurchaseOverviewPage;

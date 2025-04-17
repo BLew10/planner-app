@@ -1,27 +1,13 @@
-# Testing
-
-## Payments
-
-- If Joyce has any failed payments, that needs to be handled within stripe. 
-- The system should just be aware when payments are made and update. If the subscription is cancelled, it should know as well.
-
-### Payment Test Cases for Webhooks 
-- Creating a payment
-    - Verify a subscription schedule is created
-    - Verify the first invoice is created
-    - Verify the that when a new invoice is sent, the system picks up on it
-    - 
+## TODO
+- Check Data tables being used for page reset on changes
+- Review Billing Logic for queries, specifically the cash flow report
+- Update Address book form UI
+- Update the UI for all data tables
+- update the UI for the purchase flow
+- update dashboard
 
 
-
-### Sync with Stripe
-- When Joyce clicks 'Sync', it should grab all subscriptions, check the status
-    - if id does not exists, move status to `Cancelled`
-- My system should just interface with status, joyce will need to check stripe be see payment updates and issues. 
-
-
-## Setup
-- Have joyce setup a vercel account
-
-## CHANGES
-- light mode?
+- update town planner -> calendar
+- look into the invoice total sale editions/descriptions 
+- look into the statement not updating with payments
+- cash flow report: should be by caledar edition year

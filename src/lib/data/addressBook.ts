@@ -34,31 +34,59 @@ export const getAddressBookById = async (
 };
 
 /**
- * Grab all address book by the user's id
- * @param id The id of the address book to retrieve
- * @returns id, name, and displayLevel of the address book
+ * Grab all address books by the user's id with pagination and search
+ * @returns address books with pagination data
  */
-export const getAllAddressBooks = async (): Promise<
-  Partial<AddressBook>[] | null
-> => {
+export const getAllAddressBooks = async (
+  page: number | null = null,
+  pageSize: number | null = null,
+  search: string | null = null
+): Promise<{
+  data: Partial<AddressBook>[] | null;
+  totalItems: number;
+}> => {
   const session = await auth();
   const userId = session?.user?.id;
 
   try {
-    const addressBooks = await prisma.addressBook.findMany({
-      where: {
-        userId,
-      },
-      select: {
-        id: true,
-        name: true,
-        displayLevel: true,
-      },
-    });
+    const skip = page && pageSize ? (page - 1) * pageSize : undefined;
+    const where = {
+      userId,
+      isDeleted: false,
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' as const } },
+        ],
+      }),
+    };
 
-    return addressBooks;
-  } catch {
-    return null;
+    const [addressBooks, total] = await Promise.all([
+      prisma.addressBook.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          displayLevel: true,
+        },
+        ...(skip !== undefined && { skip }),
+        ...(pageSize && { take: pageSize }),
+        orderBy: {
+          name: 'asc'
+        }
+      }),
+      prisma.addressBook.count({ where })
+    ]);
+
+    return {
+      data: addressBooks || [],
+      totalItems: total
+    };
+  } catch (error) {
+    console.error('Error fetching address books:', error);
+    return {
+      data: null,
+      totalItems: 0
+    };
   }
 };
 
