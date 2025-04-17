@@ -9,23 +9,22 @@ datasource db {
 }
 
 model User {
-  id                String              @id @default(uuid())
-  email             String              @unique
-  firstName         String?
-  lastName          String?
-  username          String              @unique
-  password          String
-  billingUpdated    DateTime            @default(now())
-  addressBooks      AddressBook[]
-  advertisements    Advertisement[]
-  calendarEditions  CalendarEdition[]
-  contacts          Contact[]
-  Payment           Payment[]
-  paymentOverviews  PaymentOverview[]
-  purchases         PurchaseOverview[]
-  layouts           Layout[]
-  calendarLayouts   CalendarLayout[]
-  GridConfiguration GridConfiguration[]
+  id               String             @id @default(uuid())
+  email            String             @unique
+  firstName        String?
+  lastName         String?
+  username         String             @unique
+  password         String
+  billingUpdated   DateTime           @default(now())
+  addressBooks     AddressBook[]
+  advertisements   Advertisement[]
+  calendarEditions CalendarEdition[]
+  contacts         Contact[]
+  Payment          Payment[]
+  paymentOverviews PaymentOverview[]
+  purchases        PurchaseOverview[]
+  layouts          Layout[]
+  calendarLayouts  CalendarLayout[]
 }
 
 model Contact {
@@ -96,8 +95,8 @@ model CalendarEdition {
   user                      User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
   events                    Event[]                     @relation("CalendarEditionToEvent")
   purchases                 PurchaseOverview[]          @relation("CalendarEditionToPurchaseOverview")
-  GridConfiguration         GridConfiguration[]
   CalendarLayout            CalendarLayout[]
+  layouts                   CalendarEditionLayout[]
 }
 
 model Advertisement {
@@ -110,7 +109,6 @@ model Advertisement {
   User                      User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
   purchases                 AdvertisementPurchase[]
   AdvertisementPurchaseSlot AdvertisementPurchaseSlot[]
-  GridAssignment            GridAssignment[]
   AdPlacement               AdPlacement[]
 }
 
@@ -293,18 +291,17 @@ model Event {
 }
 
 model Layout {
-  id                String              @id @default(uuid())
-  name              String
-  description       String?
-  isDeleted         Boolean             @default(false)
-  userId            String
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  adPlacements      AdPlacement[]
-  calendarLayouts   CalendarLayout[]
-  GridConfiguration GridConfiguration[]
-  GridAssignment    GridAssignment[]
+  id               String                  @id @default(uuid())
+  name             String
+  description      String?
+  isDeleted        Boolean                 @default(false)
+  userId           String
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  user             User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  adPlacements     AdPlacement[]
+  calendarLayouts  CalendarLayout[]
+  calendarEditions CalendarEditionLayout[]
 }
 
 model CalendarLayout {
@@ -334,25 +331,15 @@ model AdPlacement {
   advertisement   Advertisement @relation(fields: [advertisementId], references: [id], onDelete: Cascade)
 }
 
-model GridConfiguration {
-  id           String          @id @default(uuid())
-  layoutId     String
-  calendarId   String
-  calendarYear Int
-  isDeleted    Boolean         @default(false)
-  userId       String
-  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  calendar     CalendarEdition @relation(fields: [calendarId], references: [id], onDelete: Cascade)
-  layout       Layout          @relation(fields: [layoutId], references: [id])
+model CalendarEditionLayout {
+  id                String          @id @default(cuid())
+  calendarEdition   CalendarEdition @relation(fields: [calendarEditionId], references: [id])
+  calendarEditionId String
+  layout            Layout          @relation(fields: [layoutId], references: [id])
+  layoutId          String
+  year              Int
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 
-  @@unique([calendarId, calendarYear])
-}
-
-model GridAssignment {
-  id              String        @id @default(uuid())
-  layoutId        String
-  advertisementId String
-  cells           String[]
-  layout          Layout        @relation(fields: [layoutId], references: [id], onDelete: Cascade)
-  advertisement   Advertisement @relation(fields: [advertisementId], references: [id], onDelete: Cascade)
+  @@unique([calendarEditionId, year])
 }

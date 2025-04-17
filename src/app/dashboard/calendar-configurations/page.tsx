@@ -1,11 +1,11 @@
 "use client";
 
-import { useCalendarEditions } from "@/hooks/calendar-edition/useCalendarEditions";
-import { CalendarEditionsTable } from "./CalendarEditionsTable";
+import { useCalendarConfigurations } from "@/hooks/calendar-configuration/useCalendarConfigurations";
+import { CalendarConfigurationsTable } from "./CalendarConfigurationsTable";
 
-const CalendarsPage = () => {
+export default function CalendarConfigurationsPage() {
   const {
-    calendarEditions,
+    configurations,
     isLoading,
     selectedRows,
     setSelectedRows,
@@ -15,14 +15,14 @@ const CalendarsPage = () => {
     setSearch,
     page,
     totalItems,
-  } = useCalendarEditions({
+  } = useCalendarConfigurations({
     itemsPerPage: 10,
   });
 
   return (
-    <div className="container mx-auto px-4 w-full mt-10">
-      <CalendarEditionsTable
-        calendarEditions={calendarEditions}
+    <div className="container mx-auto px-8 w-full mt-10">
+      <CalendarConfigurationsTable
+        configurations={configurations}
         isLoading={isLoading}
         selectedRows={selectedRows}
         onSelectedRowsChange={setSelectedRows}
@@ -35,6 +35,4 @@ const CalendarsPage = () => {
       />
     </div>
   );
-};
-
-export default CalendarsPage;
+}

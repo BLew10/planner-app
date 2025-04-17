@@ -6,7 +6,6 @@ import Image from "next/image";
 import { useThemeStore } from "@/store/themeStore";
 import { logout } from "@/actions/user/logout";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import {
   Sidebar,
   SidebarHeader,
@@ -28,12 +27,10 @@ import {
   DollarSign,
   CreditCard,
   InfoIcon,
-  Sun,
-  Moon,
   Grid,
+  Hammer,
+  LayoutTemplate,
 } from "lucide-react";
-
-
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", urlPath: "/dashboard" },
@@ -57,23 +54,24 @@ const menuItems = [
     urlPath: "/dashboard/calendar-editions",
   },
   {
+    icon: LayoutTemplate,
+    label: "Layouts",
+    urlPath: "/dashboard/layout",
+  },
+  {
+    icon: Hammer,
+    label: "Calendar Configurations",
+    urlPath: "/dashboard/calendar-configurations",
+  },
+  {
     icon: InfoIcon,
     label: "Events",
     urlPath: "/dashboard/events",
   },
-  {
-    icon: Grid,
-    label: "Calendar Layout",
-    urlPath: "/dashboard/layout",
-  },
 ];
 
 const MainMenu: React.FC = () => {
-  const { theme, setTheme } = useThemeStore();
   const { open } = useSidebar();
-  const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light");
-  };
 
   return (
     <Sidebar collapsible="icon">
@@ -87,7 +85,7 @@ const MainMenu: React.FC = () => {
         <SidebarHeader>
           <div className="flex items-center justify-between p-4">
             <div className="flex items-center gap-2 text-xl font-bold overflow-hidden">
-              <Image 
+              <Image
                 src="/images/logo.png"
                 alt="Calendar Planner Logo"
                 width={40}
@@ -126,20 +124,6 @@ const MainMenu: React.FC = () => {
                 Sign Out
               </Button>
             </form>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Dark Mode</span>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={theme === "dark"}
-                  onCheckedChange={toggleTheme}
-                />
-                {theme === "dark" ? (
-                  <Moon className="h-4 w-4" />
-                ) : (
-                  <Sun className="h-4 w-4" />
-                )}
-              </div>
-            </div>
           </div>
         </SidebarFooter>
       )}
