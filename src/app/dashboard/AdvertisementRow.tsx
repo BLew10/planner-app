@@ -5,7 +5,12 @@ import { Advertisement } from "@prisma/client";
 import { MONTHS } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface AdvertisementRowProps {
   slots: SlotInfo[] | null;
@@ -17,31 +22,33 @@ const AdvertisementRow: React.FC<AdvertisementRowProps> = ({
   adType,
 }) => {
   // Transform slots array into a map where keys are month indices and values are arrays of all slots for that month
-  const slotsByMonth = (slots || []).reduce(
-    (acc, slot) => {
-      const monthIndex = slot.month ?? 0;
-      if (!acc[monthIndex]) acc[monthIndex] = [];
-      acc[monthIndex].push(slot);
-      return acc;
-    },
-    {} as Record<number, SlotInfo[]>
-  );
+  const slotsByMonth = (slots || []).reduce((acc, slot) => {
+    const monthIndex = slot.month ?? 0;
+    if (!acc[monthIndex]) acc[monthIndex] = [];
+    acc[monthIndex].push(slot);
+    return acc;
+  }, {} as Record<number, SlotInfo[]>);
 
   // Special handling for non-monthly ads (like covers, special sections)
   if (adType.perMonth === 0) {
     return (
       <div className="p-3">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-base font-semibold text-primary">{adType.name}</h2>
+          <h2 className="text-base font-semibold text-primary">
+            {adType.name}
+          </h2>
           <Badge variant="outline" className="ml-2 text-xs">
             Special
           </Badge>
         </div>
-        
+
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
           {slots && slots.length > 0 ? (
             slots.map((slot) => (
-              <Card key={slot.slot} className="overflow-hidden border shadow-sm bg-primary/5">
+              <Card
+                key={slot.slot}
+                className="overflow-hidden border shadow-sm bg-primary/5"
+              >
                 <CardContent className="p-2">
                   <div className="text-xs">
                     <div className="flex items-center justify-between">
@@ -49,7 +56,9 @@ const AdvertisementRow: React.FC<AdvertisementRowProps> = ({
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className="font-medium truncate">{slot.contactCompany || "—"}</span>
+                            <span className="font-medium truncate">
+                              {slot.contactCompany || "—"}
+                            </span>
                           </TooltipTrigger>
                           <TooltipContent>
                             {slot.contactCompany || "—"}
@@ -89,7 +98,7 @@ const AdvertisementRow: React.FC<AdvertisementRowProps> = ({
         {MONTHS.map((month, index) => {
           const monthIndex = index + 1;
           const monthSlots = slotsByMonth[monthIndex] || [];
-          
+
           return (
             <Card key={month} className="overflow-hidden">
               <CardHeader className="py-1 px-2 bg-muted/30">
@@ -103,11 +112,17 @@ const AdvertisementRow: React.FC<AdvertisementRowProps> = ({
                       const slotsForIndex = monthSlots.filter(
                         (s) => s.slot === slotIndex + 1
                       );
-                      
+
                       return slotsForIndex.length === 0 ? (
-                        <div key={`empty-${slotIndex}`} className="border border-dashed rounded-sm p-1">
+                        <div
+                          key={`empty-${slotIndex}`}
+                          className="border border-dashed rounded-sm p-1"
+                        >
                           <div className="flex items-center text-xs space-x-1">
-                            <Badge variant="outline" className="bg-transparent text-xs h-4 min-w-4">
+                            <Badge
+                              variant="outline"
+                              className="bg-transparent text-xs h-4 min-w-4"
+                            >
                               {slotIndex + 1}
                             </Badge>
                             <span className="text-muted-foreground text-xs">
@@ -117,9 +132,15 @@ const AdvertisementRow: React.FC<AdvertisementRowProps> = ({
                         </div>
                       ) : (
                         slotsForIndex.map((slotInfo, i) => (
-                          <div key={`slot-${slotIndex}-${i}`} className="border rounded-sm p-1 bg-primary/5">
+                          <div
+                            key={`slot-${slotIndex}-${i}`}
+                            className="border rounded-sm p-1 bg-primary/15"
+                          >
                             <div className="flex items-center text-xs space-x-1">
-                              <Badge variant="secondary" className="text-xs h-4 min-w-4">
+                              <Badge
+                                variant="secondary"
+                                className="text-xs h-4 min-w-4"
+                              >
                                 {slotIndex + 1}
                               </Badge>
                               <TooltipProvider>

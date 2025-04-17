@@ -6,6 +6,7 @@ import AdvertisementRow from "./AdvertisementRow";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CalendarInventoryProps {
     slots: Record<string, SlotInfo[]> | null;
@@ -24,19 +25,35 @@ const CalendarInventory: React.FC<CalendarInventoryProps> = ({ slots, advertisem
         );
     }
 
+    // Use the first ad type as the default tab
+    const defaultValue = advertisementTypes[0].id || '';
+
     return (
-        <div className="space-y-6">
+        <Tabs defaultValue={defaultValue} className="w-full">
+            <TabsList className="mb-4 h-auto flex-wrap gap-2">
+                {advertisementTypes.map((type) => (
+                    <TabsTrigger
+                        key={type.id}
+                        value={type.id || ''}
+                        className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                    >
+                        {type.name}
+                    </TabsTrigger>
+                ))}
+            </TabsList>
             {advertisementTypes.map((type) => (
-                <Card key={type.id || ''} className="overflow-hidden">
-                    <CardContent className="p-0">
-                        <AdvertisementRow
-                            slots={type.id && slots ? slots[type.id] : []}
-                            adType={type}
-                        />
-                    </CardContent>
-                </Card>
+                <TabsContent key={type.id} value={type.id || ''}>
+                    <Card className="overflow-hidden">
+                        <CardContent className="p-0">
+                            <AdvertisementRow
+                                slots={type.id && slots ? slots[type.id] : []}
+                                adType={type}
+                            />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
             ))}
-        </div>
+        </Tabs>
     );
 }
 

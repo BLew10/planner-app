@@ -19,9 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Loader2, Printer, CheckSquare, Square } from "lucide-react";
+import { Loader2, Printer } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 
@@ -32,9 +31,6 @@ const selectFirstYear =
 const Dashboard = () => {
   const [selectedYear, setSelectedYear] = useState(selectFirstYear.value);
   const [selectedCalendar, setSelectedCalendar] = useState("");
-  const [selectedAdtypes, setSelectedAdtypes] = useState<
-    Partial<Advertisement>[]
-  >([]);
   const [slotData, setSlotData] = useState<Record<string, SlotInfo[]> | null>(
     null
   );
@@ -54,16 +50,15 @@ const Dashboard = () => {
       setCalendarData(calendars || []);
       const { data: ads } = await getAllAdvertisementTypes();
       setAdvertisementTypes(ads || []);
-      setSelectedAdtypes(ads || []);
     };
     fetchFilterData();
   }, []);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!selectedCalendar) return;
+      if (!selectedCalendar || !advertisementTypes?.length) return;
       setFetching(true);
-      const adtypesIds = selectedAdtypes.map((ad) => ad.id);
+      const adtypesIds = advertisementTypes.map((ad) => ad.id);
 
       const slots = await getAllSlotsByCalendarEditionYearAndCalendarId(
         selectedCalendar,
@@ -91,46 +86,6 @@ const Dashboard = () => {
 
   const handleCalendarChange = (value: string) => {
     setSelectedCalendar(value);
-  };
-
-  const handleAdTypeToggle = (adId: string, checked: boolean) => {
-    if (!advertisementTypes) return;
-
-    if (checked) {
-      const adToAdd = advertisementTypes.find((ad) => ad.id === adId);
-      if (adToAdd) {
-        setSelectedAdtypes((prev) => [...prev, adToAdd]);
-      }
-    } else {
-      setSelectedAdtypes((prev) => prev.filter((ad) => ad.id !== adId));
-    }
-  };
-
-  const filterByAdtype = async () => {
-    if (!selectedCalendar || !selectedYear) return;
-
-    setFetching(true);
-    const adTypeIds = selectedAdtypes.map((ad) => ad.id || "");
-
-    const slots = await getAllSlotsByCalendarEditionYearAndCalendarId(
-      selectedCalendar,
-      selectedYear,
-      adTypeIds
-    );
-
-    setFetching(false);
-    setSlotData(slots || null);
-  };
-
-  // Add these new functions for checkbox control
-  const checkAllAdTypes = () => {
-    if (advertisementTypes) {
-      setSelectedAdtypes([...advertisementTypes]);
-    }
-  };
-
-  const uncheckAllAdTypes = () => {
-    setSelectedAdtypes([]);
   };
 
   if (fetching) {
@@ -213,55 +168,6 @@ const Dashboard = () => {
                 </Select>
               </div>
             </div>
-
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <Label>Advertisement Types</Label>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={checkAllAdTypes}
-                    className="flex items-center gap-1"
-                  >
-                    <CheckSquare className="h-4 w-4" />
-                    Check All
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={uncheckAllAdTypes}
-                    className="flex items-center gap-1"
-                  >
-                    <Square className="h-4 w-4" />
-                    Uncheck All
-                  </Button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-2">
-                {advertisementTypes?.map((ad) => (
-                  <div key={ad.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`ad-${ad.id}`}
-                      checked={selectedAdtypes.some(
-                        (selectedAd) => selectedAd.id === ad.id
-                      )}
-                      onCheckedChange={(checked) =>
-                        handleAdTypeToggle(ad.id || "", checked as boolean)
-                      }
-                    />
-                    <Label htmlFor={`ad-${ad.id}`} className="cursor-pointer">
-                      {ad.name}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-
-              <Button onClick={filterByAdtype} className="w-full mt-2">
-                Apply Filters
-              </Button>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -270,7 +176,7 @@ const Dashboard = () => {
 
       <CalendarInventory
         slots={slotData}
-        advertisementTypes={selectedAdtypes}
+        advertisementTypes={advertisementTypes}
       />
     </div>
   );

@@ -1,310 +1,313 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Canvas } from "./calendar/canvas-grid";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
-import { CalendarGrid } from "./calendar/calendar-grid";
-import { SelectionControls } from "./calendar/selection-controls";
-import { GridSettings } from "./calendar/grid-settings";
-import { AssignedAreas } from "./calendar/assigned-areas";
-import { SharedCells } from "./calendar/shared-cells";
-import { Selection } from "@/types/calendar";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { useAdTypes } from "@/hooks/advertisment-type/useAdTypes";
+import { useCalendarEditions } from "@/hooks/calendar-edition/useCalendarEditions";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-export function CustomizableGrid({
-  initialTopRows = 4,
-  initialBottomRows = 2,
-  initialCols = 6,
-}: {
-  initialTopRows?: number;
-  initialBottomRows?: number;
-  initialCols?: number;
-}) {
-  const [topRows, setTopRows] = useState(initialTopRows);
-  const [bottomRows, setBottomRows] = useState(initialBottomRows);
-  const [cols, setCols] = useState(initialCols);
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedCells, setSelectedCells] = useState<string[]>([]);
-  const [savedSelections, setSavedSelections] = useState<Selection[]>([]);
-  const [currentLabel, setCurrentLabel] = useState("");
-  const [newTopRows, setNewTopRows] = useState(initialTopRows.toString());
-  const [newBottomRows, setNewBottomRows] = useState(initialBottomRows.toString());
-  const [newCols, setNewCols] = useState(initialCols.toString());
-  const [error, setError] = useState("");
-  const [dragMode, setDragMode] = useState(false);
-  const [dragStart, setDragStart] = useState<string | null>(null);
-  const [activeCalendar, setActiveCalendar] = useState<"top" | "bottom" | null>(null);
+interface SavedArea {
+  id: string;
+  adTypeId: string;
+  adTypeName: string;
+  slotNumber: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  position: "top" | "bottom";
+}
 
-  // Calculate shared cells for display
-  const sharedCells = savedSelections.reduce((acc, selection) => {
-    selection.cells.forEach((cellId) => {
-      const otherSelections = savedSelections.filter(
-        (s) => s.id !== selection.id && s.cells.includes(cellId)
-      );
-      
-      if (otherSelections.length > 0) {
-        const existingIndex = acc.findIndex((item) => item.cellId === cellId);
-        
-        if (existingIndex === -1) {
-          acc.push({
-            cellId,
-            selectionLabels: [
-              selection.label,
-              ...otherSelections.map((s) => s.label),
-            ],
-          });
-        }
-      }
-    });
-    
-    return acc;
-  }, [] as { cellId: string; selectionLabels: string[] }[]);
+export function CustomizableGrid() {
+  const { adTypes, isLoading: adTypesLoading } = useAdTypes();
+  const { calendarEditions, isLoading: calendarsLoading } =
+    useCalendarEditions();
+  const [calendarId, setCalendarId] = useState<string>("");
+  const [calendarYear, setCalendarYear] = useState<number>(
+    new Date().getFullYear()
+  );
 
-  const handleMouseDown = (cellId: string) => {
-    if (!selectionMode) return;
+  const [showDialog, setShowDialog] = useState(false);
+  const [currentSelection, setCurrentSelection] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    position: "top" | "bottom";
+  } | null>(null);
+  const [selectedAdTypeId, setSelectedAdTypeId] = useState<string>("");
+  const [savedAreas, setSavedAreas] = useState<SavedArea[]>([]);
 
-    // Extract calendar position from cellId
-    const [calendarPos] = cellId.split("-");
-    setActiveCalendar(calendarPos as "top" | "bottom");
+  // Function to get the next available slot number for an ad type
+  const getNextSlotNumber = (adTypeId: string) => {
+    const existingSlots = savedAreas
+      .filter((area) => area.adTypeId === adTypeId)
+      .map((area) => area.slotNumber);
 
-    // Start a new rectangular selection
-    setDragMode(true);
-    setDragStart(cellId);
-    setSelectedCells([cellId]);
+    if (existingSlots.length === 0) return 1;
+    return Math.max(...existingSlots) + 1;
   };
 
-  const handleMouseUp = (cellId: string) => {
-    if (!selectionMode || !dragMode) return;
-    
-    setDragMode(false);
+  const handleSelectionComplete = (selection: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    position: "top" | "bottom";
+  }) => {
+    setCurrentSelection(selection);
+    setShowDialog(true);
   };
 
-  const handleMouseEnter = (cellId: string) => {
-    if (!selectionMode || !dragMode || !dragStart) return;
-    
-    // Only allow selecting cells from the same calendar
-    const [calendarPos] = cellId.split("-");
-    if (calendarPos !== activeCalendar) return;
-    
-    // Get coordinates for start and current cell
-    const [_, startRow, startCol] = dragStart.split("-").map(Number);
-    const [__, currentRow, currentCol] = cellId.split("-").map(Number);
-    
-    // Calculate the rectangle
-    const minRow = Math.min(startRow, currentRow);
-    const maxRow = Math.max(startRow, currentRow);
-    const minCol = Math.min(startCol, currentCol);
-    const maxCol = Math.max(startCol, currentCol);
-    
-    // Create a new selection of cells
-    const newSelection = [];
-    for (let r = minRow; r <= maxRow; r++) {
-      for (let c = minCol; c <= maxCol; c++) {
-        newSelection.push(`${activeCalendar}-${r}-${c}`);
-      }
-    }
-    
-    setSelectedCells(newSelection);
-  };
+  const handleSaveArea = () => {
+    if (!currentSelection || !selectedAdTypeId) return;
 
-  const validateRectangle = (cells: string[]) => {
-    if (cells.length === 0) return false;
-    
-    // Extract coordinates
-    const coords = cells.map((id) => {
-      const [_, row, col] = id.split("-").map(Number);
-      return { row, col };
-    });
-    
-    // Find min/max
-    const minRow = Math.min(...coords.map((c) => c.row));
-    const maxRow = Math.max(...coords.map((c) => c.row));
-    const minCol = Math.min(...coords.map((c) => c.col));
-    const maxCol = Math.max(...coords.map((c) => c.col));
-    
-    // Check if the number of cells matches a rectangle
-    const expectedCells = (maxRow - minRow + 1) * (maxCol - minCol + 1);
-    return cells.length === expectedCells;
-  };
+    const selectedAdType = adTypes?.find(
+      (type) => type.id === selectedAdTypeId
+    );
+    if (!selectedAdType?.name) return;
 
-  const saveSelection = () => {
-    if (selectedCells.length === 0 || !currentLabel.trim()) return;
+    // Get the next available slot number for this ad type
+    const slotNumber = getNextSlotNumber(selectedAdTypeId);
 
-    // Check if selection forms a rectangle
-    const isRectangle = validateRectangle(selectedCells);
-    if (!isRectangle) {
-      alert("Selection must form a rectangle");
-      return;
-    }
-
-    // Add the new selection
-    setSavedSelections((prev) => [
+    setSavedAreas((prev) => [
       ...prev,
       {
-        id: `selection-${Date.now()}`,
-        label: currentLabel,
-        cells: [...selectedCells],
-        isShared: selectedCells.some(cellId => 
-          prev.some(selection => selection.cells.includes(cellId))
-        )
+        id: Math.random().toString(36).substr(2, 9),
+        adTypeId: selectedAdTypeId,
+        adTypeName: selectedAdType.name as string,
+        slotNumber,
+        position: currentSelection.position,
+        x: currentSelection.x,
+        y: currentSelection.y,
+        width: currentSelection.width,
+        height: currentSelection.height,
       },
     ]);
 
-    // Reset selection state
-    setSelectedCells([]);
-    setCurrentLabel("");
-    setSelectionMode(false);
+    setShowDialog(false);
+    setSelectedAdTypeId("");
+    setCurrentSelection(null);
   };
 
-  const updateGridDimensions = () => {
-    const topRowsNum = Number.parseInt(newTopRows)
-    const bottomRowsNum = Number.parseInt(newBottomRows)
-    const colsNum = Number.parseInt(newCols)
+  const handleSaveConfiguration = async () => {
+    if (!calendarId || savedAreas.length === 0) return;
 
-    if (isNaN(topRowsNum) || isNaN(bottomRowsNum) || isNaN(colsNum)) {
-      setError("Please enter valid numbers")
-      return
-    }
-
-    if (topRowsNum < 1 || bottomRowsNum < 1 || colsNum < 1) {
-      setError("Dimensions must be at least 1")
-      return
-    }
-
-    // Clear any selections that would be outside the new grid
-    const updatedSelections = savedSelections.map(selection => {
-      const validCells = selection.cells.filter(cellId => {
-        const [pos, row, col] = cellId.split("-").map((v, i) => i === 0 ? v : Number(v));
-        if (pos === "top" && (Number(row) >= topRowsNum || Number(col) >= colsNum)) return false;
-        if (pos === "bottom" && (Number(row) >= bottomRowsNum || Number(col) >= colsNum)) return false;
-        return true;
-      });
-      
-      return {
-        ...selection,
-        cells: validCells
-      };
-    }).filter(selection => selection.cells.length > 0);
-
-    setSavedSelections(updatedSelections);
-    setTopRows(topRowsNum);
-    setBottomRows(bottomRowsNum);
-    setCols(colsNum);
-    setError("");
+    // TODO: Save configuration to backend
+    console.log("Saving configuration:", {
+      calendarId,
+      calendarYear,
+      areas: savedAreas,
+    });
   };
+
+  const handleCopyFromExisting = async () => {
+    // TODO: Implement copying from existing configuration
+    console.log("Copy from existing");
+  };
+
+  if (adTypesLoading || calendarsLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <div className="space-y-6 mx-auto max-w-screen-xl mt-10 w-full">
-      <div className="w-full bg-white rounded-lg shadow-sm p-4 mb-6">
-        <h1 className="text-2xl font-bold text-center">Calendar Layout</h1>
-      </div>
-      
-      <div className="grid gap-8 md:grid-cols-[1fr_300px] w-full">
-        <div className="space-y-6">
-          {/* Selection Mode UI */}
-          <SelectionControls
-            selectionMode={selectionMode}
-            setSelectionMode={setSelectionMode}
-            selectedCells={selectedCells}
-            currentLabel={currentLabel}
-            setCurrentLabel={setCurrentLabel}
-            saveSelection={saveSelection}
-            onCancel={() => {
-              setSelectedCells([]);
-              setSelectionMode(false);
-              setActiveCalendar(null);
-            }}
-          />
-
-          {/* Top Calendar */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Top Calendar</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <CalendarGrid
-                calendarPosition="top"
-                rows={topRows}
-                cols={cols}
-                selectedCells={selectedCells}
-                savedSelections={savedSelections}
-                dragMode={dragMode}
-                onMouseDown={handleMouseDown}
-                onMouseUp={handleMouseUp}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={() => {
-                  if (dragMode) {
-                    setDragMode(false);
-                    setDragStart(null);
-                    setActiveCalendar(null);
-                  }
-                }}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Bottom Calendar */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Bottom Calendar</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <CalendarGrid
-                calendarPosition="bottom"
-                rows={bottomRows}
-                cols={cols}
-                selectedCells={selectedCells}
-                savedSelections={savedSelections}
-                dragMode={dragMode}
-                onMouseDown={handleMouseDown}
-                onMouseUp={handleMouseUp}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={() => {
-                  if (dragMode) {
-                    setDragMode(false);
-                    setDragStart(null);
-                    setActiveCalendar(null);
-                  }
-                }}
-              />
-            </CardContent>
-          </Card>
+    <div className="min-h-screen bg-gray-50 p-8 w-full">
+      <div className="space-y-8 max-w-[1800px] mx-auto">
+        <div className="w-full bg-white rounded-lg shadow-sm p-4">
+          <h1 className="text-2xl font-bold text-center">Calendar Layout</h1>
         </div>
 
-        <div className="space-y-6">
-          {/* Grid Settings */}
-          <GridSettings
-            newTopRows={newTopRows}
-            setNewTopRows={setNewTopRows}
-            newBottomRows={newBottomRows}
-            setNewBottomRows={setNewBottomRows}
-            newCols={newCols}
-            setNewCols={setNewCols}
-            error={error}
-            updateGridDimensions={updateGridDimensions}
-          />
+        <div className="grid grid-cols-[250px_1fr_250px] gap-6">
+          {/* Configuration Details */}
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Configuration Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="calendar">Calendar Edition</Label>
+                  <Select value={calendarId} onValueChange={setCalendarId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select calendar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {calendarEditions?.map((calendar) => (
+                        <SelectItem key={calendar.id} value={calendar.id || ""}>
+                          {calendar.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="year">Calendar Year</Label>
+                  <Input
+                    id="year"
+                    type="number"
+                    value={calendarYear}
+                    onChange={(e) => setCalendarYear(Number(e.target.value))}
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={handleCopyFromExisting}
+                  className="w-full"
+                >
+                  Copy from Existing Layout
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
 
-          {/* Assigned Areas */}
-          <AssignedAreas
-            savedSelections={savedSelections}
-            setSavedSelections={setSavedSelections}
-          />
+          {/* Middle Section - Empty */}
+          <div />
 
-          {/* Shared Cells */}
-          {sharedCells.length > 0 && (
-            <SharedCells sharedCells={sharedCells} />
-          )}
+          {/* Right Side Controls */}
+          <div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Save Configuration</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  className="w-full"
+                  onClick={handleSaveConfiguration}
+                  disabled={!calendarId || savedAreas.length === 0}
+                >
+                  Save Configuration
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
+
+      {/* Calendars */}
+      <div className="mt-6">
+        {/* Top Calendar */}
+        <Card className="mb-6">
+          <CardHeader className="pb-2">
+            <CardTitle>Top Calendar</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="w-full aspect-[3/1]">
+              <Canvas
+                width="100%"
+                height="100%"
+                position="top"
+                savedAreas={savedAreas.filter(
+                  (area) => area.position === "top"
+                )}
+                onSelectionComplete={handleSelectionComplete}
+                onDeleteArea={(areaId) => {
+                  setSavedAreas((prev) =>
+                    prev.filter((area) => area.id !== areaId)
+                  );
+                }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Bottom Calendar */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle>Bottom Calendar</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="w-full aspect-[3/1]">
+              <Canvas
+                width="100%"
+                height="100%"
+                position="bottom"
+                savedAreas={savedAreas.filter(
+                  (area) => area.position === "bottom"
+                )}
+                onSelectionComplete={handleSelectionComplete}
+                onDeleteArea={(areaId) => {
+                  setSavedAreas((prev) =>
+                    prev.filter((area) => area.id !== areaId)
+                  );
+                }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Name and Ad Type Selection Dialog */}
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Select Advertisement Type</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="adType">Advertisement Type</Label>
+              <Select
+                value={selectedAdTypeId}
+                onValueChange={setSelectedAdTypeId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select an ad type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {adTypes?.map((type) => {
+                    const usedSlots = savedAreas.filter(
+                      (area) => area.adTypeId === type.id
+                    ).length;
+                    const maxSlots = type.perMonth || 0;
+                    const isDisabled = maxSlots > 0 && usedSlots >= maxSlots;
+
+                    return (
+                      <SelectItem
+                        key={type.id}
+                        value={type.id || ""}
+                        disabled={isDisabled}
+                      >
+                        {type.name} ({usedSlots}/{maxSlots || "∞"})
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowDialog(false);
+                setSelectedAdTypeId("");
+                setCurrentSelection(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSaveArea} disabled={!selectedAdTypeId}>
+              Save Area
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

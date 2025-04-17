@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useThemeStore } from "@/store/themeStore";
 import { logout } from "@/actions/user/logout";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,8 @@ import {
   Moon,
   Grid,
 } from "lucide-react";
+
+
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", urlPath: "/dashboard" },
@@ -83,8 +86,14 @@ const MainMenu: React.FC = () => {
       {open && (
         <SidebarHeader>
           <div className="flex items-center justify-between p-4">
-            <div className="text-xl font-bold overflow-hidden">
-              Calendar Planner
+            <div className="flex items-center gap-2 text-xl font-bold overflow-hidden">
+              <Image 
+                src="/images/logo.png"
+                alt="Calendar Planner Logo"
+                width={40}
+                height={40}
+              />
+              Calendex
             </div>
             <SidebarTrigger />
           </div>
