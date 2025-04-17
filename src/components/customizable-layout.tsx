@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
+import { useToast } from "@/components/ui/use-toast";
 interface SavedArea {
   id: string;
   adTypeId: string;
@@ -43,6 +43,7 @@ interface CustomizableLayoutProps {
 
 export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const { adTypes, isLoading: adTypesLoading } = useAdTypes();
   const { layout, isLoading: layoutLoading, createLayout, updateLayout } = useLayout(layoutId);
 
@@ -58,27 +59,61 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
   } | null>(null);
   const [selectedAdTypeId, setSelectedAdTypeId] = useState<string>("");
   const [savedAreas, setSavedAreas] = useState<SavedArea[]>([]);
+  const [copiedArea, setCopiedArea] = useState<SavedArea | null>(null);
 
   // Load layout data when editing
   useEffect(() => {
     if (layout) {
       setName(layout.name);
       setDescription(layout.description || "");
-      // Convert ad placements to savedAreas format
-      const areas = layout.adPlacements.map((placement) => ({
-        id: placement.id,
-        adTypeId: placement.advertisementId,
-        adTypeName: placement.advertisement.name,
-        slotNumber: 1,
-        x: placement.x,
-        y: placement.y,
-        width: placement.width,
-        height: placement.height,
-        position: placement.position as "top" | "bottom",
-      }));
+      
+      // Group placements by advertisement type to assign correct slot numbers
+      const placementsByType = layout.adPlacements.reduce((acc, placement) => {
+        const key = placement.advertisementId;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(placement);
+        return acc;
+      }, {} as Record<string, typeof layout.adPlacements>);
+
+      // Convert placements to areas with correct slot numbers
+      const areas = layout.adPlacements.map((placement) => {
+        const sameTypeAds = placementsByType[placement.advertisementId];
+        // Sort by x and y to ensure consistent slot numbering
+        sameTypeAds.sort((a, b) => (a.y === b.y ? a.x - b.x : a.y - b.y));
+        const slotNumber = sameTypeAds.findIndex(p => p.id === placement.id) + 1;
+
+        return {
+          id: placement.id,
+          adTypeId: placement.advertisementId,
+          adTypeName: placement.advertisement.name,
+          slotNumber,
+          x: placement.x,
+          y: placement.y,
+          width: placement.width,
+          height: placement.height,
+          position: placement.position as "top" | "bottom",
+        };
+      });
+
       setSavedAreas(areas);
     }
   }, [layout]);
+
+  // Add event listener for Escape key to cancel paste
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && copiedArea) {
+        setCopiedArea(null);
+        toast({
+          title: "Paste cancelled",
+          description: "Paste mode has been cancelled",
+        });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [copiedArea]);
 
   // Function to get the next available slot number for an ad type
   const getNextSlotNumber = (adTypeId: string) => {
@@ -97,8 +132,52 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
     height: number;
     position: "top" | "bottom";
   }) => {
-    setCurrentSelection(selection);
-    setShowDialog(true);
+    // If there's a copied area and this is a paste action
+    if (copiedArea) {
+      const selectedAdType = adTypes?.find(
+        (type) => type.id === copiedArea.adTypeId
+      );
+      
+      if (!selectedAdType) return;
+
+      // Check if we've reached the maximum slots for this ad type
+      const usedSlots = savedAreas.filter(
+        (area) => area.adTypeId === copiedArea.adTypeId
+      ).length;
+      
+      if (selectedAdType.perMonth && usedSlots >= selectedAdType.perMonth) {
+        toast({
+          title: "Cannot paste area",
+          description: `Maximum slots (${selectedAdType.perMonth}) reached for this ad type.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create new area at the pasted location
+      const slotNumber = getNextSlotNumber(copiedArea.adTypeId);
+      setSavedAreas((prev) => [
+        ...prev,
+        {
+          ...copiedArea,
+          id: Math.random().toString(36).substr(2, 9),
+          slotNumber,
+          x: selection.x - (copiedArea.width / 2), // Center the pasted area at cursor
+          y: selection.y - (copiedArea.height / 2),
+          position: selection.position,
+        },
+      ]);
+
+      // Clear the clipboard
+      setCopiedArea(null);
+      toast({
+        title: "Area pasted",
+        description: `Created new ${copiedArea.adTypeName} area`,
+      });
+    } else {
+      setCurrentSelection(selection);
+      setShowDialog(true);
+    }
   };
 
   const handleSaveArea = () => {
@@ -130,6 +209,37 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
     setShowDialog(false);
     setSelectedAdTypeId("");
     setCurrentSelection(null);
+  };
+
+  const handleCopyArea = (areaId: string) => {
+    const areaToCopy = savedAreas.find((area) => area.id === areaId);
+    if (!areaToCopy) return;
+
+    // Check if we've reached the maximum slots for this ad type
+    const selectedAdType = adTypes?.find(
+      (type) => type.id === areaToCopy.adTypeId
+    );
+    
+    if (!selectedAdType) return;
+
+    const usedSlots = savedAreas.filter(
+      (area) => area.adTypeId === areaToCopy.adTypeId
+    ).length;
+    
+    if (selectedAdType.perMonth && usedSlots >= selectedAdType.perMonth) {
+      toast({
+        title: "Cannot copy area",
+        description: `Maximum slots (${selectedAdType.perMonth}) reached for this ad type.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCopiedArea(areaToCopy);
+    toast({
+      title: "Area copied",
+      description: "Click and drag on the canvas to paste the area, or press Escape to cancel",
+    });
   };
 
   const handleSaveLayout = async () => {
@@ -241,10 +351,41 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
                 )}
                 onSelectionComplete={handleSelectionComplete}
                 onDeleteArea={(areaId) => {
+                  setSavedAreas((prev) => {
+                    // First remove the area
+                    const remainingAreas = prev.filter((area) => area.id !== areaId);
+                    
+                    // Get the deleted area's type to know which slots to renumber
+                    const deletedArea = prev.find((area) => area.id === areaId);
+                    if (!deletedArea) return remainingAreas;
+
+                    // Renumber slots for the affected ad type
+                    return remainingAreas.map((area) => {
+                      if (area.adTypeId === deletedArea.adTypeId) {
+                        // Get all areas of this type and sort them by current slot number
+                        const sameTypeAreas = remainingAreas
+                          .filter(a => a.adTypeId === area.adTypeId)
+                          .sort((a, b) => a.slotNumber - b.slotNumber);
+                        
+                        // Find this area's position in the sorted list
+                        const newSlotNumber = sameTypeAreas.findIndex(a => a.id === area.id) + 1;
+                        return { ...area, slotNumber: newSlotNumber };
+                      }
+                      return area;
+                    });
+                  });
+                }}
+                onCopyArea={handleCopyArea}
+                onMoveArea={(areaId, newX, newY) => {
                   setSavedAreas((prev) =>
-                    prev.filter((area) => area.id !== areaId)
+                    prev.map((area) =>
+                      area.id === areaId
+                        ? { ...area, x: newX, y: newY }
+                        : area
+                    )
                   );
                 }}
+                isPasteMode={!!copiedArea}
               />
             </div>
           </CardContent>
@@ -266,10 +407,41 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
                 )}
                 onSelectionComplete={handleSelectionComplete}
                 onDeleteArea={(areaId) => {
+                  setSavedAreas((prev) => {
+                    // First remove the area
+                    const remainingAreas = prev.filter((area) => area.id !== areaId);
+                    
+                    // Get the deleted area's type to know which slots to renumber
+                    const deletedArea = prev.find((area) => area.id === areaId);
+                    if (!deletedArea) return remainingAreas;
+
+                    // Renumber slots for the affected ad type
+                    return remainingAreas.map((area) => {
+                      if (area.adTypeId === deletedArea.adTypeId) {
+                        // Get all areas of this type and sort them by current slot number
+                        const sameTypeAreas = remainingAreas
+                          .filter(a => a.adTypeId === area.adTypeId)
+                          .sort((a, b) => a.slotNumber - b.slotNumber);
+                        
+                        // Find this area's position in the sorted list
+                        const newSlotNumber = sameTypeAreas.findIndex(a => a.id === area.id) + 1;
+                        return { ...area, slotNumber: newSlotNumber };
+                      }
+                      return area;
+                    });
+                  });
+                }}
+                onCopyArea={handleCopyArea}
+                onMoveArea={(areaId, newX, newY) => {
                   setSavedAreas((prev) =>
-                    prev.filter((area) => area.id !== areaId)
+                    prev.map((area) =>
+                      area.id === areaId
+                        ? { ...area, x: newX, y: newY }
+                        : area
+                    )
                   );
                 }}
+                isPasteMode={!!copiedArea}
               />
             </div>
           </CardContent>

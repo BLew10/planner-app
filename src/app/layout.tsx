@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import "@/styles/globals.scss";
+import { Inter } from "next/font/google";
+import "../styles/globals.scss";
+import { Toaster } from "@/components/ui/toaster";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Calendex",
-  description: "Calendex is a platform for creating and managing your community calendar.",
-  icons: {
-    icon: "/images/logo.png"
-  },
+  title: "Calendar Planner",
+  description: "Plan your calendar layouts",
 };
 
 export default function RootLayout({
@@ -16,7 +17,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={inter.className}>
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }

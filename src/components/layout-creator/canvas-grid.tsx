@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { Copy, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface SavedArea {
   id: string;
@@ -26,53 +28,106 @@ interface CanvasProps {
     position: 'top' | 'bottom';
   }) => void;
   onDeleteArea?: (areaId: string) => void;
+  onCopyArea?: (areaId: string) => void;
+  onMoveArea?: (areaId: string, newX: number, newY: number) => void;
+  isPasteMode?: boolean;
 }
 
-export function Canvas({ width, height, savedAreas, position, onSelectionComplete, onDeleteArea }: CanvasProps) {
+export function Canvas({ 
+  width, 
+  height, 
+  savedAreas, 
+  position, 
+  onSelectionComplete, 
+  onDeleteArea,
+  onCopyArea,
+  onMoveArea,
+  isPasteMode 
+}: CanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [currentPos, setCurrentPos] = useState({ x: 0, y: 0 });
+  const [draggedArea, setDraggedArea] = useState<string | null>(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
-  // Handle mouse down - start drawing
-  const handleMouseDown = (e: React.MouseEvent) => {
+  // Handle mouse down - start drawing or dragging
+  const handleMouseDown = (e: React.MouseEvent, areaId?: string) => {
     if (!containerRef.current) return;
     
     const rect = containerRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    setIsDrawing(true);
-    setStartPos({ x, y });
-    setCurrentPos({ x, y });
+    if (areaId) {
+      // Start dragging an existing area
+      setDraggedArea(areaId);
+      const area = savedAreas.find(a => a.id === areaId);
+      if (area) {
+        setDragOffset({
+          x: x - area.x,
+          y: y - area.y
+        });
+      }
+      e.stopPropagation(); // Prevent canvas drawing
+    } else if (isPasteMode) {
+      // Paste at current mouse position
+      onSelectionComplete({
+        x: mousePos.x,
+        y: mousePos.y,
+        width: 0, // These will be ignored for paste operation
+        height: 0,
+        position
+      });
+    } else {
+      // Start drawing a new area
+      setIsDrawing(true);
+      setStartPos({ x, y });
+      setCurrentPos({ x, y });
+    }
   };
 
-  // Handle mouse move - update selection
+  // Handle mouse move - update selection or dragged area
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDrawing || !containerRef.current) return;
+    if (!containerRef.current) return;
 
     const rect = containerRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    setCurrentPos({ x, y });
+    // Always update mouse position for paste mode
+    setMousePos({ x, y });
+    
+    if (draggedArea && onMoveArea) {
+      // Update dragged area position
+      onMoveArea(draggedArea, 
+        Math.max(0, Math.min(x - dragOffset.x, rect.width - 10)),
+        Math.max(0, Math.min(y - dragOffset.y, rect.height - 10))
+      );
+    } else if (isDrawing) {
+      // Update selection rectangle
+      setCurrentPos({ x, y });
+    }
   };
 
-  // Handle mouse up - complete selection
+  // Handle mouse up - complete selection or dragging
   const handleMouseUp = () => {
-    if (!isDrawing) return;
+    if (draggedArea) {
+      setDraggedArea(null);
+    } else if (isDrawing) {
+      setIsDrawing(false);
 
-    setIsDrawing(false);
+      // Calculate the selection rectangle
+      const x = Math.min(startPos.x, currentPos.x);
+      const y = Math.min(startPos.y, currentPos.y);
+      const width = Math.abs(currentPos.x - startPos.x);
+      const height = Math.abs(currentPos.y - startPos.y);
 
-    // Calculate the selection rectangle
-    const x = Math.min(startPos.x, currentPos.x);
-    const y = Math.min(startPos.y, currentPos.y);
-    const width = Math.abs(currentPos.x - startPos.x);
-    const height = Math.abs(currentPos.y - startPos.y);
-
-    // Only trigger if we have a meaningful selection
-    if (width > 10 && height > 10) {
-      onSelectionComplete({ x, y, width, height, position });
+      // Only trigger if we have a meaningful selection
+      if (width > 10 && height > 10) {
+        onSelectionComplete({ x, y, width, height, position });
+      }
     }
   };
 
@@ -108,7 +163,8 @@ export function Canvas({ width, height, savedAreas, position, onSelectionComplet
     <div 
       ref={containerRef}
       className={cn(
-        "relative cursor-crosshair",
+        "relative",
+        isPasteMode ? "cursor-copy" : "cursor-crosshair",
         "border border-gray-200 rounded-lg overflow-hidden bg-white"
       )}
       style={{ width, height }}
@@ -121,7 +177,11 @@ export function Canvas({ width, height, savedAreas, position, onSelectionComplet
       {savedAreas.map((area) => (
         <div
           key={area.id}
-          className="group"
+          className={cn(
+            "group",
+            draggedArea === area.id && "cursor-grabbing",
+            !draggedArea && "cursor-grab"
+          )}
           style={{
             position: 'absolute',
             left: area.x,
@@ -137,35 +197,37 @@ export function Canvas({ width, height, savedAreas, position, onSelectionComplet
             color: '#1f2937',
             borderRadius: '4px',
           }}
+          onMouseDown={(e) => handleMouseDown(e, area.id)}
         >
-          {/* Delete Button */}
-          {onDeleteArea && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDeleteArea(area.id);
-              }}
-              className="absolute -top-3 -right-3 bg-white rounded-full p-1 shadow-md border border-gray-200 
-                         opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer
-                         hover:bg-red-50"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-red-500"
+          {/* Action Buttons */}
+          <div className="absolute -top-3 -right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            {onCopyArea && (
+              <Button
+                size="icon"
+                variant="outline"
+                className="h-6 w-6 bg-white hover:bg-blue-50"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCopyArea(area.id);
+                }}
               >
-                <path d="M18 6L6 18" />
-                <path d="M6 6l12 12" />
-              </svg>
-            </button>
-          )}
+                <Copy className="h-3 w-3 text-blue-500" />
+              </Button>
+            )}
+            {onDeleteArea && (
+              <Button
+                size="icon"
+                variant="outline"
+                className="h-6 w-6 bg-white hover:bg-red-50"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteArea(area.id);
+                }}
+              >
+                <X className="h-3 w-3 text-red-500" />
+              </Button>
+            )}
+          </div>
           <span className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded shadow-sm pointer-events-none">
             {area.adTypeName} #{area.slotNumber}
           </span>
@@ -175,6 +237,20 @@ export function Canvas({ width, height, savedAreas, position, onSelectionComplet
       {/* Selection overlay */}
       {isDrawing && selectionStyle && (
         <div style={selectionStyle} />
+      )}
+
+      {/* Paste Preview */}
+      {isPasteMode && (
+        <div
+          className="pointer-events-none absolute border-2 border-blue-500 bg-blue-500/10 rounded"
+          style={{
+            left: mousePos.x,
+            top: mousePos.y,
+            width: 100,  // Show a fixed-size preview
+            height: 50,
+            transform: 'translate(-50%, -50%)'
+          }}
+        />
       )}
     </div>
   );
