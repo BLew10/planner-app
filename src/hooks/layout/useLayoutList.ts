@@ -38,6 +38,7 @@ export function useLayoutList({ search = "", page = 1 }: UseLayoutListParams = {
   return {
     layouts: data?.layouts,
     totalPages: data?.totalPages || 1,
+    totalItems: data?.totalItems || 0,
     isLoading,
   };
 }

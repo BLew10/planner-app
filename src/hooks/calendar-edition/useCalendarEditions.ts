@@ -1,108 +1,89 @@
-import { useState, useCallback, useEffect } from "react";
-import { toast } from "@/hooks/shadcn/use-toast";
-import { getAllCalendars } from "@/lib/data/calendarEdition";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { CalendarEdition } from "@prisma/client";
-import deleteCalendar from "@/actions/calendar-editions/deleteCalendarEdition";
 
-export const useCalendarEditions = ({
-  itemsPerPage = 10,
-}: { itemsPerPage?: number } = {}) => {
-  const [calendarEditions, setCalendarEditions] = useState<
-    Partial<CalendarEdition>[] | null
-  >(null);
-  const [isLoading, setIsLoading] = useState(true);
+interface CalendarEditionsResponse {
+  calendarEditions: CalendarEdition[];
+  totalItems: number;
+  totalPages: number;
+}
+
+interface UseCalendarEditionsProps {
+  itemsPerPage?: number;
+}
+
+export function useCalendarEditions({ itemsPerPage = 10 }: UseCalendarEditionsProps = {}) {
+  const queryClient = useQueryClient();
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
-  const [totalItems, setTotalItems] = useState(0);
-  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const fetchCalendarEditions = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const { data, totalItems: total } = await getAllCalendars(
-        page,
-        itemsPerPage,
-        search
-      );
-      setCalendarEditions(data);
-      setTotalItems(total);
-      setSelectedRows([]);
-    } catch (error) {
-      toast({
-        title: "Error fetching calendar editions",
-        description: "There was a problem loading the calendar editions.",
-        variant: "destructive",
-      });
-      setCalendarEditions(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [itemsPerPage, page, search]);
+  const [page, setPage] = useState(1);
 
-  useEffect(() => {
-    fetchCalendarEditions();
-  }, [fetchCalendarEditions]);
+  const { data, isLoading } = useQuery<CalendarEditionsResponse>({
+    queryKey: ["calendar-editions", { search, page }],
+    queryFn: async () => {
+      const searchParams = new URLSearchParams({
+        search,
+        page: page.toString(),
+      });
+      const response = await fetch(`/api/calendar-editions?${searchParams}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch calendar editions");
+      }
+      return response.json();
+    },
+  });
+
+  const deleteCalendarEdition = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/calendar-editions/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete calendar edition");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["calendar-editions"] });
+      toast.success("Calendar edition deleted successfully");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
 
   const handleDelete = async (id: string) => {
     try {
-      const deleted = await deleteCalendar(id);
-      if (deleted) {
-        toast({
-          title: "Calendar edition deleted",
-          description: "The calendar edition has been successfully deleted.",
-        });
-        fetchCalendarEditions();
-        return true;
-      } else {
-        throw new Error("Failed to delete");
-      }
+      await deleteCalendarEdition.mutateAsync(id);
+      return true;
     } catch (error) {
-      toast({
-        title: "Error deleting calendar edition",
-        description: "There was a problem deleting the calendar edition.",
-        variant: "destructive",
-      });
+      console.error("Failed to delete calendar edition:", error);
       return false;
     }
   };
 
   const handleDeleteSelected = async () => {
     try {
-      const results = await Promise.all(
-        selectedRows.map((id) => deleteCalendar(id))
-      );
-
-      if (results.every(Boolean)) {
-        toast({
-          title: "Calendar editions deleted",
-          description: "The selected calendar editions have been deleted.",
-        });
-        setSelectedRows([]);
-        fetchCalendarEditions();
-        return true;
-      } else {
-        throw new Error("Some deletions failed");
-      }
+      await Promise.all(selectedRows.map(id => deleteCalendarEdition.mutateAsync(id)));
+      setSelectedRows([]);
+      return true;
     } catch (error) {
-      toast({
-        title: "Error deleting calendar editions",
-        description: "There was a problem deleting some calendar editions.",
-        variant: "destructive",
-      });
+      console.error("Failed to delete selected calendar editions:", error);
       return false;
     }
   };
 
   return {
-    calendarEditions,
+    calendarEditions: data?.calendarEditions || null,
     isLoading,
     selectedRows,
     setSelectedRows,
-    totalItems,
-    page,
-    setPage,
-    search,
-    setSearch,
     handleDelete,
     handleDeleteSelected,
+    setPage,
+    setSearch,
+    page,
+    totalItems: data?.totalItems || 0,
+    totalPages: data?.totalPages || 1,
   };
-};
+}
