@@ -185,7 +185,7 @@ export function DataTable<TData extends { id?: string }>({
   // Handle debounced search
   const handleSearchChange = (value: string) => {
     setInternalSearchQuery(value);
-    
+
     // Clear any existing timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
@@ -197,23 +197,20 @@ export function DataTable<TData extends { id?: string }>({
     }, searchDebounceMs);
   };
 
-  // Cleanup timeout on unmount
-  React.useEffect(() => {
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, []);
-
   // Reset search
   const handleReset = () => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
     setInternalSearchQuery("");
     onSearch?.("");
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
     onSearch?.(internalSearchQuery);
   };
 
@@ -262,7 +259,7 @@ export function DataTable<TData extends { id?: string }>({
               <div className="relative flex-1 max-w-sm">
                 <Input
                   placeholder={searchPlaceholder}
-                  value={externalSearchQuery !== undefined ? externalSearchQuery : internalSearchQuery}
+                  value={internalSearchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   className="pr-8"
                 />

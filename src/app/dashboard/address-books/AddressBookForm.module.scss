@@ -8,10 +8,6 @@
   @include form-heading;
 }
 
-.instructions {
-  @include form-instructions;
-}
-
 .submitButton {
   @include submit-button;
 }

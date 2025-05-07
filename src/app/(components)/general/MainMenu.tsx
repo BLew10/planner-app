@@ -56,6 +56,11 @@ const menuItems = [
     label: "Events",
     urlPath: "/dashboard/events",
   },
+  {
+    icon: Calendar,
+    label: "Calendar Editions",
+    urlPath: "/dashboard/calendar-editions",
+  },
 ];
 
 const MainMenu: React.FC = () => {
@@ -99,7 +104,7 @@ const MainMenu: React.FC = () => {
             </SidebarMenuItem>
           ))}
           
-          <SidebarMenuItem>
+          {/* <SidebarMenuItem>
             <Collapsible
               open={calendarExpanded}
               onOpenChange={setCalendarExpanded}
@@ -155,7 +160,7 @@ const MainMenu: React.FC = () => {
                 <span>Configurations</span>
               </Link>
             </SidebarMenuButton>
-          </SidebarMenuItem>
+          </SidebarMenuItem> */}
         </SidebarMenu>
       </SidebarContent>
       {open && (

@@ -1,11 +1,21 @@
 import React, { useState } from "react";
-import styles from "./InvoiceSending.module.scss";
-import InvoiceTotalStatement from "./InvoiceTotalStatement";
 import { PaymentOverviewModel } from "@/lib/models/paymentOverview";
 import { generateInvoiceTotalStatementPdf } from "./InvoiceTotalStatement";
 import { generateStatementPdf, getNextPayment } from "./Statement";
+import InvoiceTotalStatement from "./InvoiceTotalStatement";
 import Statement from "./Statement";
 import { useToast } from "@/hooks/shadcn/use-toast";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface InvoiceSendingProps {
   paymentOverviews: Partial<PaymentOverviewModel>[] | null;
@@ -13,24 +23,20 @@ interface InvoiceSendingProps {
   onSendInvoices: () => void;
 }
 
-const nextYear = new Date().getFullYear() + 1;
-
 export default function InvoiceSending({
   paymentOverviews,
   invoiceType,
   onSendInvoices,
 }: InvoiceSendingProps) {
-  console.log(paymentOverviews);
   const [checkedIds, setCheckedIds] = useState<string[]>([]);
   const { toast } = useToast();
-  const handleSendInvoice = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const paymentId = event.target.value;
 
-    if (event.target.checked) {
-      if (checkedIds.includes(paymentId)) return;
-      setCheckedIds((prev) => [...prev, paymentId]);
+  const handleSendInvoice = (id: string, checked: boolean) => {
+    if (checked) {
+      if (checkedIds.includes(id)) return;
+      setCheckedIds((prev) => [...prev, id]);
     } else {
-      setCheckedIds((prev) => prev.filter((id) => id !== paymentId));
+      setCheckedIds((prev) => prev.filter((existingId) => existingId !== id));
     }
   };
 
@@ -82,7 +88,7 @@ export default function InvoiceSending({
             attachment: {
               ContentType: "application/pdf",
               Filename: `Invoice-${paymentOverview.calendarEditionYear}.pdf`,
-              Base64Content: base64data?.toString().split("base64,")[1], // Remove the prefix to get pure Base64 data
+              Base64Content: base64data?.toString().split("base64,")[1],
             },
             to: customerEmail,
             subject: `Invoice for Calendar ${paymentOverview.calendarEditionYear}`,
@@ -100,56 +106,77 @@ export default function InvoiceSending({
       });
     }
   };
+
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <p>Company</p>
-        <p>Contact</p>
-        <p>Year</p>
-        <p>Proof</p>
-        <p>Send</p>
-      </div>
-      {paymentOverviews?.map((paymentOverview) => (
-        <div className={styles.contactWrapper} key={paymentOverview.id}>
-          <p className={styles.company}>
-            {paymentOverview.contact?.contactContactInformation?.company}
-          </p>
-          <p className={styles.contactName}>
-            {paymentOverview.contact?.contactContactInformation?.firstName}{" "}
-            {paymentOverview.contact?.contactContactInformation?.lastName}
-          </p>
-          <p>{paymentOverview.calendarEditionYear}</p>
-
-          {invoiceType === "invoiceTotalSale" && (
-            <InvoiceTotalStatement
-              key={paymentOverview.id}
-              paymentOverview={paymentOverview}
-            />
-          )}
-
-          {invoiceType === "statements" && (
-            <Statement
-              key={paymentOverview.id}
-              paymentOverview={paymentOverview}
-            />
-          )}
-          <div>
-            <input
-              type="checkbox"
-              name="sendInvoice"
-              id="sendInvoice"
-              onChange={handleSendInvoice}
-              checked={checkedIds.includes(paymentOverview.id || "")}
-              value={paymentOverview.id}
-            />
-          </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Invoice Sending</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[50px]">
+                  <Checkbox
+                    checked={checkedIds.length === (paymentOverviews?.length || 0)}
+                    onCheckedChange={(value) => {
+                      const newCheckedIds = value
+                        ? paymentOverviews?.map((po) => po.id || "") || []
+                        : [];
+                      setCheckedIds(newCheckedIds);
+                    }}
+                    aria-label="Select all"
+                  />
+                </TableHead>
+                <TableHead>Company</TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead>Year</TableHead>
+                <TableHead>Preview</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paymentOverviews?.map((paymentOverview) => (
+                <TableRow key={paymentOverview.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={checkedIds.includes(paymentOverview.id || "")}
+                      onCheckedChange={(value) => 
+                        handleSendInvoice(paymentOverview.id || "", !!value)
+                      }
+                      aria-label="Select row"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    {paymentOverview.contact?.contactContactInformation?.company}
+                  </TableCell>
+                  <TableCell>
+                    {paymentOverview.contact?.contactContactInformation?.firstName}{" "}
+                    {paymentOverview.contact?.contactContactInformation?.lastName}
+                  </TableCell>
+                  <TableCell>{paymentOverview.calendarEditionYear}</TableCell>
+                  <TableCell>
+                    {invoiceType === "invoiceTotalSale" && (
+                      <InvoiceTotalStatement paymentOverview={paymentOverview} />
+                    )}
+                    {invoiceType === "statements" && (
+                      <Statement paymentOverview={paymentOverview} />
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
-      ))}
-      <div>
-        <button className={styles.sendButton} onClick={sendInvoices}>
-          Send
-        </button>
-      </div>
-    </div>
+        <div className="mt-4 flex justify-end">
+          <Button 
+            onClick={sendInvoices}
+            disabled={checkedIds.length === 0}
+          >
+            Send Selected ({checkedIds.length})
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

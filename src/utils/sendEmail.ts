@@ -21,7 +21,7 @@ interface SendEmailParams {
 const sendEmail = async ({ to, subject, text, attachment }: SendEmailParams): Promise<any> => {
   const message = {
     From: {
-      Email: "brandonlewis.10@gmail.com",
+      Email: "joyce@metrocalendars.com",
       Name: "Joyce Nazabal"
     },
     To: [{ Email: to }],

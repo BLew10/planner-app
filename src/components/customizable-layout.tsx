@@ -35,6 +35,7 @@ interface SavedArea {
   width: number;
   height: number;
   position: "top" | "bottom";
+  aspectRatio: number;
 }
 
 interface CustomizableLayoutProps {
@@ -45,7 +46,12 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
   const router = useRouter();
   const { toast } = useToast();
   const { adTypes, isLoading: adTypesLoading } = useAdTypes();
-  const { layout, isLoading: layoutLoading, createLayout, updateLayout } = useLayout(layoutId);
+  const {
+    layout,
+    isLoading: layoutLoading,
+    createLayout,
+    updateLayout,
+  } = useLayout(layoutId);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -66,7 +72,7 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
     if (layout) {
       setName(layout.name);
       setDescription(layout.description || "");
-      
+
       // Group placements by advertisement type to assign correct slot numbers
       const placementsByType = layout.adPlacements.reduce((acc, placement) => {
         const key = placement.advertisementId;
@@ -80,7 +86,8 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
         const sameTypeAds = placementsByType[placement.advertisementId];
         // Sort by x and y to ensure consistent slot numbering
         sameTypeAds.sort((a, b) => (a.y === b.y ? a.x - b.x : a.y - b.y));
-        const slotNumber = sameTypeAds.findIndex(p => p.id === placement.id) + 1;
+        const slotNumber =
+          sameTypeAds.findIndex((p) => p.id === placement.id) + 1;
 
         return {
           id: placement.id,
@@ -92,6 +99,7 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
           width: placement.width,
           height: placement.height,
           position: placement.position as "top" | "bottom",
+          aspectRatio: placement.width / placement.height,
         };
       });
 
@@ -102,7 +110,7 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
   // Add event listener for Escape key to cancel paste
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && copiedArea) {
+      if (e.key === "Escape" && copiedArea) {
         setCopiedArea(null);
         toast({
           title: "Paste cancelled",
@@ -111,8 +119,8 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [copiedArea]);
 
   // Function to get the next available slot number for an ad type
@@ -137,14 +145,14 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
       const selectedAdType = adTypes?.find(
         (type) => type.id === copiedArea.adTypeId
       );
-      
+
       if (!selectedAdType) return;
 
       // Check if we've reached the maximum slots for this ad type
       const usedSlots = savedAreas.filter(
         (area) => area.adTypeId === copiedArea.adTypeId
       ).length;
-      
+
       if (selectedAdType.perMonth && usedSlots >= selectedAdType.perMonth) {
         toast({
           title: "Cannot paste area",
@@ -162,9 +170,10 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
           ...copiedArea,
           id: Math.random().toString(36).substr(2, 9),
           slotNumber,
-          x: selection.x - (copiedArea.width / 2), // Center the pasted area at cursor
-          y: selection.y - (copiedArea.height / 2),
+          x: selection.x - copiedArea.width / 2, // Center the pasted area at cursor
+          y: selection.y - copiedArea.height / 2,
           position: selection.position,
+          aspectRatio: copiedArea.width / copiedArea.height,
         },
       ]);
 
@@ -203,6 +212,7 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
         y: currentSelection.y,
         width: currentSelection.width,
         height: currentSelection.height,
+        aspectRatio: currentSelection.width / currentSelection.height,
       },
     ]);
 
@@ -219,13 +229,13 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
     const selectedAdType = adTypes?.find(
       (type) => type.id === areaToCopy.adTypeId
     );
-    
+
     if (!selectedAdType) return;
 
     const usedSlots = savedAreas.filter(
       (area) => area.adTypeId === areaToCopy.adTypeId
     ).length;
-    
+
     if (selectedAdType.perMonth && usedSlots >= selectedAdType.perMonth) {
       toast({
         title: "Cannot copy area",
@@ -238,7 +248,8 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
     setCopiedArea(areaToCopy);
     toast({
       title: "Area copied",
-      description: "Click and drag on the canvas to paste the area, or press Escape to cancel",
+      description:
+        "Click and drag on the canvas to paste the area, or press Escape to cancel",
     });
   };
 
@@ -353,8 +364,10 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
                 onDeleteArea={(areaId) => {
                   setSavedAreas((prev) => {
                     // First remove the area
-                    const remainingAreas = prev.filter((area) => area.id !== areaId);
-                    
+                    const remainingAreas = prev.filter(
+                      (area) => area.id !== areaId
+                    );
+
                     // Get the deleted area's type to know which slots to renumber
                     const deletedArea = prev.find((area) => area.id === areaId);
                     if (!deletedArea) return remainingAreas;
@@ -364,11 +377,12 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
                       if (area.adTypeId === deletedArea.adTypeId) {
                         // Get all areas of this type and sort them by current slot number
                         const sameTypeAreas = remainingAreas
-                          .filter(a => a.adTypeId === area.adTypeId)
+                          .filter((a) => a.adTypeId === area.adTypeId)
                           .sort((a, b) => a.slotNumber - b.slotNumber);
-                        
+
                         // Find this area's position in the sorted list
-                        const newSlotNumber = sameTypeAreas.findIndex(a => a.id === area.id) + 1;
+                        const newSlotNumber =
+                          sameTypeAreas.findIndex((a) => a.id === area.id) + 1;
                         return { ...area, slotNumber: newSlotNumber };
                       }
                       return area;
@@ -379,9 +393,7 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
                 onMoveArea={(areaId, newX, newY) => {
                   setSavedAreas((prev) =>
                     prev.map((area) =>
-                      area.id === areaId
-                        ? { ...area, x: newX, y: newY }
-                        : area
+                      area.id === areaId ? { ...area, x: newX, y: newY } : area
                     )
                   );
                 }}
@@ -409,8 +421,10 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
                 onDeleteArea={(areaId) => {
                   setSavedAreas((prev) => {
                     // First remove the area
-                    const remainingAreas = prev.filter((area) => area.id !== areaId);
-                    
+                    const remainingAreas = prev.filter(
+                      (area) => area.id !== areaId
+                    );
+
                     // Get the deleted area's type to know which slots to renumber
                     const deletedArea = prev.find((area) => area.id === areaId);
                     if (!deletedArea) return remainingAreas;
@@ -420,11 +434,12 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
                       if (area.adTypeId === deletedArea.adTypeId) {
                         // Get all areas of this type and sort them by current slot number
                         const sameTypeAreas = remainingAreas
-                          .filter(a => a.adTypeId === area.adTypeId)
+                          .filter((a) => a.adTypeId === area.adTypeId)
                           .sort((a, b) => a.slotNumber - b.slotNumber);
-                        
+
                         // Find this area's position in the sorted list
-                        const newSlotNumber = sameTypeAreas.findIndex(a => a.id === area.id) + 1;
+                        const newSlotNumber =
+                          sameTypeAreas.findIndex((a) => a.id === area.id) + 1;
                         return { ...area, slotNumber: newSlotNumber };
                       }
                       return area;
@@ -435,9 +450,7 @@ export function CustomizableLayout({ layoutId }: CustomizableLayoutProps) {
                 onMoveArea={(areaId, newX, newY) => {
                   setSavedAreas((prev) =>
                     prev.map((area) =>
-                      area.id === areaId
-                        ? { ...area, x: newX, y: newY }
-                        : area
+                      area.id === areaId ? { ...area, x: newX, y: newY } : area
                     )
                   );
                 }}

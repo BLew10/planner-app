@@ -61,7 +61,7 @@ const AddressBookForm = ({
     <AnimateWrapper>
       <form onSubmit={handleSubmit} className={styles.form}>
         <h2 className={styles.heading}>Create New Address Book</h2>
-        <p className={styles.instructions}>
+        <p>
           To change the name of this Address Book, type the new name you wish to
           assign to it, then indicate the Display Level.
         </p>

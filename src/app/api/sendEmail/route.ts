@@ -4,6 +4,7 @@ export async function POST(req: Request) {
     try {
       const { to, subject, text, attachment } = await req.json();
       const data = await sendEmail({ to, subject, text, attachment });
+      console.log("Email sent:", data);
       return new Response(JSON.stringify(data), { status: 200, headers: { 'Content-Type': 'application/json' } });
     } catch (error) {
       console.error("Error during email send:", error);
