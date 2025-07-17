@@ -169,7 +169,13 @@ export const getNextPayment = (
   const unpaidPayments = paymentOverview?.scheduledPayments?.filter(
     (payment: ScheduledPayment) => !payment.isPaid
   );
-  for (const payment of unpaidPayments || []) {
+  
+  // Sort unpaid payments by due date to ensure we get the earliest one
+  const sortedUnpaidPayments = unpaidPayments?.sort((a, b) => {
+    return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+  });
+  
+  for (const payment of sortedUnpaidPayments || []) {
     if (new Date(payment.dueDate) > today || inlcudeOlderPayments) {
       nextPayment = {
         dueDate: payment.dueDate,

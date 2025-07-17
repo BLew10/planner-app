@@ -18,7 +18,11 @@ export const getPaymentOverviewById = async (
       },
       include: {
         purchase: true,
-        scheduledPayments: true,
+        scheduledPayments: {
+          orderBy: {
+            dueDate: "asc",
+          },
+        },
         payments: true,
       },
     });
@@ -343,6 +347,9 @@ export const getThisMonthPayments = async (
           dueDateTimeStamp: {
             lte: today,
           },
+        },
+        orderBy: {
+          dueDate: "asc",
         },
       },
       purchase: {

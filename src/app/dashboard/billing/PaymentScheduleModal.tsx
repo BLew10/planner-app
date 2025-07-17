@@ -79,11 +79,11 @@ export default function PaymentScheduleModal({
       if (data) {
         setScheduledPayments(
           sortByDateScheduledPayments(
-            paymentOverview?.scheduledPayments || null
+            data?.scheduledPayments || null
           )
         );
         setPaymentsMade(
-          sortByDatePaymentsMade(paymentOverview?.payments || null)
+          sortByDatePaymentsMade(data?.payments || null)
         );
       }
       setIsFetching(false);
