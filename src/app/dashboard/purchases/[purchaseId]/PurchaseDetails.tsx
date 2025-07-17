@@ -460,6 +460,7 @@ const PurchaseDetails: React.FC<PurchaseProps> = ({
           <PurchaseDayType
             data={activeModalData.data}
             year={year}
+            contactId={contactId}
             closeModal={() =>
               setActiveModalData({
                 isOpenDayType: false,

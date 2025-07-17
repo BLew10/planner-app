@@ -337,7 +337,7 @@ const PurchaseNonDayType = ({
                                                   <div
                                                     className={`
                                                     h-full w-full border rounded-md overflow-hidden flex flex-col
-                                                    bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800/30
+                                                    bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800/30
                                                     transition-all duration-150
                                                   `}
                                                   >
@@ -346,7 +346,7 @@ const PurchaseNonDayType = ({
                                                         <span className="font-medium">
                                                           {slotIndex + 1}
                                                         </span>
-                                                        <div className="rounded-full p-1 bg-green-200 text-green-700 dark:bg-green-700 dark:text-green-100">
+                                                        <div className="rounded-full p-1 bg-red-200 text-red-700 dark:bg-red-700 dark:text-red-100">
                                                           <Check className="h-2.5 w-2.5" />
                                                         </div>
                                                       </div>

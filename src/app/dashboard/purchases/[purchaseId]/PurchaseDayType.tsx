@@ -3,6 +3,7 @@ import { formatDateToString } from "@/lib/helpers/formatDateToString";
 import { AdvertisementPurchaseData } from "./PurchaseDetails";
 import { usePurchasesStore } from "@/store/purchaseStore";
 import { MONTHS } from "@/lib/constants";
+import { getTakenSlots } from "@/lib/data/purchase";
 import { motion } from "framer-motion";
 
 // shadcn components
@@ -16,13 +17,20 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CalendarDays, X, ArrowRight } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { CalendarDays, X, ArrowRight, Check } from "lucide-react";
 
 interface PurchaseDayTypeProps {
   data: AdvertisementPurchaseData | undefined | null;
   closeModal: () => void;
   isOpen: boolean;
   year: string;
+  contactId: string;
 }
 
 const PurchaseDayType: React.FC<PurchaseDayTypeProps> = ({
@@ -30,10 +38,14 @@ const PurchaseDayType: React.FC<PurchaseDayTypeProps> = ({
   closeModal,
   isOpen,
   year,
+  contactId,
 }) => {
   const purchaseStore = usePurchasesStore();
   const [selectedSlots, setSelectedSlots] = useState<
     { month: number; slot: number }[]
+  >([]);
+  const [takenSlots, setTakenSlots] = useState<
+    { month: number; slot: number; takenBy: string }[]
   >([]);
   const { calendarId, adId } = data || {};
   
@@ -90,6 +102,7 @@ const PurchaseDayType: React.FC<PurchaseDayTypeProps> = ({
       // When modal opens, initialize from the store
       initializedRef.current = false;
       setSelectedSlots([]);
+      setTakenSlots([]);
     }
   }, [isOpen]);
 
@@ -118,13 +131,54 @@ const PurchaseDayType: React.FC<PurchaseDayTypeProps> = ({
     initializedRef.current = true;
   }, [isOpen, calendarId, adId, purchaseStore]);
 
+  // Fetch taken slots
+  useEffect(() => {
+    const fetchTakenSlots = async () => {
+      if (!data) return;
+      const { adId, calendarId } = data;
+      if (!adId || !calendarId) {
+        return;
+      }
+      const takenSlotsData = await getTakenSlots(year, calendarId, contactId, adId);
+      if (!takenSlotsData) return;
+      
+      const processedTakenSlots = takenSlotsData.map(slot => ({
+        month: slot.month || 0,
+        slot: slot.slot || 0,
+        takenBy: slot.contact?.contactContactInformation?.company || ""
+      }));
+      
+      setTakenSlots(processedTakenSlots);
+    };
+
+    fetchTakenSlots();
+  }, [year, contactId, data]);
+
   const isSlotSelected = (month: number, position: number) => {
     return selectedSlots.some(
       slot => slot.month === month + 1 && slot.slot === position
     );
   };
 
+  const isSlotTaken = (month: number, position: number) => {
+    return takenSlots.some(
+      slot => slot.month === month + 1 && slot.slot === position
+    );
+  };
+
+  const getTakenByCompany = (month: number, position: number) => {
+    const takenSlot = takenSlots.find(
+      slot => slot.month === month + 1 && slot.slot === position
+    );
+    return takenSlot?.takenBy || "";
+  };
+
   const handleSlotSelect = (month: number, position: number) => {
+    // Don't allow selection of taken slots
+    if (isSlotTaken(month, position)) {
+      return;
+    }
+
     const isAlreadySelected = selectedSlots.some(
       slot => slot.month === month + 1 && slot.slot === position
     );
@@ -240,6 +294,8 @@ const PurchaseDayType: React.FC<PurchaseDayTypeProps> = ({
                         {getMonthGrid(monthIndex, numericYear).map((cell, cellIndex) => {
                           const position = cell.position; // 1-42
                           const isSelected = isSlotSelected(monthIndex, position);
+                          const isTaken = isSlotTaken(monthIndex, position);
+                          const takenBy = getTakenByCompany(monthIndex, position);
                           
                           // Determine grid row for styling
                           const gridRow = Math.floor(cellIndex / 7) + 1;
@@ -249,26 +305,57 @@ const PurchaseDayType: React.FC<PurchaseDayTypeProps> = ({
                               key={cellIndex}
                               className={`relative aspect-square p-0.5 ${gridRow > 5 ? 'row-6' : ''}`}
                             >
-                              <div
-                                onClick={() => handleSlotSelect(monthIndex, position)}
-                                className={`
-                                  w-full h-full rounded-md flex items-center justify-center cursor-pointer
-                                  transition-all duration-150 text-xs font-medium
-                                  shadow-sm hover:shadow-md
-                                  ${isSelected 
-                                    ? 'bg-primary/10 border-2 border-primary' 
-                                    : 'bg-white dark:bg-gray-800 border border-muted-foreground/20 hover:border-primary/50 hover:bg-muted/20'}
-                                  ${cell.isEmpty ? 'opacity-70' : ''}
-                                `}
-                              >
-                                {cell.dayNumber && <span>{cell.dayNumber}</span>}
-                                {isSelected && (
-                                  <div className="absolute top-1 right-1 rounded-full bg-primary w-2 h-2" />
-                                )}
-                                <span className="absolute bottom-1 right-1 text-[8px] text-muted-foreground">
-                                  {position}
-                                </span>
-                              </div>
+                              {isTaken && takenBy ? (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div
+                                        className={`
+                                          w-full h-full rounded-md flex items-center justify-center
+                                          transition-all duration-150 text-xs font-medium
+                                          shadow-sm
+                                          bg-red-50 border-2 border-red-200 dark:bg-red-950/20 dark:border-red-800/30
+                                          ${cell.isEmpty ? 'opacity-70' : ''}
+                                        `}
+                                      >
+                                        {cell.dayNumber && <span>{cell.dayNumber}</span>}
+                                        <div className="absolute top-1 right-1 rounded-full bg-red-200 text-red-700 dark:bg-red-700 dark:text-red-100 w-3 h-3 flex items-center justify-center">
+                                          <Check className="h-2 w-2" />
+                                        </div>
+                                        <span className="absolute bottom-1 right-1 text-[8px] text-muted-foreground">
+                                          {position}
+                                        </span>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="p-2 max-w-[200px]">
+                                      <p className="text-sm">
+                                        Taken by: {takenBy}
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              ) : (
+                                <div
+                                  onClick={() => handleSlotSelect(monthIndex, position)}
+                                  className={`
+                                    w-full h-full rounded-md flex items-center justify-center cursor-pointer
+                                    transition-all duration-150 text-xs font-medium
+                                    shadow-sm hover:shadow-md
+                                    ${isSelected 
+                                      ? 'bg-primary/10 border-2 border-primary' 
+                                      : 'bg-white dark:bg-gray-800 border border-muted-foreground/20 hover:border-primary/50 hover:bg-muted/20'}
+                                    ${cell.isEmpty ? 'opacity-70' : ''}
+                                  `}
+                                >
+                                  {cell.dayNumber && <span>{cell.dayNumber}</span>}
+                                  {isSelected && (
+                                    <div className="absolute top-1 right-1 rounded-full bg-primary w-2 h-2" />
+                                  )}
+                                  <span className="absolute bottom-1 right-1 text-[8px] text-muted-foreground">
+                                    {position}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           );
                         })}
