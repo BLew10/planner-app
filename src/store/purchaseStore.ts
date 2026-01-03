@@ -41,6 +41,7 @@ interface PurchasesStore {
   removeCalendarId: (calendarId: string) => void;
   setCharge: (calendarId: string, adId: string, charge: string) => void;
   setQuantity: (calendarId: string, adId: string, quantity: string) => void;
+  clearAdData: (calendarId: string, adId: string) => void;
   reset: () => void;
   updateTotal: () => void;
   getByCalendarIdAdId: (
@@ -150,6 +151,26 @@ export const usePurchasesStore = create<PurchasesStore>()(
                 [adId]: {
                   ...currentAd,
                   quantity: quantity,
+                },
+              },
+            },
+          };
+        });
+      },
+      clearAdData: (calendarId: string, adId: string) => {
+        set((state) => {
+          const currentCalendar = state.purchaseOverview?.[calendarId] || {};
+          return {
+            total: state.total,
+            purchaseOverview: {
+              ...state.purchaseOverview,
+              [calendarId]: {
+                ...currentCalendar,
+                [adId]: {
+                  perMonth: "",
+                  quantity: "",
+                  charge: "",
+                  slots: [],
                 },
               },
             },

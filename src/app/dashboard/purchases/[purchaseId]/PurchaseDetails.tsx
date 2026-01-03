@@ -28,7 +28,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ChevronRight, MapPin, AlertCircle, Check } from "lucide-react";
+import { ChevronRight, MapPin, AlertCircle, Check, X } from "lucide-react";
 
 interface PurchaseProps {
   advertisementTypes: Partial<Advertisement>[];
@@ -143,6 +143,15 @@ const PurchaseDetails: React.FC<PurchaseProps> = ({
     }
   };
 
+  // Handle clearing ad data
+  const handleClearAd = (calendarId: string, adId: string) => {
+    purchaseStore.clearAdData(calendarId, adId);
+    // Clear any existing error for this ad
+    if (formErrors[`${adId}-${calendarId}`]) {
+      setFormErrors((prev) => ({ ...prev, [`${adId}-${calendarId}`]: false }));
+    }
+  };
+
   // Handle form submission
   const onContinue = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -157,6 +166,19 @@ const PurchaseDetails: React.FC<PurchaseProps> = ({
         const adData = calendarData[adId];
         let { slots, quantity, charge } = adData;
 
+        // Normalize values to handle edge cases (undefined, null, whitespace)
+        const quantityStr = (quantity ?? "").toString().trim();
+        const chargeStr = (charge ?? "").toString().trim();
+        
+        // Treat quantity of "0" as empty (no purchase)
+        const hasQuantity = quantityStr !== "" && quantityStr !== "0";
+        const hasCharge = chargeStr !== "" && chargeStr !== "0";
+
+        // Skip validation if no meaningful quantity or charge (user cleared the data or set to 0)
+        if (!hasQuantity && !hasCharge) {
+          continue;
+        }
+
         if (!adType?.perMonth || adType?.perMonth === 0) {
           // Extra Cases is the ad type and am using quantity as the slot number
           adData.slots = [
@@ -169,10 +191,7 @@ const PurchaseDetails: React.FC<PurchaseProps> = ({
           slots = adData.slots;
         }
 
-        if (
-          (quantity !== "" || charge !== "") &&
-          (!slots || slots.length === 0)
-        ) {
+        if (!slots || slots.length === 0) {
           const errorKey = `${adId}-${calendarId}`;
           newErrors[errorKey] = true;
           hasErrors = true;
@@ -287,9 +306,13 @@ const PurchaseDetails: React.FC<PurchaseProps> = ({
                           const hasError =
                             formErrors[`${ad.id}-${calendar.id}`];
 
+                          // Treat quantity "0" as empty (no purchase needed)
+                          const hasQuantityData = data.quantity !== "" && data.quantity !== "0";
+                          const hasChargeData = data.charge !== "" && data.charge !== "0";
+                          
                           const needsPlacement =
                             ad.perMonth !== 0 &&
-                            (data.quantity !== "" || data.charge !== "") &&
+                            (hasQuantityData || hasChargeData) &&
                             (!data.slots || data.slots.length === 0);
 
                           return (
@@ -353,58 +376,103 @@ const PurchaseDetails: React.FC<PurchaseProps> = ({
                                   />
                                 </div>
 
-                                {ad.perMonth !== 0 && (
+                                {/* Clear button for ad types without Place button */}
+                                {ad.perMonth === 0 && (data.quantity !== "" || data.charge !== "") && (
                                   <TooltipProvider>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <Button
                                           type="button"
-                                          variant={
-                                            data.slots?.length 
-                                              ? "add" 
-                                              : needsPlacement 
-                                                ? "destructive" 
-                                                : "outline"
-                                          }
+                                          variant="ghost"
                                           size="sm"
-                                          className={`mt-2 md:mt-0 min-w-[90px] ${
-                                            needsPlacement ? "animate-pulse" : ""
-                                          }`}
-                                          onClick={() => {
-                                            if (ad.isDayType) {
-                                              openDayTypeModal(
-                                                ad,
-                                                calendar.id as string
-                                              );
-                                            } else {
-                                              openNonDayTypeModal(
-                                                ad,
-                                                calendar.id as string
-                                              );
-                                            }
-                                          }}
+                                          className="h-8 w-8 p-0 mt-2 md:mt-0 text-muted-foreground hover:text-destructive"
+                                          onClick={() => handleClearAd(calendar.id as string, ad.id as string)}
                                         >
-                                          {data.slots?.length ? (
-                                            <>
-                                              <Check className="h-4 w-4 mr-1" />
-                                              {data.slots.length} Placed
-                                            </>
-                                          ) : (
-                                            <>
-                                              {needsPlacement ? "Required" : "Place"}
-                                            </>
-                                          )}
+                                          <X className="h-4 w-4" />
                                         </Button>
                                       </TooltipTrigger>
                                       <TooltipContent>
-                                        {needsPlacement
-                                          ? "Placement required before continuing"
-                                          : data.slots?.length
-                                          ? `${data.slots.length} slots placed`
-                                          : "Place advertisement position"}
+                                        Clear quantity and charge
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>
+                                )}
+
+                                {ad.perMonth !== 0 && (
+                                  <div className="flex items-center gap-1 mt-2 md:mt-0">
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            type="button"
+                                            variant={
+                                              data.slots?.length 
+                                                ? "add" 
+                                                : needsPlacement 
+                                                  ? "destructive" 
+                                                  : "outline"
+                                            }
+                                            size="sm"
+                                            className={`min-w-[90px] ${
+                                              needsPlacement ? "animate-pulse" : ""
+                                            }`}
+                                            onClick={() => {
+                                              if (ad.isDayType) {
+                                                openDayTypeModal(
+                                                  ad,
+                                                  calendar.id as string
+                                                );
+                                              } else {
+                                                openNonDayTypeModal(
+                                                  ad,
+                                                  calendar.id as string
+                                                );
+                                              }
+                                            }}
+                                          >
+                                            {data.slots?.length ? (
+                                              <>
+                                                <Check className="h-4 w-4 mr-1" />
+                                                {data.slots.length} Placed
+                                              </>
+                                            ) : (
+                                              <>
+                                                {needsPlacement ? "Required" : "Place"}
+                                              </>
+                                            )}
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          {needsPlacement
+                                            ? "Placement required before continuing"
+                                            : data.slots?.length
+                                            ? `${data.slots.length} slots placed`
+                                            : "Place advertisement position"}
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                    
+                                    {(data.quantity !== "" || data.charge !== "" || (data.slots && data.slots.length > 0)) && (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              type="button"
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                                              onClick={() => handleClearAd(calendar.id as string, ad.id as string)}
+                                            >
+                                              <X className="h-4 w-4" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            Clear quantity, charge, and placements
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
+                                  </div>
                                 )}
 
                                 {hasError && (
