@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCashFlowData } from "@/lib/data/cashFlowReport";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // Get query parameters
