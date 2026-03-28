@@ -41,8 +41,8 @@ export default {
           user.password
         );
         if (passwordsMatch){
-            delete user.password;
-            return user;
+            const { password: _, ...userWithoutPassword } = user;
+            return userWithoutPassword;
         }
         return null;
       },
