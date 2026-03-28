@@ -101,7 +101,7 @@ async function main() {
 
     const province = addr?.state
       ? (STATE_MAP[addr.state] ?? addr.state)
-      : "";
+      : "California";
 
     return [
       "",                                 // CUSTOMER_CODE
