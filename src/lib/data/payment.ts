@@ -30,8 +30,6 @@ export const getPaymentById = async (
 
 export const getPaymentsByCalendarEditionYear = async (
   calendarEditionYear: string,
-  page: number = 1,
-  itemsPerPage: number = 10,
   searchQuery: string = ""
 ): Promise<{ payments: Partial<PaymentModel>[]; total: number }> => {
   const session = await auth();
@@ -100,8 +98,6 @@ export const getPaymentsByCalendarEditionYear = async (
         orderBy: {
           paymentDate: "desc",
         },
-        skip: (page - 1) * itemsPerPage,
-        take: itemsPerPage,
       }),
       prisma.payment.count({ where }),
     ]);

@@ -45,11 +45,12 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchFilterData = async () => {
-      const { data: calendars } = await getAllCalendars();
-      setSelectedCalendar(calendars?.[0]?.id || "");
-      setCalendarData(calendars || []);
-      const { data: ads } = await getAllAdvertisementTypes();
-      setAdvertisementTypes(ads || []);
+      const calendarResult = await getAllCalendars();
+      const calendars = calendarResult?.data ?? [];
+      setSelectedCalendar(calendars[0]?.id || "");
+      setCalendarData(calendars);
+      const adsResult = await getAllAdvertisementTypes();
+      setAdvertisementTypes(adsResult?.data ?? []);
     };
     fetchFilterData();
   }, []);

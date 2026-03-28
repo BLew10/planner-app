@@ -18,9 +18,7 @@ interface PaymentsTableProps {
   onDelete: (id: string) => void;
   onDeleteSelected: () => void;
   onSearch: (query: string) => void;
-  onPageChange: (page: number) => void;
   totalItems: number;
-  currentPage: number;
   year: string;
   onYearChange: (year: string) => void;
   filterOptions: { value: string; label: string }[];
@@ -35,9 +33,7 @@ export function PaymentsTable({
   onDelete,
   onDeleteSelected,
   onSearch,
-  onPageChange,
   totalItems,
-  currentPage,
   year,
   onYearChange,
   filterOptions,
@@ -150,13 +146,12 @@ export function PaymentsTable({
       defaultFilterValue={year}
       onFilterChange={onYearChange}
       onSearch={onSearch}
-      onPageChange={onPageChange}
       selectedRows={selectedRows}
       onSelectedRowsChange={onSelectedRowsChange}
       onDeleteSelected={onDeleteSelected}
-      currentPage={currentPage}
       searchPlaceholder="Search payments..."
       totalItems={totalItems}
+      noPagination
     />
   );
 } 

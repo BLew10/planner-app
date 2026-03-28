@@ -7,7 +7,8 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "populate-due-dates": "ts-node scripts/populate-due-date-timestamps.ts"
+    "populate-due-dates": "ts-node scripts/populate-due-date-timestamps.ts",
+    "export-helcim-csv": "ts-node scripts/export-helcim-contacts.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^1.1.0",

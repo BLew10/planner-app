@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useThemeStore } from "@/store/themeStore";
 import { logout } from "@/actions/user/logout";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,8 @@ import {
   LogOut,
   FileText,
   DollarSign,
-  CreditCard,
+  ShoppingCart,
+  Wallet,
   InfoIcon,
   Grid,
   Hammer,
@@ -36,36 +38,26 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", urlPath: "/dashboard" },
-  { icon: DollarSign, label: "Billing", urlPath: "/dashboard/billing" },
-  { icon: CreditCard, label: "Purchases", urlPath: "/dashboard/purchases" },
-  { icon: CreditCard, label: "Payments", urlPath: "/dashboard/payments" },
-  {
-    icon: BookOpen,
-    label: "Address Books",
-    urlPath: "/dashboard/address-books",
-  },
-  { icon: Users, label: "Contacts", urlPath: "/dashboard/contacts" },
-  {
-    icon: FileText,
-    label: "Advertisement Types",
-    urlPath: "/dashboard/advertisement-types",
-  },
-  {
-    icon: InfoIcon,
-    label: "Events",
-    urlPath: "/dashboard/events",
-  },
-  {
-    icon: Calendar,
-    label: "Calendar Editions",
-    urlPath: "/dashboard/calendar-editions",
-  },
+  { icon: LayoutDashboard, label: "Dashboard", urlPath: "/dashboard", color: "text-violet-500" },
+  { icon: DollarSign, label: "Billing", urlPath: "/dashboard/billing", color: "text-emerald-500" },
+  { icon: ShoppingCart, label: "Purchases", urlPath: "/dashboard/purchases", color: "text-sky-500" },
+  { icon: Wallet, label: "Payments", urlPath: "/dashboard/payments", color: "text-amber-500" },
+  { icon: BookOpen, label: "Address Books", urlPath: "/dashboard/address-books", color: "text-rose-500" },
+  { icon: Users, label: "Contacts", urlPath: "/dashboard/contacts", color: "text-indigo-500" },
+  { icon: FileText, label: "Advertisement Types", urlPath: "/dashboard/advertisement-types", color: "text-orange-500" },
+  { icon: InfoIcon, label: "Events", urlPath: "/dashboard/events", color: "text-pink-500" },
+  { icon: Calendar, label: "Calendar Editions", urlPath: "/dashboard/calendar-editions", color: "text-teal-500" },
 ];
 
 const MainMenu: React.FC = () => {
   const { open } = useSidebar();
+  const pathname = usePathname();
   const [calendarExpanded, setCalendarExpanded] = React.useState(false);
+
+  const isItemActive = (urlPath: string) => {
+    if (urlPath === "/dashboard") return pathname === "/dashboard";
+    return pathname.startsWith(urlPath);
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -93,16 +85,19 @@ const MainMenu: React.FC = () => {
       )}
       <SidebarContent>
         <SidebarMenu>
-          {menuItems.map((item) => (
-            <SidebarMenuItem key={item.label}>
-              <SidebarMenuButton asChild>
-                <Link href={item.urlPath} className="mx-auto">
-                  <item.icon />
-                  <span>{item.label}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {menuItems.map((item) => {
+            const active = isItemActive(item.urlPath);
+            return (
+              <SidebarMenuItem key={item.label}>
+                <SidebarMenuButton asChild isActive={active} size="lg" className="text-base">
+                  <Link href={item.urlPath} className="mx-auto">
+                    <item.icon className={`${item.color} !size-5`} />
+                    <span>{item.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
           
           {/* <SidebarMenuItem>
             <Collapsible

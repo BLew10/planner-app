@@ -8,10 +8,8 @@ import { getPaymentsByCalendarEditionYear } from "@/lib/data/payment";
 
 export const usePayments = (
   {
-    itemsPerPage = 10,
     initialYear = "",
   }: {
-    itemsPerPage?: number;
     initialYear: string;
   } = { initialYear: "" }
 ) => {
@@ -21,28 +19,18 @@ export const usePayments = (
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [totalItems, setTotalItems] = useState(0);
-  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [year, setYear] = useState(initialYear);
 
   const fetchPayments = useCallback(async () => {
     setIsLoading(true);
     try {
-      // In an ideal world, we'd update the API to support pagination, search, etc.
-      // For now, we'll handle it client-side
-      const result = await getPaymentsByCalendarEditionYear(
-        year,
-        page,
-        itemsPerPage,
-        search
-      );
+      const result = await getPaymentsByCalendarEditionYear(year, search);
 
       if (Array.isArray(result)) {
-        // Legacy API returns just an array - we'll need to handle pagination manually
         setPayments(result);
         setTotalItems(result.length);
       } else {
-        // If API is updated to return { payments, total }
         setPayments(result?.payments || []);
         setTotalItems(result?.total || 0);
       }
@@ -58,7 +46,7 @@ export const usePayments = (
     } finally {
       setIsLoading(false);
     }
-  }, [year, page, itemsPerPage, search]);
+  }, [year, search]);
 
   useEffect(() => {
     fetchPayments();
@@ -123,8 +111,6 @@ export const usePayments = (
     selectedRows,
     setSelectedRows,
     totalItems,
-    page,
-    setPage,
     search,
     setSearch,
     year,

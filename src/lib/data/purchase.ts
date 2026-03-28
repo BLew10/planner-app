@@ -92,13 +92,13 @@ export interface PurchaseTableData {
   purchasedOn: string;
   total: number;
   amountPaid: number;
+  hasSubmittedArtwork: boolean;
 }
 
 export const getPurchaseTableData = async (
   calendarEditionYear: string,
-  page: number,
-  itemsPerPage: number,
-  search: string
+  search: string,
+  artworkFilter: string = "all"
 ): Promise<{ purchases: PurchaseTableData[]; total: number } | null> => {
   const session = await auth();
   if (!session) {
@@ -108,7 +108,7 @@ export const getPurchaseTableData = async (
   const userId = session.user.id;
 
   try {
-    const where = {
+    const where: any = {
       userId,
       calendarEditionYear: Number(calendarEditionYear),
       isDeleted: false,
@@ -120,6 +120,12 @@ export const getPurchaseTableData = async (
       ],
     };
 
+    if (artworkFilter === "true") {
+      where.hasSubmittedArtwork = true;
+    } else if (artworkFilter === "false") {
+      where.hasSubmittedArtwork = false;
+    }
+
     const [purchases, total] = await Promise.all([
       prisma.purchaseOverview.findMany({
         where,
@@ -129,6 +135,7 @@ export const getPurchaseTableData = async (
           createdAt: true,
           calendarEditionYear: true,
           paymentOverviewId: true,
+          hasSubmittedArtwork: true,
           paymentOverview: {
             select: {
               amountPaid: true,
@@ -158,8 +165,6 @@ export const getPurchaseTableData = async (
             },
           },
         },
-        skip: (page - 1) * itemsPerPage,
-        take: itemsPerPage,
       }),
       prisma.purchaseOverview.count({ where }),
     ]);
@@ -180,6 +185,7 @@ export const getPurchaseTableData = async (
         purchasedOn: formatDateToString(purchase.createdAt),
         total: Number(purchase.paymentOverview?.net || 0),
         amountPaid: Number(purchase.paymentOverview?.amountPaid || 0),
+        hasSubmittedArtwork: purchase.hasSubmittedArtwork,
       };
     });
 

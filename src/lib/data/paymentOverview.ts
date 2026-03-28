@@ -34,9 +34,7 @@ export const getPaymentOverviewById = async (
 
 export const getOwedPayments = async (
   calendarYear: string = "all",
-  searchQuery: string = "",
-  page: number = 1,
-  pageSize: number | null = null
+  searchQuery: string = ""
 ): Promise<{
   data: Partial<PaymentOverviewModel>[] | null;
   totalItems: number;
@@ -166,11 +164,7 @@ export const getOwedPayments = async (
       ],
     };
 
-    // Add pagination parameters only if pageSize is provided
-    if (pageSize !== null) {
-      queryOptions.skip = (page - 1) * pageSize;
-      queryOptions.take = pageSize;
-    }
+    
 
     // Then get the data (paginated or all)
     const payments = await prisma.paymentOverview.findMany(queryOptions);
@@ -253,9 +247,7 @@ const billingUpdatedAlready = (date: Date): boolean => {
 
 export const getThisMonthPayments = async (
   calendarYear: string = "all",
-  searchQuery: string = "",
-  page: number = 1,
-  pageSize: number = 10
+  searchQuery: string = ""
 ): Promise<{
   data: Partial<PaymentOverviewModel>[] | null;
   totalItems: number;
@@ -372,8 +364,6 @@ export const getThisMonthPayments = async (
         },
       },
     ],
-    skip: (page - 1) * pageSize,
-    take: pageSize,
   });
 
   return {

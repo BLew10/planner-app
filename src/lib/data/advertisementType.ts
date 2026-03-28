@@ -47,10 +47,9 @@ export const getAllAdvertisementTypes = async (
   data: Partial<Advertisement>[] | null;
   totalItems: number;
 }> => {
-  const session = await auth();
-  const userId = session?.user?.id;
-
   try {
+    const session = await auth();
+    const userId = session?.user?.id;
     const skip = page && pageSize ? (page - 1) * pageSize : undefined;
     const where = {
       userId,

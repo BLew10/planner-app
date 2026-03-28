@@ -139,6 +139,7 @@ model PurchaseOverview {
   calendarEditionYear Int
   amountOwed          Decimal
   isDeleted           Boolean                     @default(false)
+  hasSubmittedArtwork Boolean                     @default(false)
   createdAt           DateTime                    @default(now())
   paymentOverviewId   String?                     @unique
   adPurchases         AdvertisementPurchase[]

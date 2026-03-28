@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState } from "react";
 import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,23 @@ import { DataTable } from "@/app/(components)/general/DataTable";
 import DeleteButton from "@/app/(components)/general/DeleteButton";
 import { PurchaseTableData } from "@/lib/data/purchase";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+const ARTWORK_FILTER_OPTIONS = [
+  { value: "all", label: "All Artwork Status" },
+  { value: "true", label: "Artwork Submitted" },
+  { value: "false", label: "Artwork Not Submitted" },
+];
 
 interface PurchasesTableProps {
   purchases: PurchaseTableData[] | null;
@@ -17,13 +35,15 @@ interface PurchasesTableProps {
   onDelete: (id: string, paymentOverviewId: string) => void;
   onDeleteSelected: () => void;
   onSearch: (query: string) => void;
-  onPageChange: (page: number) => void;
   totalItems: number;
-  currentPage: number;
   year: string;
   onYearChange: (year: string) => void;
   filterOptions: { value: string; label: string }[];
   onPurchaseClick: (purchaseId: string, companyName: string) => void;
+  onToggleArtwork: (purchaseId: string, value: boolean) => void;
+  pendingArtworkIds: Set<string>;
+  artworkFilter: string;
+  onArtworkFilterChange: (value: string) => void;
 }
 
 export function PurchasesTable({
@@ -34,14 +54,36 @@ export function PurchasesTable({
   onDelete,
   onDeleteSelected,
   onSearch,
-  onPageChange,
   totalItems,
-  currentPage,
   year,
   onYearChange,
   filterOptions,
   onPurchaseClick,
+  onToggleArtwork,
+  pendingArtworkIds,
+  artworkFilter,
+  onArtworkFilterChange,
 }: PurchasesTableProps) {
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [pendingTogglePurchaseId, setPendingTogglePurchaseId] = useState<string | null>(null);
+
+  const handleArtworkToggle = (purchaseId: string, currentValue: boolean) => {
+    if (currentValue) {
+      setPendingTogglePurchaseId(purchaseId);
+      setConfirmDialogOpen(true);
+    } else {
+      onToggleArtwork(purchaseId, true);
+    }
+  };
+
+  const handleConfirmToggleOff = () => {
+    if (pendingTogglePurchaseId) {
+      onToggleArtwork(pendingTogglePurchaseId, false);
+    }
+    setConfirmDialogOpen(false);
+    setPendingTogglePurchaseId(null);
+  };
+
   const columns: ColumnDef<PurchaseTableData>[] = [
     {
       accessorKey: "companyName",
@@ -106,6 +148,26 @@ export function PurchasesTable({
       header: "Calendar Editions",
     },
     {
+      accessorKey: "hasSubmittedArtwork",
+      header: "Artwork Submitted",
+      cell: ({ row }) => {
+        const purchase = row.original;
+        const isPending = pendingArtworkIds.has(purchase.id);
+        return (
+          <div onClick={(e) => e.stopPropagation()}>
+            <Switch
+              checked={purchase.hasSubmittedArtwork}
+              disabled={isPending}
+              className={isPending ? "opacity-50" : ""}
+              onCheckedChange={() =>
+                handleArtworkToggle(purchase.id, purchase.hasSubmittedArtwork)
+              }
+            />
+          </div>
+        );
+      },
+    },
+    {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => {
@@ -142,22 +204,49 @@ export function PurchasesTable({
   ];
 
   return (
-    <DataTable
-      columns={columns}
-      data={purchases || []}
-      isLoading={isLoading}
-      title="Purchases"
-      filterOptions={filterOptions}
-      defaultFilterValue={year}
-      onFilterChange={onYearChange}
-      onSearch={onSearch}
-      onPageChange={onPageChange}
-      selectedRows={selectedRows}
-      onSelectedRowsChange={onSelectedRowsChange}
-      onDeleteSelected={onDeleteSelected}
-      currentPage={currentPage}
-      searchPlaceholder="Search purchases..."
-      totalItems={totalItems}
-    />
+    <>
+      <DataTable
+        columns={columns}
+        data={purchases || []}
+        isLoading={isLoading}
+        title="Purchases"
+        filterOptions={filterOptions}
+        defaultFilterValue={year}
+        onFilterChange={onYearChange}
+        secondFilterOptions={ARTWORK_FILTER_OPTIONS}
+        defaultSecondFilterValue={artworkFilter}
+        onSecondFilterChange={onArtworkFilterChange}
+        secondFilterPlaceholder="Artwork Status"
+        onSearch={onSearch}
+        selectedRows={selectedRows}
+        onSelectedRowsChange={onSelectedRowsChange}
+        onDeleteSelected={onDeleteSelected}
+        searchPlaceholder="Search purchases..."
+        totalItems={totalItems}
+        noPagination
+      />
+
+      <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Artwork Submission?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to mark this artwork as not submitted? This
+              will change the artwork status back to pending.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => setPendingTogglePurchaseId(null)}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmToggleOff}>
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 } 

@@ -2,13 +2,12 @@ import { useState, useCallback, useEffect } from "react";
 import { toast } from "@/hooks/shadcn/use-toast";
 import { getPurchaseTableData, PurchaseTableData } from "@/lib/data/purchase";
 import deletePurchase from "@/actions/purchases/deletePurchase";
+import toggleArtworkSubmitted from "@/actions/purchases/toggleArtworkSubmitted";
 
 export const usePurchases = (
   {
-    itemsPerPage = 10,
     initialYear = "",
   }: {
-    itemsPerPage?: number;
     initialYear: string;
   } = { initialYear: "" }
 ) => {
@@ -16,33 +15,16 @@ export const usePurchases = (
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [totalItems, setTotalItems] = useState(0);
-  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [year, setYear] = useState(initialYear);
+  const [artworkFilter, setArtworkFilter] = useState("all");
 
   const fetchPurchases = useCallback(async () => {
     setIsLoading(true);
     try {
-      console.log(year, page, itemsPerPage, search);
-      // The existing function doesn't support pagination and search directly,
-      // so we might need to adapt it or filter client-side temporarily
-      const result = await getPurchaseTableData(
-        year,
-        page,
-        itemsPerPage,
-        search
-      );
+      const result = await getPurchaseTableData(year, search, artworkFilter);
 
-      // Filter by search if provided
-      let filteredPurchases = result?.purchases || [];
-      if (search && filteredPurchases) {
-        const searchLower = search.toLowerCase();
-        filteredPurchases = filteredPurchases.filter(
-          (purchase) =>
-            purchase.companyName.toLowerCase().includes(searchLower) ||
-            purchase.calendarEditions.toLowerCase().includes(searchLower)
-        );
-      }
+      const filteredPurchases = result?.purchases || [];
 
       setPurchases(filteredPurchases);
       setTotalItems(result?.total || 0);
@@ -57,7 +39,7 @@ export const usePurchases = (
     } finally {
       setIsLoading(false);
     }
-  }, [year, search, page, itemsPerPage]);
+  }, [year, search, artworkFilter]);
 
   useEffect(() => {
     fetchPurchases();
@@ -125,20 +107,63 @@ export const usePurchases = (
     }
   };
 
+  const [pendingArtworkIds, setPendingArtworkIds] = useState<Set<string>>(
+    new Set()
+  );
+
+  const handleToggleArtwork = async (
+    purchaseId: string,
+    value: boolean
+  ) => {
+    setPurchases((prev) =>
+      (prev || []).map((p) =>
+        p.id === purchaseId ? { ...p, hasSubmittedArtwork: value } : p
+      )
+    );
+
+    setPendingArtworkIds((prev) => new Set(prev).add(purchaseId));
+
+    try {
+      const success = await toggleArtworkSubmitted(purchaseId, value);
+      if (!success) {
+        throw new Error("Failed to update artwork status");
+      }
+    } catch {
+      setPurchases((prev) =>
+        (prev || []).map((p) =>
+          p.id === purchaseId ? { ...p, hasSubmittedArtwork: !value } : p
+        )
+      );
+      toast({
+        title: "Error updating artwork status",
+        description: "The change could not be saved. The toggle has been reverted.",
+        variant: "destructive",
+      });
+    } finally {
+      setPendingArtworkIds((prev) => {
+        const next = new Set(prev);
+        next.delete(purchaseId);
+        return next;
+      });
+    }
+  };
+
   return {
     purchases,
     isLoading,
     selectedRows,
     setSelectedRows,
     totalItems,
-    page,
-    setPage,
     search,
     setSearch,
     year,
     setYear,
+    artworkFilter,
+    setArtworkFilter,
+    pendingArtworkIds,
     handleDelete,
     handleDeleteSelected,
+    handleToggleArtwork,
     fetchPurchases,
   };
 };

@@ -28,8 +28,6 @@ const ThisMonthTab: React.FC<ThisMonthTabProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [payments, setPayments] = useState<Partial<PaymentOverviewModel>[]>([]);
   const [totalItems, setTotalItems] = useState(0);
-  const [page, setPage] = useState(1);
-  const [itemsPerPage] = useState(10);
   const [selectedPaymentIds, setSelectedPaymentIds] = useState<string[]>([]);
 
   // Add modal state and selected payment
@@ -46,12 +44,6 @@ const ThisMonthTab: React.FC<ThisMonthTabProps> = ({
     }
   };
 
-  // Reset page to 1 when filters change
-  useEffect(() => {
-    setPage(1);
-  }, [selectedCalendarYear, searchQuery]);
-
-  // Fetch data only when filters or pagination changes
   useEffect(() => {
     let isMounted = true;
 
@@ -60,9 +52,7 @@ const ThisMonthTab: React.FC<ThisMonthTabProps> = ({
       try {
         const { data, totalItems: total } = await getThisMonthPayments(
           selectedCalendarYear,
-          searchQuery,
-          page,
-          itemsPerPage
+          searchQuery
         );
 
         if (!isMounted) return;
@@ -83,7 +73,7 @@ const ThisMonthTab: React.FC<ThisMonthTabProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [selectedCalendarYear, searchQuery, page, itemsPerPage]);
+  }, [selectedCalendarYear, searchQuery]);
 
   // Simple handler for row selection
   const handleRowSelectionChange = (newSelectedIds: string[]) => {
@@ -197,11 +187,9 @@ const ThisMonthTab: React.FC<ThisMonthTabProps> = ({
         onSearch={onSearch}
         selectedRows={selectedPaymentIds}
         onSelectedRowsChange={handleRowSelectionChange}
-        itemsPerPage={itemsPerPage}
         totalItems={totalItems}
-        currentPage={page}
-        onPageChange={setPage}
         searchQuery={searchQuery}
+        noPagination
       />
 
       {/* Payment Schedule Modal */}

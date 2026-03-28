@@ -23,9 +23,11 @@ export const getUserByCredential = async (loginInfo: string) => {
       },
     });
 
+    if (!user) return null;
+
     return {
       ...user,
-      id: user?.id.toString(),
+      id: user.id.toString(),
     };
   } catch {
     return null;
@@ -40,9 +42,11 @@ export const getUserById = async (id: string) => {
       },
     });
 
+    if (!user) return null;
+
     return {
       ...user,
-      id: user?.id.toString(),
+      id: user.id.toString(),
     };
   } catch {
     return null;

@@ -67,8 +67,6 @@ import CalendarYearSelector from "./(components)/CalendarYearSelector";
 //   return `${month}-${day}-${year}`;
 // };
 
-const ITEMS_PER_PAGE = 10;
-
 const BillingPage = () => {
   const [owedPayments, setOwedPayments] = useState<
     Partial<PaymentOverviewModel>[] | null
@@ -92,10 +90,6 @@ const BillingPage = () => {
   const [selectedCalendarYear, setSelectedCalendarYear] =
     useState(DEFAULT_YEAR);
 
-  // Separate pagination states for each tab
-  const [allPaymentsPage, setAllPaymentsPage] = useState(1);
-  const [thisMonthPage, setThisMonthPage] = useState(1);
-
   const onPaymentClick = (paymentId: string) => {
     setPayment(owedPayments?.find((p) => p.id === paymentId) || null);
     setOpenPaymentScheduleModal(true);
@@ -105,16 +99,9 @@ const BillingPage = () => {
     const fetchPayments = async () => {
       setIsLoading(true);
 
-      // Current page calculation based on active tab
-      const currentPageNum =
-        activeTab === "all-payments" ? allPaymentsPage : thisMonthPage;
-
-      // Now pass pagination parameters to the API
       const { data, totalItems: total } = await getOwedPayments(
         selectedCalendarYear,
-        searchQuery,
-        currentPageNum,
-        ITEMS_PER_PAGE
+        searchQuery
       );
 
       setOwedPayments(data);
@@ -124,13 +111,7 @@ const BillingPage = () => {
     };
 
     fetchPayments();
-  }, [
-    selectedCalendarYear,
-    searchQuery,
-    activeTab,
-    allPaymentsPage,
-    thisMonthPage,
-  ]);
+  }, [selectedCalendarYear, searchQuery]);
 
   const handleInvoiceType = (value: string) => {
     setInvoiceType(value as InvoiceType);
@@ -139,15 +120,6 @@ const BillingPage = () => {
   const onNext = () => {
     setStep((prev) => prev + 1);
   };
-
-  // Add this effect to reset pagination when tab changes
-  useEffect(() => {
-    if (activeTab === "all-payments") {
-      setThisMonthPage(1);
-    } else {
-      setAllPaymentsPage(1);
-    }
-  }, [activeTab]);
 
   // Handle tab change to automatically select a year for cash flow report
   const handleTabChange = (value: string) => {
@@ -296,10 +268,7 @@ const BillingPage = () => {
                       )
                     );
                   }}
-                  itemsPerPage={ITEMS_PER_PAGE}
                   totalItems={totalItems}
-                  currentPage={allPaymentsPage}
-                  onPageChange={setAllPaymentsPage}
                   onPaymentClick={onPaymentClick}
                   year={selectedCalendarYear}
                 />
