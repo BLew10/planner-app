@@ -93,6 +93,7 @@ interface DataTableProps<TData> {
   searchQuery?: string;
   noPagination?: boolean;
   onDeleteRow?: (row: TData) => void;
+  initialSorting?: SortingState;
 }
 
 export function DataTable<TData extends { id?: string }>({
@@ -124,8 +125,9 @@ export function DataTable<TData extends { id?: string }>({
   searchQuery: externalSearchQuery,
   noPagination = false,
   onDeleteRow,
+  initialSorting = [],
 }: DataTableProps<TData>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] = React.useState<SortingState>(initialSorting);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );

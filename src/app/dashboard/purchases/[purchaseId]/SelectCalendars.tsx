@@ -134,7 +134,7 @@ const SelectCalendars = ({
                         htmlFor={`calendar-${calendar.id}`}
                         className="flex-1 cursor-pointer font-medium"
                       >
-                        {calendar.name}
+                        {calendar.name}{calendar.code ? ` (${calendar.code})` : ''}
                       </Label>
                       <Checkbox
                         id={`calendar-${calendar.id}`}

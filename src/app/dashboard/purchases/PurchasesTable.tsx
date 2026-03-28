@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Edit, ExternalLink } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Edit, ExternalLink } from "lucide-react";
 import { DataTable } from "@/app/(components)/general/DataTable";
 import DeleteButton from "@/app/(components)/general/DeleteButton";
 import { PurchaseTableData } from "@/lib/data/purchase";
@@ -87,7 +87,21 @@ export function PurchasesTable({
   const columns: ColumnDef<PurchaseTableData>[] = [
     {
       accessorKey: "companyName",
-      header: "Company Name",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Company Name
+          {column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
+        </Button>
+      ),
       cell: ({ row }) => {
         const purchase = row.original;
         return (
@@ -145,7 +159,21 @@ export function PurchasesTable({
     },
     {
       accessorKey: "calendarEditions",
-      header: "Calendar Editions",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Calendar Editions
+          {column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
+        </Button>
+      ),
     },
     {
       accessorKey: "hasSubmittedArtwork",
@@ -224,6 +252,7 @@ export function PurchasesTable({
         searchPlaceholder="Search purchases..."
         totalItems={totalItems}
         noPagination
+        initialSorting={[{ id: "companyName", desc: false }]}
       />
 
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>

@@ -72,7 +72,7 @@ export const getAllCalendars = async (
         ...(skip !== undefined && { skip }),
         ...(pageSize && { take: pageSize }),
         orderBy: {
-          name: 'asc'
+          code: 'asc'
         }
       }),
       prisma.calendarEdition.count({ where })

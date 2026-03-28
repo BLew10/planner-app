@@ -165,6 +165,13 @@ export const getPurchaseTableData = async (
             },
           },
         },
+        orderBy: {
+          contact: {
+            contactContactInformation: {
+              company: 'asc',
+            },
+          },
+        },
       }),
       prisma.purchaseOverview.count({ where }),
     ]);
@@ -172,6 +179,8 @@ export const getPurchaseTableData = async (
     const allPurchases: PurchaseTableData[] = purchases.map((purchase) => {
       const calendarsEditions = purchase.calendarEditions
         .map((e) => e.code)
+        .filter(Boolean)
+        .sort((a, b) => a!.localeCompare(b!))
         .join(", ");
 
       return {
