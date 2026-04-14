@@ -1,15 +1,14 @@
 import ATForm from "./ATForm";
 
-const AddAddressBookPage = ({
+const AddAddressBookPage = async ({
   params,
 }: {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 }) => {
+  const { id } = await params;
   return (
     <section className="container mx-auto my-10 w-full">
-      <ATForm id={params.id === "add" ? null : params.id} />
+      <ATForm id={id === "add" ? null : id} />
     </section>
   );
 };

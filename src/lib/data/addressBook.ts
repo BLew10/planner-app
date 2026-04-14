@@ -108,10 +108,10 @@ export const getAllAddressBooks = async (
  * @returns {AddressBook | null} An AddressBook object if parsing is successful, otherwise null.
  */
 
-export const parseForm = (
+export const parseForm = async (
   formData: FormData,
   userId: string
-): AddressBook | null => {
+): Promise<AddressBook | null> => {
   const formObject = Object.fromEntries(formData.entries());
   const data: Partial<AddressBook> = {
     userId,

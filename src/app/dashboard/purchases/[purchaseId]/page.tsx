@@ -8,9 +8,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 const PurchaseOverviewPage = async ({
   params,
 }: {
-  params: { purchaseId: string };
+  params: Promise<{ purchaseId: string }>;
 }) => {
-  const { purchaseId } = params;
+  const { purchaseId } = await params;
 
   const advertisementTypes = await getAllAdvertisementTypes();
   const { data: calendars } = await getAllCalendars();

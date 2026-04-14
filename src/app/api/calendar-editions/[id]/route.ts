@@ -4,9 +4,10 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string; year: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await params;
     // const { userId } = auth();
     // if (!userId) {
     //   return new NextResponse("Unauthorized", { status: 401 });

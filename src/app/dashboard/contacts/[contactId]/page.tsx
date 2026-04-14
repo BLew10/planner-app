@@ -3,9 +3,9 @@ import ContactForm from "./ContactForm";
 const UpsertContactPage = async ({
   params,
 }: {
-  params: { contactId: string };
+  params: Promise<{ contactId: string }>;
 }) => {
-  const { contactId } = params;
+  const { contactId } = await params;
 
   return <ContactForm id={contactId === "add" ? null : contactId} />;
 };

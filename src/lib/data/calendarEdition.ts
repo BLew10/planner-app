@@ -108,10 +108,10 @@ export const getAllCalendars = async (
  * @returns {CalendarEdition | null} An CalendarEdition object if parsing is successful, otherwise null.
  */
 
-export const parseForm = (
+export const parseForm = async (
   formData: FormData,
   userId: string
-): CalendarEdition | null => {
+): Promise<CalendarEdition | null> => {
   const formObject = Object.fromEntries(formData.entries());
   const data: Partial<CalendarEdition> = {
     userId,

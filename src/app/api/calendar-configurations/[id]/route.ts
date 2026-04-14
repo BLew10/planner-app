@@ -4,16 +4,17 @@ import prisma from "@/lib/prisma/prisma";
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const configuration = await prisma.calendarEditionLayout.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         calendarEdition: true,
       },
@@ -31,7 +32,7 @@ export async function DELETE(
     }
 
     await prisma.calendarEditionLayout.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ success: true });
@@ -43,9 +44,10 @@ export async function DELETE(
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -53,7 +55,7 @@ export async function GET(
 
     const configuration = await prisma.calendarEditionLayout.findUnique({
       where: {
-        id: params.id,
+        id,
       },
       include: {
         calendarEdition: {
@@ -86,9 +88,10 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -134,7 +137,7 @@ export async function PATCH(
     // Verify the configuration exists and belongs to the user
     const existingConfig = await prisma.calendarEditionLayout.findUnique({
       where: {
-        id: params.id,
+        id,
       },
       include: {
         calendarEdition: {
@@ -162,7 +165,7 @@ export async function PATCH(
         calendarEditionId,
         year,
         NOT: {
-          id: params.id, // Exclude current configuration
+          id, // Exclude current configuration
         },
       },
     });
@@ -179,7 +182,7 @@ export async function PATCH(
     // Update the configuration
     const updatedConfig = await prisma.calendarEditionLayout.update({
       where: {
-        id: params.id,
+        id,
       },
       data: {
         calendarEditionId,

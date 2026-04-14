@@ -3,9 +3,10 @@ import EventForm from "../EventForm";
 const EventFormPage = async ({
   params,
 }: {
-  params: { id: string | null };
+  params: Promise<{ id: string }>;
 }) => {
-  let { id } = params;
+  const resolved = await params;
+  let id: string | null = resolved.id;
 
   if (id === "add") {
     id = null;

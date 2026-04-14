@@ -5,7 +5,12 @@ import LoadingSpinner from "@/app/(components)/general/LoadingSpinner";
 import { getPaymentById } from "@/lib/data/payment";
 import { redirect } from "next/navigation";
 
-const PaymentsPage = async ({ params: { id } }: { params: { id: string }}) => {
+const PaymentsPage = async ({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) => {
+  const { id } = await params;
   if (id === "add") {
     return (
       <section className={styles.container}>

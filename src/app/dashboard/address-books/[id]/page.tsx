@@ -5,9 +5,9 @@ import { getAddressBookById } from "@/lib/data/addressBook";
 const UpdateAddressBookPage = async ({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) => {
-  const { id } = params;
+  const { id } = await params;
 
   const addressBook = await getAddressBookById(id as string);
   if (!addressBook) {

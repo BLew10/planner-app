@@ -4,9 +4,9 @@ import styles from "./page.module.scss";
 const ContactOverviewPage = async ({
   params,
 }: {
-  params: { contactId: string };
+  params: Promise<{ contactId: string }>;
 }) => {
-  let { contactId } = params;
+  let { contactId } = await params;
   return <ContactOverview contactId={contactId} />;
 };
 

@@ -139,10 +139,10 @@ export const getManyAdvertisementTypes = async (
  * @returns {Advertisement | null} An Advertisement object if parsing is successful, otherwise null.
  */
 
-export const parseForm = (
+export const parseForm = async (
   formData: FormData,
   userId: string
-): Advertisement | null => {
+): Promise<Advertisement | null> => {
   const formObject = Object.fromEntries(formData.entries());
   const data: Partial<Advertisement> = {
     userId,

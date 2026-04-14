@@ -4,9 +4,10 @@ import prisma from "@/lib/prisma/prisma";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -14,7 +15,7 @@ export async function GET(
 
     const layout = await prisma.layout.findUnique({
       where: {
-        id: params.id,
+        id,
         userId: session.user.id,
         isDeleted: false,
       },
@@ -40,9 +41,10 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -58,7 +60,7 @@ export async function PATCH(
     // First update the layout
     const layout = await prisma.layout.update({
       where: {
-        id: params.id,
+        id,
         userId: session.user.id,
       },
       data: {
@@ -72,14 +74,14 @@ export async function PATCH(
       // Delete existing ad placements
       await prisma.adPlacement.deleteMany({
         where: {
-          layoutId: params.id,
+          layoutId: id,
         },
       });
 
       // Create new ad placements
       await prisma.adPlacement.createMany({
         data: savedAreas.map((area: any) => ({
-          layoutId: params.id,
+          layoutId: id,
           advertisementId: area.adTypeId,
           position: area.position,
           x: area.x,
@@ -99,9 +101,10 @@ export async function PATCH(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -110,7 +113,7 @@ export async function DELETE(
     // Delete the layout and its ad placements (cascade delete will handle this)
     await prisma.layout.delete({
       where: {
-        id: params.id,
+        id,
         userId: session.user.id,
       },
     });
