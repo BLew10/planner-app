@@ -94,7 +94,10 @@ const ContactsPage = () => {
           actionContent={
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" disabled={isDownloading}>
+                <Button
+                  className="bg-yellow-400 text-yellow-950 hover:bg-yellow-500"
+                  disabled={isDownloading}
+                >
                   <Download className="mr-2 h-4 w-4" />
                   Download Contacts
                 </Button>

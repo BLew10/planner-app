@@ -6,7 +6,6 @@ const CONTACT_CSV_COLUMNS: {
   header: string;
   value: (contact: ContactExportRow) => string | number | null | undefined;
 }[] = [
-  { header: "Contact ID", value: (contact) => contact.id },
   { header: "Company", value: (contact) => contact.contactContactInformation?.company },
   { header: "First Name", value: (contact) => contact.contactContactInformation?.firstName },
   { header: "Last Name", value: (contact) => contact.contactContactInformation?.lastName },

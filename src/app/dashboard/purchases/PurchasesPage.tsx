@@ -96,7 +96,11 @@ const PurchasesPage = () => {
           artworkFilter={artworkFilter}
           onArtworkFilterChange={setArtworkFilter}
           actionContent={
-            <Button variant="outline" onClick={handleDownloadContacts} disabled={isDownloading}>
+            <Button
+              className="bg-yellow-400 text-yellow-950 hover:bg-yellow-500"
+              onClick={handleDownloadContacts}
+              disabled={isDownloading}
+            >
               <Download className="mr-2 h-4 w-4" />
               Download Contacts
             </Button>
