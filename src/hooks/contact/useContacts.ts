@@ -69,6 +69,7 @@ export const useContacts = ({ itemsPerPage, addressBookId }: UseContactsProps) =
     currentPage,
     setCurrentPage,
     totalItems,
+    searchQuery,
     setSearchQuery,
     isLoading,
     deleteSelectedContacts,

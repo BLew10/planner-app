@@ -44,6 +44,7 @@ interface PurchasesTableProps {
   pendingArtworkIds: Set<string>;
   artworkFilter: string;
   onArtworkFilterChange: (value: string) => void;
+  actionContent?: React.ReactNode;
 }
 
 export function PurchasesTable({
@@ -63,6 +64,7 @@ export function PurchasesTable({
   pendingArtworkIds,
   artworkFilter,
   onArtworkFilterChange,
+  actionContent,
 }: PurchasesTableProps) {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [pendingTogglePurchaseId, setPendingTogglePurchaseId] = useState<string | null>(null);
@@ -253,6 +255,7 @@ export function PurchasesTable({
         totalItems={totalItems}
         noPagination
         initialSorting={[{ id: "companyName", desc: false }]}
+        actionContent={actionContent}
       />
 
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
@@ -278,4 +281,4 @@ export function PurchasesTable({
       </AlertDialog>
     </>
   );
-} 
+}

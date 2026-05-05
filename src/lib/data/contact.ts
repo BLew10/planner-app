@@ -80,6 +80,58 @@ export const getContactsByAddressBook = async (
   }
 };
 
+export const getAllContactsByAddressBook = async (
+  addressBookId: string,
+  searchQuery: string
+): Promise<Partial<ContactTableData>[]> => {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!addressBookId) {
+    const addressBook = await prisma.addressBook.findFirst();
+    addressBookId = addressBook?.id || "";
+  }
+
+  try {
+    return await prisma.contact.findMany({
+      where: {
+        userId,
+        isDeleted: false,
+        ...(addressBookId !== "-1" && {
+          addressBooks: {
+            some: {
+              id: addressBookId,
+            },
+          },
+        }),
+        OR: [
+          { contactContactInformation: { firstName: { contains: searchQuery, mode: "insensitive" as const } } },
+          { contactContactInformation: { lastName: { contains: searchQuery, mode: "insensitive" as const } } },
+          { contactContactInformation: { company: { contains: searchQuery, mode: "insensitive" as const } } },
+          { contactTelecomInformation: { email: { contains: searchQuery, mode: "insensitive" as const } } },
+        ],
+      },
+      select: {
+        id: true,
+        customerSince: true,
+        notes: true,
+        category: true,
+        webAddress: true,
+        contactContactInformation: true,
+        contactTelecomInformation: true,
+        contactAddress: true,
+      },
+      orderBy: {
+        contactContactInformation: {
+          company: "asc",
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching contacts for export:", error);
+    return [];
+  }
+};
+
 /**
  * Parses the given FormData object to construct a Contact object suitable for database insertion.
  * This function iterates through the FormData entries, assigning the values to the corresponding
@@ -175,4 +227,3 @@ export const deleteManyContacts = async (contactIds: string[]) => {
     return false;
   }
 };
-

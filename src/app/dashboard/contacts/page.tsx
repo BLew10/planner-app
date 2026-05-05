@@ -1,18 +1,28 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import SimpleModal from "@/app/(components)/general/SimpleModal";
-import { ContactTableData } from "@/lib/data/contact";
+import { getAllContactsByAddressBook } from "@/lib/data/contact";
 import { useContacts } from "@/hooks/contact/useContacts";
 import { useAddressBooks } from "@/hooks/address-book/useAddressBooks";
 import { ContactsTable } from "./ContactsTable";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Download } from "lucide-react";
+import { createContactsCsv, downloadCsv } from "@/lib/helpers/contactCsv";
 
 const ITEMS_PER_PAGE = 10;
 
 const ContactsPage = () => {
   const router = useRouter();
   const [openEmailModal, setOpenEmailModal] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const { addressBookId, setAddressBookId, addressBooks } = useAddressBooks({ includeAllOption: true });
 
   const {
@@ -22,6 +32,7 @@ const ContactsPage = () => {
     currentPage,
     setCurrentPage,
     totalItems,
+    searchQuery,
     setSearchQuery,
     isLoading,
     deleteSelectedContacts,
@@ -34,6 +45,20 @@ const ContactsPage = () => {
   const handleAddressBookChange = (value: string) => {
     setAddressBookId(value);
     setCurrentPage(1);
+  };
+
+  const handleDownloadCurrentPage = () => {
+    downloadCsv(createContactsCsv(contacts || []), "contacts-current-page.csv");
+  };
+
+  const handleDownloadAll = async () => {
+    setIsDownloading(true);
+    try {
+      const allContacts = await getAllContactsByAddressBook(addressBookId, searchQuery);
+      downloadCsv(createContactsCsv(allContacts), "contacts-all.csv");
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -66,6 +91,24 @@ const ContactsPage = () => {
           currentPage={currentPage}
           onPageChange={setCurrentPage}
           onAdd={() => router.push("/dashboard/contacts/add")}
+          actionContent={
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" disabled={isDownloading}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Contacts
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleDownloadAll}>
+                  Download all filtered contacts
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDownloadCurrentPage}>
+                  Download current page
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          }
         />
       </section>
     </>

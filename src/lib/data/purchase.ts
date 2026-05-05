@@ -6,6 +6,8 @@ import {
   PurchaseOverview,
   ContactContactInformation,
   CalendarEdition,
+  ContactAddress,
+  ContactTelecomInformation,
 } from "@prisma/client";
 import { auth } from "@/auth";
 import { PurchaseOverviewModel } from "../models/purchaseOverview";
@@ -93,6 +95,12 @@ export interface PurchaseTableData {
   total: number;
   amountPaid: number;
   hasSubmittedArtwork: boolean;
+}
+
+export interface PurchaseContactExportData extends Contact {
+  contactContactInformation?: Partial<ContactContactInformation> | null;
+  contactTelecomInformation?: Partial<ContactTelecomInformation> | null;
+  contactAddress?: Partial<ContactAddress> | null;
 }
 
 export const getPurchaseTableData = async (
@@ -202,6 +210,74 @@ export const getPurchaseTableData = async (
   } catch (error) {
     console.error(`Error fetching purchases: ${error}`);
     return { purchases: [], total: 0 };
+  }
+};
+
+export const getPurchaseContactExportData = async (
+  calendarEditionYear: string,
+  search: string,
+  artworkFilter: string = "all"
+): Promise<Partial<PurchaseContactExportData>[]> => {
+  const session = await auth();
+  if (!session) {
+    return [];
+  }
+
+  const userId = session.user.id;
+
+  try {
+    const where: any = {
+      userId,
+      calendarEditionYear: Number(calendarEditionYear),
+      isDeleted: false,
+      OR: [
+        { contact: { contactContactInformation: { company: { contains: search, mode: "insensitive" as const } } } },
+        { contact: { contactContactInformation: { firstName: { contains: search, mode: "insensitive" as const } } } },
+        { contact: { contactContactInformation: { lastName: { contains: search, mode: "insensitive" as const } } } },
+        { id: { contains: search, mode: "insensitive" as const } },
+      ],
+    };
+
+    if (artworkFilter === "true") {
+      where.hasSubmittedArtwork = true;
+    } else if (artworkFilter === "false") {
+      where.hasSubmittedArtwork = false;
+    }
+
+    const purchases = await prisma.purchaseOverview.findMany({
+      where,
+      select: {
+        contact: {
+          select: {
+            id: true,
+            customerSince: true,
+            notes: true,
+            category: true,
+            webAddress: true,
+            contactContactInformation: true,
+            contactTelecomInformation: true,
+            contactAddress: true,
+          },
+        },
+      },
+      orderBy: {
+        contact: {
+          contactContactInformation: {
+            company: "asc",
+          },
+        },
+      },
+    });
+
+    const contactsById = new Map<string, Partial<PurchaseContactExportData>>();
+    purchases.forEach((purchase) => {
+      contactsById.set(purchase.contact.id, purchase.contact);
+    });
+
+    return Array.from(contactsById.values());
+  } catch (error) {
+    console.error(`Error fetching purchase contacts for export: ${error}`);
+    return [];
   }
 };
 

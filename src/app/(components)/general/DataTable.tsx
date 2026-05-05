@@ -94,6 +94,7 @@ interface DataTableProps<TData> {
   noPagination?: boolean;
   onDeleteRow?: (row: TData) => void;
   initialSorting?: SortingState;
+  actionContent?: React.ReactNode;
 }
 
 export function DataTable<TData extends { id?: string }>({
@@ -126,6 +127,7 @@ export function DataTable<TData extends { id?: string }>({
   noPagination = false,
   onDeleteRow,
   initialSorting = [],
+  actionContent,
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = React.useState<SortingState>(initialSorting);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -255,6 +257,7 @@ export function DataTable<TData extends { id?: string }>({
                 {addButtonLabel}
               </Button>
             )}
+            {actionContent}
           </div>
           <div className="flex items-center gap-4">
             <form onSubmit={handleSearch} className="flex-1 flex gap-2">

@@ -17,6 +17,7 @@ interface ContactsTableProps {
   currentPage: number;
   onPageChange: (page: number) => void;
   onAdd: () => void;
+  actionContent?: React.ReactNode;
 }
 
 export function ContactsTable({
@@ -34,6 +35,7 @@ export function ContactsTable({
   currentPage,
   onPageChange,
   onAdd,
+  actionContent,
 }: ContactsTableProps) {
   const columns = getContactColumns(onContactDelete);
 
@@ -57,6 +59,7 @@ export function ContactsTable({
       currentPage={currentPage}
       onPageChange={onPageChange}
       filterPlaceholder="Filter by address book..."
+      actionContent={actionContent}
     />
   );
 }
