@@ -4,6 +4,7 @@ import * as React from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
+  OnChangeFn,
   SortingState,
   VisibilityState,
   flexRender,
@@ -94,6 +95,9 @@ interface DataTableProps<TData> {
   noPagination?: boolean;
   onDeleteRow?: (row: TData) => void;
   initialSorting?: SortingState;
+  sorting?: SortingState;
+  onSortingChange?: (sorting: SortingState) => void;
+  manualSorting?: boolean;
   actionContent?: React.ReactNode;
 }
 
@@ -127,9 +131,13 @@ export function DataTable<TData extends { id?: string }>({
   noPagination = false,
   onDeleteRow,
   initialSorting = [],
+  sorting: controlledSorting,
+  onSortingChange,
+  manualSorting = false,
   actionContent,
 }: DataTableProps<TData>) {
-  const [sorting, setSorting] = React.useState<SortingState>(initialSorting);
+  const [internalSorting, setInternalSorting] =
+    React.useState<SortingState>(initialSorting);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
@@ -141,6 +149,18 @@ export function DataTable<TData extends { id?: string }>({
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
   const [deleteMode, setDeleteMode] = React.useState<'single' | 'multiple'>('single');
   const [rowToDelete, setRowToDelete] = React.useState<TData | null>(null);
+  const sorting = controlledSorting ?? internalSorting;
+
+  const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
+    const nextSorting =
+      typeof updater === "function" ? updater(sorting) : updater;
+
+    if (controlledSorting === undefined) {
+      setInternalSorting(nextSorting);
+    }
+
+    onSortingChange?.(nextSorting);
+  };
 
   // Sync internal search state with external search query if provided
   React.useEffect(() => {
@@ -171,9 +191,10 @@ export function DataTable<TData extends { id?: string }>({
     },
     pageCount: Math.ceil(totalItems / itemsPerPage),
     manualPagination: true,
+    manualSorting,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
+    onSortingChange: handleSortingChange,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),

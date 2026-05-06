@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { SortingState } from "@tanstack/react-table";
 import { toast } from "@/hooks/shadcn/use-toast";
 import { getPurchaseTableData, PurchaseTableData } from "@/lib/data/purchase";
 import deletePurchase from "@/actions/purchases/deletePurchase";
@@ -18,11 +19,19 @@ export const usePurchases = (
   const [search, setSearch] = useState("");
   const [year, setYear] = useState(initialYear);
   const [artworkFilter, setArtworkFilter] = useState("all");
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "companyName", desc: false },
+  ]);
 
   const fetchPurchases = useCallback(async () => {
     setIsLoading(true);
     try {
-      const result = await getPurchaseTableData(year, search, artworkFilter);
+      const result = await getPurchaseTableData(
+        year,
+        search,
+        artworkFilter,
+        sorting
+      );
 
       const filteredPurchases = result?.purchases || [];
 
@@ -39,7 +48,7 @@ export const usePurchases = (
     } finally {
       setIsLoading(false);
     }
-  }, [year, search, artworkFilter]);
+  }, [year, search, artworkFilter, sorting]);
 
   useEffect(() => {
     fetchPurchases();
@@ -160,6 +169,8 @@ export const usePurchases = (
     setYear,
     artworkFilter,
     setArtworkFilter,
+    sorting,
+    setSorting,
     pendingArtworkIds,
     handleDelete,
     handleDeleteSelected,

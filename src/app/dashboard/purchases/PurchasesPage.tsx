@@ -43,6 +43,8 @@ const PurchasesPage = () => {
     setYear,
     artworkFilter,
     setArtworkFilter,
+    sorting,
+    setSorting,
     pendingArtworkIds,
     handleDelete,
     handleDeleteSelected,
@@ -107,6 +109,8 @@ const PurchasesPage = () => {
           pendingArtworkIds={pendingArtworkIds}
           artworkFilter={artworkFilter}
           onArtworkFilterChange={setArtworkFilter}
+          sorting={sorting}
+          onSortingChange={setSorting}
           actionContent={
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

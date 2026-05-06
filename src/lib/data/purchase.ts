@@ -98,16 +98,43 @@ export interface PurchaseTableData {
   hasSubmittedArtwork: boolean;
 }
 
+export type PurchaseTableSort = { id: string; desc: boolean }[];
+
 export interface PurchaseContactExportData extends Contact {
   contactContactInformation?: Partial<ContactContactInformation> | null;
   contactTelecomInformation?: Partial<ContactTelecomInformation> | null;
   contactAddress?: Partial<ContactAddress> | null;
 }
 
+const getPurchaseTableOrderBy = (
+  sort: PurchaseTableSort[number] | undefined
+) => {
+  const direction = sort?.desc ? Prisma.sql`DESC` : Prisma.sql`ASC`;
+
+  switch (sort?.id) {
+    case "amountOwed":
+      return Prisma.sql`po."amountOwed" ${direction}, LOWER(COALESCE(cci."company", '')) ASC, po."id" ASC`;
+    case "total":
+      return Prisma.sql`COALESCE(pay."net", 0) ${direction}, LOWER(COALESCE(cci."company", '')) ASC, po."id" ASC`;
+    case "purchasedOn":
+      return Prisma.sql`po."createdAt" ${direction}, LOWER(COALESCE(cci."company", '')) ASC, po."id" ASC`;
+    case "amountPaid":
+      return Prisma.sql`COALESCE(pay."amountPaid", 0) ${direction}, LOWER(COALESCE(cci."company", '')) ASC, po."id" ASC`;
+    case "calendarEditions":
+      return Prisma.sql`COALESCE(calendar_order."codes", '') ${direction}, LOWER(COALESCE(cci."company", '')) ASC, po."id" ASC`;
+    case "hasSubmittedArtwork":
+      return Prisma.sql`po."hasSubmittedArtwork" ${direction}, LOWER(COALESCE(cci."company", '')) ASC, po."id" ASC`;
+    case "companyName":
+    default:
+      return Prisma.sql`LOWER(COALESCE(cci."company", '')) ${direction}, po."id" ASC`;
+  }
+};
+
 export const getPurchaseTableData = async (
   calendarEditionYear: string,
   search: string,
-  artworkFilter: string = "all"
+  artworkFilter: string = "all",
+  sort: PurchaseTableSort = [{ id: "companyName", desc: false }]
 ): Promise<{ purchases: PurchaseTableData[]; total: number } | null> => {
   const session = await auth();
   if (!session) {
@@ -125,12 +152,21 @@ export const getPurchaseTableData = async (
         : artworkFilter === "false"
           ? Prisma.sql`AND po."hasSubmittedArtwork" = false`
           : Prisma.empty;
+    const orderBy = getPurchaseTableOrderBy(sort[0]);
 
-    const orderedPurchaseIds = await prisma.$queryRaw<{ id: string }[]>`
+    const orderedPurchaseIds = await prisma.$queryRaw<{ id: string }[]>(
+      Prisma.sql`
       SELECT po."id"
       FROM "PurchaseOverview" po
       LEFT JOIN "Contact" c ON c."id" = po."contactId"
       LEFT JOIN "ContactContactInformation" cci ON cci."contactId" = c."id"
+      LEFT JOIN "PaymentOverview" pay ON pay."purchaseId" = po."id"
+      LEFT JOIN (
+        SELECT cpo."B" AS "purchaseId", string_agg(ce."code", ', ' ORDER BY ce."code") AS "codes"
+        FROM "_CalendarEditionToPurchaseOverview" cpo
+        JOIN "CalendarEdition" ce ON ce."id" = cpo."A"
+        GROUP BY cpo."B"
+      ) calendar_order ON calendar_order."purchaseId" = po."id"
       WHERE po."userId" = ${userId}
         AND po."calendarEditionYear" = ${calendarYear}
         AND po."isDeleted" = false
@@ -141,8 +177,9 @@ export const getPurchaseTableData = async (
           OR cci."lastName" ILIKE ${searchTerm}
           OR po."id" ILIKE ${searchTerm}
         )
-      ORDER BY LOWER(COALESCE(cci."company", '')), po."id"
-    `;
+      ORDER BY ${orderBy}
+    `
+    );
 
     if (!orderedPurchaseIds.length) {
       return { purchases: [], total: 0 };

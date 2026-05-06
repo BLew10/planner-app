@@ -2,9 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ColumnDef } from "@tanstack/react-table";
+import { Column, ColumnDef, SortingState } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Edit, ExternalLink } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Edit, ExternalLink } from "lucide-react";
 import { DataTable } from "@/app/(components)/general/DataTable";
 import DeleteButton from "@/app/(components)/general/DeleteButton";
 import { PurchaseTableData } from "@/lib/data/purchase";
@@ -43,8 +43,37 @@ interface PurchasesTableProps {
   pendingArtworkIds: Set<string>;
   artworkFilter: string;
   onArtworkFilterChange: (value: string) => void;
+  sorting: SortingState;
+  onSortingChange: (sorting: SortingState) => void;
   actionContent?: React.ReactNode;
 }
+
+const SortableHeader = ({
+  column,
+  label,
+}: {
+  column: Column<PurchaseTableData, unknown>;
+  label: string;
+}) => {
+  const sortDirection = column.getIsSorted();
+  const SortIcon =
+    sortDirection === "asc"
+      ? ArrowUp
+      : sortDirection === "desc"
+        ? ArrowDown
+        : ArrowUpDown;
+
+  return (
+    <Button
+      variant="ghost"
+      className="h-auto p-0 text-left font-semibold hover:bg-transparent"
+      onClick={() => column.toggleSorting(sortDirection === "asc")}
+    >
+      {label}
+      <SortIcon className="ml-2 h-4 w-4" />
+    </Button>
+  );
+};
 
 export function PurchasesTable({
   purchases,
@@ -63,6 +92,8 @@ export function PurchasesTable({
   pendingArtworkIds,
   artworkFilter,
   onArtworkFilterChange,
+  sorting,
+  onSortingChange,
   actionContent,
 }: PurchasesTableProps) {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -88,7 +119,9 @@ export function PurchasesTable({
   const columns: ColumnDef<PurchaseTableData>[] = [
     {
       accessorKey: "companyName",
-      header: "Company Name",
+      header: ({ column }) => (
+        <SortableHeader column={column} label="Company Name" />
+      ),
       cell: ({ row }) => {
         const purchase = row.original;
         return (
@@ -118,7 +151,9 @@ export function PurchasesTable({
     },
     {
       accessorKey: "amountOwed",
-      header: "Purchase Total",
+      header: ({ column }) => (
+        <SortableHeader column={column} label="Purchase Total" />
+      ),
       cell: ({ row }) => {
         const amount = parseFloat(row.getValue("amountOwed") || "0");
         return <div>${amount.toFixed(2)}</div>;
@@ -126,7 +161,12 @@ export function PurchasesTable({
     },
     {
       accessorKey: "total",
-      header: "Total with Discounts and Late Fees",
+      header: ({ column }) => (
+        <SortableHeader
+          column={column}
+          label="Total with Discounts and Late Fees"
+        />
+      ),
       cell: ({ row }) => {
         const amount = parseFloat(row.getValue("total") || "0");
         return <div>${amount.toFixed(2)}</div>;
@@ -134,11 +174,15 @@ export function PurchasesTable({
     },
     {
       accessorKey: "purchasedOn",
-      header: "Purchased On",
+      header: ({ column }) => (
+        <SortableHeader column={column} label="Purchased On" />
+      ),
     },
     {
       accessorKey: "amountPaid",
-      header: "Amount Paid",
+      header: ({ column }) => (
+        <SortableHeader column={column} label="Amount Paid" />
+      ),
       cell: ({ row }) => {
         const amount = parseFloat(row.getValue("amountPaid") || "0");
         return <div>${amount.toFixed(2)}</div>;
@@ -146,11 +190,15 @@ export function PurchasesTable({
     },
     {
       accessorKey: "calendarEditions",
-      header: "Calendar Editions",
+      header: ({ column }) => (
+        <SortableHeader column={column} label="Calendar Editions" />
+      ),
     },
     {
       accessorKey: "hasSubmittedArtwork",
-      header: "Artwork Submitted",
+      header: ({ column }) => (
+        <SortableHeader column={column} label="Artwork Submitted" />
+      ),
       cell: ({ row }) => {
         const purchase = row.original;
         const isPending = pendingArtworkIds.has(purchase.id);
@@ -225,6 +273,9 @@ export function PurchasesTable({
         searchPlaceholder="Search purchases..."
         totalItems={totalItems}
         noPagination
+        sorting={sorting}
+        onSortingChange={onSortingChange}
+        manualSorting
         actionContent={actionContent}
       />
 
