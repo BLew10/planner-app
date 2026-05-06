@@ -4,11 +4,10 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { ArrowDown, ArrowUp, ArrowUpDown, Edit, ExternalLink } from "lucide-react";
+import { Edit, ExternalLink } from "lucide-react";
 import { DataTable } from "@/app/(components)/general/DataTable";
 import DeleteButton from "@/app/(components)/general/DeleteButton";
 import { PurchaseTableData } from "@/lib/data/purchase";
-import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
@@ -89,21 +88,7 @@ export function PurchasesTable({
   const columns: ColumnDef<PurchaseTableData>[] = [
     {
       accessorKey: "companyName",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Company Name
-          {column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-2 h-4 w-4" />
-          ) : column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-2 h-4 w-4" />
-          ) : (
-            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
-          )}
-        </Button>
-      ),
+      header: "Company Name",
       cell: ({ row }) => {
         const purchase = row.original;
         return (
@@ -161,21 +146,7 @@ export function PurchasesTable({
     },
     {
       accessorKey: "calendarEditions",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Calendar Editions
-          {column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-2 h-4 w-4" />
-          ) : column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-2 h-4 w-4" />
-          ) : (
-            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
-          )}
-        </Button>
-      ),
+      header: "Calendar Editions",
     },
     {
       accessorKey: "hasSubmittedArtwork",
@@ -254,7 +225,6 @@ export function PurchasesTable({
         searchPlaceholder="Search purchases..."
         totalItems={totalItems}
         noPagination
-        initialSorting={[{ id: "companyName", desc: false }]}
         actionContent={actionContent}
       />
 
