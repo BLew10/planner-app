@@ -206,6 +206,13 @@ export const getPurchaseTableData = async (
       };
     });
 
+    allPurchases.sort((a, b) =>
+      a.companyName.localeCompare(b.companyName, undefined, {
+        sensitivity: "base",
+        numeric: true,
+      })
+    );
+
     return { purchases: allPurchases, total };
   } catch (error) {
     console.error(`Error fetching purchases: ${error}`);
