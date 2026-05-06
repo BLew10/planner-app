@@ -8,6 +8,7 @@ import {
   CalendarEdition,
   ContactAddress,
   ContactTelecomInformation,
+  Prisma,
 } from "@prisma/client";
 import { auth } from "@/auth";
 import { PurchaseOverviewModel } from "../models/purchaseOverview";
@@ -116,75 +117,95 @@ export const getPurchaseTableData = async (
   const userId = session.user.id;
 
   try {
-    const where: any = {
-      userId,
-      calendarEditionYear: Number(calendarEditionYear),
-      isDeleted: false,
-      OR: [
-        { contact: { contactContactInformation: { company: { contains: search, mode: 'insensitive' as const } } } },
-        { contact: { contactContactInformation: { firstName: { contains: search, mode: 'insensitive' as const } } } },
-        { contact: { contactContactInformation: { lastName: { contains: search, mode: 'insensitive' as const } } } },
-        { id: { contains: search, mode: 'insensitive' as const } }
-      ],
-    };
+    const calendarYear = Number(calendarEditionYear);
+    const searchTerm = `%${search}%`;
+    const artworkCondition =
+      artworkFilter === "true"
+        ? Prisma.sql`AND po."hasSubmittedArtwork" = true`
+        : artworkFilter === "false"
+          ? Prisma.sql`AND po."hasSubmittedArtwork" = false`
+          : Prisma.empty;
 
-    if (artworkFilter === "true") {
-      where.hasSubmittedArtwork = true;
-    } else if (artworkFilter === "false") {
-      where.hasSubmittedArtwork = false;
+    const orderedPurchaseIds = await prisma.$queryRaw<{ id: string }[]>`
+      SELECT po."id"
+      FROM "PurchaseOverview" po
+      LEFT JOIN "Contact" c ON c."id" = po."contactId"
+      LEFT JOIN "ContactContactInformation" cci ON cci."contactId" = c."id"
+      WHERE po."userId" = ${userId}
+        AND po."calendarEditionYear" = ${calendarYear}
+        AND po."isDeleted" = false
+        ${artworkCondition}
+        AND (
+          cci."company" ILIKE ${searchTerm}
+          OR cci."firstName" ILIKE ${searchTerm}
+          OR cci."lastName" ILIKE ${searchTerm}
+          OR po."id" ILIKE ${searchTerm}
+        )
+      ORDER BY LOWER(COALESCE(cci."company", '')), po."id"
+    `;
+
+    if (!orderedPurchaseIds.length) {
+      return { purchases: [], total: 0 };
     }
 
-    const [purchases, total] = await Promise.all([
-      prisma.purchaseOverview.findMany({
-        where,
-        select: {
-          id: true,
-          amountOwed: true,
-          createdAt: true,
-          calendarEditionYear: true,
-          paymentOverviewId: true,
-          hasSubmittedArtwork: true,
-          paymentOverview: {
-            select: {
-              amountPaid: true,
-              net: true,
-              scheduledPayments: {
-                where: {
-                  isLate: true,
-                  lateFeeWaived: false,
-                  lateFeeAddedToNet: true,
-                },
-              },
-            },
-          },
-          calendarEditions: {
-            select: {
-              code: true,
-            },
-          },
-          contact: {
-            select: {
-              id: true,
-              contactContactInformation: {
-                select: {
-                  company: true,
-                },
-              },
-            },
-          },
-        },
-        orderBy: {
-          contact: {
-            contactContactInformation: {
-              company: 'asc',
-            },
-          },
-        },
-      }),
-      prisma.purchaseOverview.count({ where }),
-    ]);
+    const purchaseIds = orderedPurchaseIds.map((purchase) => purchase.id);
+    const where: any = {
+      userId,
+      id: { in: purchaseIds },
+      calendarEditionYear: calendarYear,
+      isDeleted: false,
+    };
 
-    const allPurchases: PurchaseTableData[] = purchases.map((purchase) => {
+    const purchases = await prisma.purchaseOverview.findMany({
+      where,
+      select: {
+        id: true,
+        amountOwed: true,
+        createdAt: true,
+        calendarEditionYear: true,
+        paymentOverviewId: true,
+        hasSubmittedArtwork: true,
+        paymentOverview: {
+          select: {
+            amountPaid: true,
+            net: true,
+            scheduledPayments: {
+              where: {
+                isLate: true,
+                lateFeeWaived: false,
+                lateFeeAddedToNet: true,
+              },
+            },
+          },
+        },
+        calendarEditions: {
+          select: {
+            code: true,
+          },
+        },
+        contact: {
+          select: {
+            id: true,
+            contactContactInformation: {
+              select: {
+                company: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const purchasesById = new Map(
+      purchases.map((purchase) => [purchase.id, purchase])
+    );
+
+    const allPurchases: PurchaseTableData[] = purchaseIds.flatMap((id) => {
+      const purchase = purchasesById.get(id);
+      if (!purchase) {
+        return [];
+      }
+
       const calendarsEditions = purchase.calendarEditions
         .map((e) => e.code)
         .filter(Boolean)
@@ -206,14 +227,7 @@ export const getPurchaseTableData = async (
       };
     });
 
-    allPurchases.sort((a, b) =>
-      a.companyName.localeCompare(b.companyName, undefined, {
-        sensitivity: "base",
-        numeric: true,
-      })
-    );
-
-    return { purchases: allPurchases, total };
+    return { purchases: allPurchases, total: orderedPurchaseIds.length };
   } catch (error) {
     console.error(`Error fetching purchases: ${error}`);
     return { purchases: [], total: 0 };
