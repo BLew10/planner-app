@@ -9,12 +9,19 @@ import { ALL_YEARS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { getPurchaseContactExportData } from "@/lib/data/purchase";
-import { createContactsCsv, downloadCsv } from "@/lib/helpers/contactCsv";
+import { createContactsCsv, downloadCsv, downloadXlsx } from "@/lib/helpers/contactCsv";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const nextYear = new Date().getFullYear() + 1;
 const defaultYear =
   ALL_YEARS.find((year) => year.value === String(nextYear))?.value ||
   ALL_YEARS[0].value;
+type DownloadFormat = "csv" | "xlsx";
 
 const PurchasesPage = () => {
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
@@ -57,10 +64,15 @@ const PurchasesPage = () => {
     setShowPurchaseModal(true);
   };
 
-  const handleDownloadContacts = async () => {
+  const handleDownloadContacts = async (format: DownloadFormat) => {
     setIsDownloading(true);
     try {
       const contacts = await getPurchaseContactExportData(year, search, artworkFilter);
+      if (format === "xlsx") {
+        downloadXlsx(contacts, `purchase-contacts-${year}.xlsx`);
+        return;
+      }
+
       downloadCsv(createContactsCsv(contacts), `purchase-contacts-${year}.csv`);
     } finally {
       setIsDownloading(false);
@@ -96,14 +108,25 @@ const PurchasesPage = () => {
           artworkFilter={artworkFilter}
           onArtworkFilterChange={setArtworkFilter}
           actionContent={
-            <Button
-              className="bg-yellow-400 text-yellow-950 hover:bg-yellow-500"
-              onClick={handleDownloadContacts}
-              disabled={isDownloading}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Download Contacts
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  className="bg-yellow-400 text-yellow-950 hover:bg-yellow-500"
+                  disabled={isDownloading}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Contacts
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleDownloadContacts("xlsx")}>
+                  Download contacts as XLSX
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownloadContacts("csv")}>
+                  Download contacts as CSV
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           }
         />
       </section>

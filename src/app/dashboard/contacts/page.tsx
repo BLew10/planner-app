@@ -15,9 +15,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Download } from "lucide-react";
-import { createContactsCsv, downloadCsv } from "@/lib/helpers/contactCsv";
+import { createContactsCsv, downloadCsv, downloadXlsx } from "@/lib/helpers/contactCsv";
 
 const ITEMS_PER_PAGE = 10;
+type DownloadFormat = "csv" | "xlsx";
 
 const ContactsPage = () => {
   const router = useRouter();
@@ -47,15 +48,28 @@ const ContactsPage = () => {
     setCurrentPage(1);
   };
 
-  const handleDownloadCurrentPage = () => {
-    downloadCsv(createContactsCsv(contacts || []), "contacts-current-page.csv");
+  const downloadContacts = (
+    contactsToDownload: NonNullable<typeof contacts>,
+    filename: string,
+    format: DownloadFormat
+  ) => {
+    if (format === "xlsx") {
+      downloadXlsx(contactsToDownload, `${filename}.xlsx`);
+      return;
+    }
+
+    downloadCsv(createContactsCsv(contactsToDownload), `${filename}.csv`);
   };
 
-  const handleDownloadAll = async () => {
+  const handleDownloadCurrentPage = (format: DownloadFormat) => {
+    downloadContacts(contacts || [], "contacts-current-page", format);
+  };
+
+  const handleDownloadAll = async (format: DownloadFormat) => {
     setIsDownloading(true);
     try {
       const allContacts = await getAllContactsByAddressBook(addressBookId, searchQuery);
-      downloadCsv(createContactsCsv(allContacts), "contacts-all.csv");
+      downloadContacts(allContacts, "contacts-all", format);
     } finally {
       setIsDownloading(false);
     }
@@ -103,11 +117,17 @@ const ContactsPage = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleDownloadAll}>
-                  Download all filtered contacts
+                <DropdownMenuItem onClick={() => handleDownloadAll("xlsx")}>
+                  Download all filtered contacts as XLSX
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDownloadCurrentPage}>
-                  Download current page
+                <DropdownMenuItem onClick={() => handleDownloadAll("csv")}>
+                  Download all filtered contacts as CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownloadCurrentPage("xlsx")}>
+                  Download current page as XLSX
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownloadCurrentPage("csv")}>
+                  Download current page as CSV
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
