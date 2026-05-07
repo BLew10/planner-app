@@ -35,6 +35,12 @@ export const getEventById = async (
         endDate: true,
         startTime: true,
         endTime: true,
+        scheduleType: true,
+        startsOn: true,
+        endsOn: true,
+        monthlyOrdinal: true,
+        monthlyWeekday: true,
+        monthlyMonthSelector: true,
         calendarEdition: {
           select: {
             id: true,
@@ -92,7 +98,25 @@ export const getAllEvents = async (
         ],
       }),
       ...(year && {
-        OR: [{ isYearly: true }, { year: parseInt(year, 10) }],
+        OR: [
+          { isYearly: true },
+          { year: parseInt(year, 10) },
+          {
+            scheduleType: "DAILY_RANGE" as const,
+            startsOn: { lte: `${year}-12-31` },
+            endsOn: { gte: `${year}-01-01` },
+          },
+          {
+            scheduleType: "MONTHLY_DAY" as const,
+            startsOn: { lte: `${year}-12-31` },
+            endsOn: { gte: `${year}-01-01` },
+          },
+          {
+            scheduleType: "MONTHLY_ORDINAL_WEEKDAY" as const,
+            startsOn: { lte: `${year}-12-31` },
+            endsOn: { gte: `${year}-01-01` },
+          },
+        ],
       }),
     };
 
@@ -110,6 +134,12 @@ export const getAllEvents = async (
           endDate: true,
           startTime: true,
           endTime: true,
+          scheduleType: true,
+          startsOn: true,
+          endsOn: true,
+          monthlyOrdinal: true,
+          monthlyWeekday: true,
+          monthlyMonthSelector: true,
           _count: {
             select: {
               calendarEdition: true,
@@ -195,6 +225,16 @@ export const getEventsByCalendarId = async (
         date: true,
         isYearly: true,
         year: true,
+        isMultiDay: true,
+        endDate: true,
+        startTime: true,
+        endTime: true,
+        scheduleType: true,
+        startsOn: true,
+        endsOn: true,
+        monthlyOrdinal: true,
+        monthlyWeekday: true,
+        monthlyMonthSelector: true,
       },
       orderBy: [{ isYearly: "desc" }, { date: "asc" }],
     });

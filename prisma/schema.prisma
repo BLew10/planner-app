@@ -8,6 +8,41 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum EventScheduleType {
+  SINGLE_DAY
+  DAILY_RANGE
+  MONTHLY_DAY
+  MONTHLY_ORDINAL_WEEKDAY
+}
+
+enum EventOrdinal {
+  EVERY
+  EVERY_OTHER
+  SECOND_AND_FOURTH
+  FIRST_THIRD_AND_FIFTH
+  FIRST
+  SECOND
+  THIRD
+  FOURTH
+  LAST
+}
+
+enum EventMonthSelector {
+  EVERY
+  EVEN
+  ODD
+}
+
+enum EventWeekday {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
 model User {
   id               String             @id @default(uuid())
   email            String             @unique
@@ -277,18 +312,24 @@ model AdvertisementPurchaseSlot {
 }
 
 model Event {
-  id              String            @id @default(dbgenerated("(gen_random_uuid())::text"))
-  name            String
-  description     String?
-  date            String
-  isYearly        Boolean           @default(true)
-  year            Int?
-  isDeleted       Boolean           @default(false)
-  isMultiDay      Boolean           @default(false)
-  endDate         String?
-  startTime       String?
-  endTime         String?
-  calendarEdition CalendarEdition[] @relation("CalendarEditionToEvent")
+  id                   String              @id @default(dbgenerated("(gen_random_uuid())::text"))
+  name                 String
+  description          String?
+  date                 String
+  isYearly             Boolean             @default(true)
+  year                 Int?
+  isDeleted            Boolean             @default(false)
+  isMultiDay           Boolean             @default(false)
+  endDate              String?
+  startTime            String?
+  endTime              String?
+  scheduleType         EventScheduleType?
+  startsOn             String?
+  endsOn               String?
+  monthlyOrdinal       EventOrdinal?
+  monthlyWeekday       EventWeekday?
+  monthlyMonthSelector EventMonthSelector?
+  calendarEdition      CalendarEdition[]   @relation("CalendarEditionToEvent")
 }
 
 model Layout {

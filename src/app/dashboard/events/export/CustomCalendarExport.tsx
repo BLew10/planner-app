@@ -18,6 +18,7 @@ import { ArrowLeft, FileDown, Loader, Loader2 } from "lucide-react";
 import { getAllCalendars } from "@/lib/data/calendarEdition";
 import { CalendarEdition } from "@prisma/client";
 import { useRouter } from "next/navigation";
+import { expandEventOccurrences } from "@/lib/events/recurrence";
 
 // Create a reusable back button component
 const BackButton = () => {
@@ -98,78 +99,20 @@ const CustomCalendarExport = () => {
       // Fill all days of the month
       for (let day = 1; day <= daysInMonth; day++) {
         const dayEvents =
-          events?.filter((event) => {
-            if (!event.date) return false;
-
-            const [eventMonth, eventDay] = event.date.split("-").map(Number);
-
-            // For multi-day events - only include on start and end dates
-            if (event.isMultiDay && event.endDate) {
-              const [endMonth, endDay] = event.endDate.split("-").map(Number);
-
-              // Check if this is the start date
-              if (eventMonth - 1 === month && eventDay === day) {
-                return true;
-              }
-
-              // Check if this is the end date
-              if (endMonth - 1 === month && endDay === day) {
-                return true;
-              }
-
-              return false;
-            }
-
-            // For single-day events (yearly)
-            if (
-              event.isYearly &&
-              !event.isMultiDay &&
-              eventMonth - 1 === month &&
-              eventDay === day
-            ) {
-              return true;
-            }
-
-            // For single-day events (one-time)
-            if (
-              !event.isYearly &&
-              !event.isMultiDay &&
-              event.year === year &&
-              eventMonth - 1 === month &&
-              eventDay === day
-            ) {
-              return true;
-            }
-
-            return false;
-          }) || [];
-
-        // Add markers for multi-day events
-        const eventsWithMarkers = dayEvents.map((event) => {
-          if (!event.isMultiDay) return event;
-
-          const [eventMonth, eventDay] =
-            event.date?.split("-").map(Number) || [];
-          const [endMonth, endDay] = (event.endDate || "")
-            .split("-")
-            .map(Number);
-          const eventObj = { ...event };
-
-          // Use HTML encoding to ensure the colon is properly displayed
-          if (eventMonth - 1 === month && eventDay === day) {
-            eventObj.name = `Start\u00A0: ${eventObj.name}`; // \u00A0 is a non-breaking space
-          }
-          // Mark end day
-          else if (endMonth - 1 === month && endDay === day) {
-            eventObj.name = `End: ${eventObj.name}`; // \u00A0 is a non-breaking space
-          }
-
-          return eventObj;
-        });
+          events?.flatMap((event) =>
+            expandEventOccurrences(event, year)
+              .filter((occurrence) => {
+                const [, occurrenceMonth, occurrenceDay] = occurrence.date
+                  .split("-")
+                  .map(Number);
+                return occurrenceMonth - 1 === month && occurrenceDay === day;
+              })
+              .map(() => event)
+          ) || [];
 
         calendarDays.push({
           day,
-          events: eventsWithMarkers,
+          events: dayEvents,
           // Flag for split cell rendering in the last row if needed
           isSplitCandidate: needsSplitCells && calendarDays.length >= 28,
         });

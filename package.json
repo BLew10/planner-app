@@ -7,6 +7,7 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
+    "test:event-recurrence": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/test-event-recurrence.ts",
     "populate-due-dates": "ts-node scripts/populate-due-date-timestamps.ts",
     "export-helcim-csv": "ts-node scripts/export-helcim-contacts.ts"
   },

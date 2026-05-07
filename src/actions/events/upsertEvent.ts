@@ -2,6 +2,13 @@
 
 import prisma from "@/lib/prisma/prisma";
 import { auth } from "@/auth";
+import {
+  EventMonthSelector,
+  EventOrdinal,
+  EventScheduleType,
+  EventWeekday,
+  getMonthDay,
+} from "@/lib/events/recurrence";
 
 export interface EventFormData {
   name: string;
@@ -14,6 +21,12 @@ export interface EventFormData {
   endDate?: string;
   startTime?: string;
   endTime?: string;
+  scheduleType?: EventScheduleType;
+  startsOn?: string;
+  endsOn?: string;
+  monthlyOrdinal?: EventOrdinal;
+  monthlyWeekday?: EventWeekday;
+  monthlyMonthSelector?: EventMonthSelector;
 }
 
 const upsertEvent = async (
@@ -42,17 +55,47 @@ const upsertEvent = async (
       return false;
     }
 
+    const scheduleType =
+      formData.scheduleType ??
+      (formData.isMultiDay ? "DAILY_RANGE" : "SINGLE_DAY");
+    const startsOn = formData.startsOn || formData.date;
+    const endsOn =
+      formData.endsOn ||
+      (scheduleType === "DAILY_RANGE" ? formData.endDate : undefined);
+    const legacyDate = getMonthDay(startsOn);
+    const legacyEndDate = endsOn ? getMonthDay(endsOn) : null;
+    const eventYear =
+      !formData.isYearly && startsOn?.length >= 4
+        ? parseInt(startsOn.slice(0, 4), 10)
+        : formData.year || null;
+
     // Prepare data for event
     const eventData = {
       name: formData.name,
       description: formData.description || null,
-      date: formData.date,
+      date: legacyDate,
       isYearly: formData.isYearly,
-      year: formData.isYearly ? null : formData.year || null,
-      isMultiDay: formData.isMultiDay,
-      endDate: formData.endDate || null,
+      year: formData.isYearly ? null : eventYear,
+      isMultiDay: scheduleType === "DAILY_RANGE",
+      endDate: legacyEndDate,
       startTime: formData.startTime || null,
       endTime: formData.endTime || null,
+      scheduleType,
+      startsOn: startsOn || null,
+      endsOn: endsOn || null,
+      monthlyOrdinal:
+        scheduleType === "MONTHLY_DAY" ||
+        scheduleType === "MONTHLY_ORDINAL_WEEKDAY"
+          ? formData.monthlyOrdinal || "FIRST"
+          : null,
+      monthlyWeekday:
+        scheduleType === "MONTHLY_ORDINAL_WEEKDAY"
+          ? formData.monthlyWeekday || null
+          : null,
+      monthlyMonthSelector:
+        scheduleType === "MONTHLY_ORDINAL_WEEKDAY"
+          ? formData.monthlyMonthSelector || "EVERY"
+          : null,
     };
 
     await prisma.$transaction(async (tx) => {

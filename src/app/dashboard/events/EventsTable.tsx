@@ -11,6 +11,10 @@ import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 
 import { ALL_YEARS } from "@/lib/constants";
+import {
+  formatEventSchedule,
+  getEffectiveScheduleType,
+} from "@/lib/events/recurrence";
 
 interface EventsTableProps {
   events:
@@ -52,30 +56,16 @@ export const EventsTable = ({
   const router = useRouter();
 
   const formatDate = (
-    dateStr: string | undefined,
-    endDateStr: string | undefined,
-    isYearly: boolean | undefined,
-    year: number | undefined,
-    isMultiDay: boolean | undefined,
+    event: Partial<Event>,
     startTime: string | undefined,
     endTime: string | undefined
   ) => {
-    if (!dateStr) return "";
+    const year =
+      selectedYear && selectedYear !== "all"
+        ? parseInt(selectedYear, 10)
+        : event.year ?? new Date().getFullYear();
+    let dateDisplay = formatEventSchedule(event, year);
 
-    const [month, day] = dateStr.split("-");
-
-    let dateDisplay = isYearly ? `${month}/${day}` : `${month}/${day}/${year}`;
-
-    // For multi-day events
-    if (isMultiDay && endDateStr) {
-      const [endMonth, endDay] = endDateStr.split("-");
-      const endDateDisplay = isYearly
-        ? `${endMonth}/${endDay}`
-        : `${endMonth}/${endDay}/${year}`;
-      dateDisplay = `${dateDisplay} - ${endDateDisplay}`;
-    }
-
-    // Add time if provided
     const timeDisplay = [];
     if (startTime) timeDisplay.push(`Start: ${startTime}`);
     if (endTime) timeDisplay.push(`End: ${endTime}`);
@@ -100,11 +90,7 @@ export const EventsTable = ({
       cell: ({ row }) => {
         const event = row.original;
         return formatDate(
-          event.date,
-          event.endDate ?? undefined,
-          event.isYearly,
-          event.year || undefined,
-          event.isMultiDay,
+          event,
           event.startTime ?? undefined,
           event.endTime ?? undefined
         );
@@ -115,10 +101,17 @@ export const EventsTable = ({
       header: "Type",
       cell: ({ row }) => {
         const event = row.original;
-        let badgeText = "One-time";
-        if (event.isYearly) badgeText = "Yearly";
-        if (event.isMultiDay)
-          badgeText = event.isYearly ? "Multi-day Yearly" : "Multi-day";
+        const scheduleType = getEffectiveScheduleType(event);
+        const badgeText =
+          scheduleType === "DAILY_RANGE"
+            ? "Daily range"
+            : scheduleType === "MONTHLY_DAY"
+            ? "Monthly day"
+            : scheduleType === "MONTHLY_ORDINAL_WEEKDAY"
+            ? "Monthly weekday"
+            : event.isYearly
+            ? "Yearly"
+            : "One-time";
 
         return (
           <Badge variant={event.isYearly ? "default" : "outline"}>

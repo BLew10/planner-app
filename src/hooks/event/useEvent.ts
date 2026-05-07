@@ -7,6 +7,12 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/shadcn/use-toast";
 import upsertEvent from "@/actions/events/upsertEvent";
 import { CalendarEdition } from "@prisma/client";
+import {
+  EventMonthSelector,
+  EventOrdinal,
+  EventScheduleType,
+  EventWeekday,
+} from "@/lib/events/recurrence";
 
 interface EventData {
   id?: string;
@@ -20,6 +26,12 @@ interface EventData {
   endDate?: string;
   startTime?: string;
   endTime?: string;
+  scheduleType?: EventScheduleType;
+  startsOn?: string;
+  endsOn?: string;
+  monthlyOrdinal?: EventOrdinal;
+  monthlyWeekday?: EventWeekday;
+  monthlyMonthSelector?: EventMonthSelector;
 }
 
 interface UseEventProps {
@@ -60,6 +72,12 @@ export function useEvent({ id }: UseEventProps) {
               endDate: data.endDate || "",
               startTime: data.startTime || "",
               endTime: data.endTime || "",
+              scheduleType: data.scheduleType || "SINGLE_DAY",
+              startsOn: data.startsOn || "",
+              endsOn: data.endsOn || "",
+              monthlyOrdinal: data.monthlyOrdinal || undefined,
+              monthlyWeekday: data.monthlyWeekday || undefined,
+              monthlyMonthSelector: data.monthlyMonthSelector || undefined,
             });
           }
         }
