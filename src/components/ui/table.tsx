@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -5,15 +7,52 @@ import { cn } from "@/lib/utils"
 const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
->(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-auto">
-    <table
-      ref={ref}
-      className={cn("w-full caption-bottom text-sm", className)}
-      {...props}
-    />
-  </div>
-))
+>(({ className, ...props }, ref) => {
+  const scrollRef = React.useRef<HTMLDivElement>(null)
+  // True while columns are still hidden to the right of the viewport, i.e. while a
+  // right-pinned column is actually overlaying content. Drives the pinned column's shadow.
+  const [isOverflowingRight, setIsOverflowingRight] = React.useState(false)
+
+  React.useEffect(() => {
+    const scrollEl = scrollRef.current
+    if (!scrollEl) return
+
+    // 1px tolerance so subpixel rounding at the end of the scroll range doesn't
+    // leave the shadow stuck on.
+    const update = () =>
+      setIsOverflowingRight(
+        scrollEl.scrollWidth - scrollEl.clientWidth - scrollEl.scrollLeft > 1
+      )
+
+    update()
+    scrollEl.addEventListener("scroll", update, { passive: true })
+
+    // Watch both the viewport and the table itself: column visibility toggles and
+    // data changes resize the table without resizing its container.
+    const observer = new ResizeObserver(update)
+    observer.observe(scrollEl)
+    if (scrollEl.firstElementChild) observer.observe(scrollEl.firstElementChild)
+
+    return () => {
+      scrollEl.removeEventListener("scroll", update)
+      observer.disconnect()
+    }
+  }, [])
+
+  return (
+    <div
+      ref={scrollRef}
+      data-overflow-right={isOverflowingRight ? "true" : "false"}
+      className="group/table-scroll relative w-full overflow-auto"
+    >
+      <table
+        ref={ref}
+        className={cn("w-full caption-bottom text-sm", className)}
+        {...props}
+      />
+    </div>
+  )
+})
 Table.displayName = "Table"
 
 const TableHeader = React.forwardRef<
@@ -58,7 +97,9 @@ const TableRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      "border-b transition-colors even:bg-amber-100/70 data-[state=selected]:bg-muted",
+      // `group/row` lets pinned cells mirror the row's hover/selected state, which they
+      // otherwise hide behind their own opaque background.
+      "group/row border-b transition-colors even:bg-amber-100/70 data-[state=selected]:bg-muted",
       noHoverState ? "" : "hover:bg-muted/50",
       className
     )}

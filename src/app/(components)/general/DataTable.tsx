@@ -64,6 +64,37 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
+
+/**
+ * Every table in the dashboard names its trailing button column `actions`, so pinning is
+ * keyed off that id rather than a per-table prop.
+ */
+const ACTIONS_COLUMN_ID = "actions";
+
+const isPinnedColumn = (columnId?: string) => columnId === ACTIONS_COLUMN_ID;
+
+// Shared by the pinned header and body cells. The shadow is a pseudo-element rather than a
+// `box-shadow` so it renders reliably against the table's collapsed borders, and it fades in
+// only while `Table` reports content still hidden to the right.
+const pinnedColumnBase = cn(
+  "sticky right-0 z-20",
+  "before:pointer-events-none before:absolute before:inset-y-0 before:right-full before:w-4",
+  "before:bg-gradient-to-l before:from-black/15 before:to-transparent",
+  "before:opacity-0 before:transition-opacity before:duration-200",
+  "group-data-[overflow-right=true]/table-scroll:before:opacity-100"
+);
+
+// Tint that marks the column as pinned. Backgrounds must be fully opaque — the striped rows
+// scroll underneath them.
+const pinnedHeadClass = cn(pinnedColumnBase, "bg-slate-200 dark:bg-slate-700");
+
+const pinnedCellClass = cn(
+  pinnedColumnBase,
+  "bg-slate-100 dark:bg-slate-800",
+  "transition-colors group-hover/row:bg-slate-200 dark:group-hover/row:bg-slate-700",
+  "group-data-[state=selected]/row:bg-slate-300 dark:group-data-[state=selected]/row:bg-slate-600"
+);
 
 interface DataTableProps<TData> {
   isLoading: boolean;
@@ -390,7 +421,14 @@ export function DataTable<TData extends { id?: string }>({
                     <React.Fragment key={headerGroup.id}>
                       {headerGroup.headers.map((header) => {
                         return (
-                          <TableHead key={header.id}>
+                          <TableHead
+                            key={header.id}
+                            className={
+                              isPinnedColumn(header.column.id)
+                                ? pinnedHeadClass
+                                : undefined
+                            }
+                          >
                             {header.isPlaceholder
                               ? null
                               : flexRender(
@@ -414,8 +452,15 @@ export function DataTable<TData extends { id?: string }>({
                           <Skeleton className="h-4 w-4" />
                         </TableCell>
                       )}
-                      {columns.map((_, cellIndex) => (
-                        <TableCell key={cellIndex}>
+                      {columns.map((column, cellIndex) => (
+                        <TableCell
+                          key={cellIndex}
+                          className={
+                            isPinnedColumn(column.id)
+                              ? pinnedCellClass
+                              : undefined
+                          }
+                        >
                           <Skeleton className="h-4 w-full" />
                         </TableCell>
                       ))}
@@ -467,7 +512,14 @@ export function DataTable<TData extends { id?: string }>({
                         </TableCell>
                       )}
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
+                        <TableCell
+                          key={cell.id}
+                          className={
+                            isPinnedColumn(cell.column.id)
+                              ? pinnedCellClass
+                              : undefined
+                          }
+                        >
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext()
